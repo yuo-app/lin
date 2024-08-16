@@ -3,6 +3,7 @@
   "type": "module",
   "version": "0.0.0",
   "packageManager": "bun@1.1.25",
+  "description": "auto-i18n",
   "module": "src/index.ts",
   "scripts": {
     "build": "bun --bun unbuild",
