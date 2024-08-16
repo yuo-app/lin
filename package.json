@@ -4,7 +4,20 @@
   "version": "0.0.0",
   "packageManager": "bun@1.1.25",
   "description": "auto-i18n",
+  "license": "MIT",
+  "homepage": "https://github.com/yuo-app/lin#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yuo-app/lin.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yuo-app/lin/issues"
+  },
   "module": "src/index.ts",
+  "files": [
+    "bin",
+    "dist"
+  ],
   "scripts": {
     "build": "bun --bun unbuild",
     "dev": "bun --bun unbuild --stub",
@@ -13,7 +26,7 @@
     "release": "bumpp && npm publish"
   },
   "peerDependencies": {
-    "typescript": "^5.0.0"
+    "typescript": "^5.5.4"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^2.26.0",
