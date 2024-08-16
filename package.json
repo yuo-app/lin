@@ -1,0 +1,24 @@
+{
+  "name": "lin",
+  "type": "module",
+  "version": "0.0.0",
+  "packageManager": "bun@1.1.25",
+  "module": "src/index.ts",
+  "scripts": {
+    "build": "bun --bun unbuild",
+    "dev": "bun --bun unbuild --stub",
+    "lint": "eslint . --fix",
+    "test": "echo \"Error: write tests you little shit\" && exit 1",
+    "release": "bumpp && npm publish"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^2.26.0",
+    "@types/bun": "latest",
+    "bumpp": "^9.5.1",
+    "eslint": "^9.9.0",
+    "unbuild": "^2.0.0"
+  }
+}
