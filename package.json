@@ -14,6 +14,9 @@
     "url": "https://github.com/yuo-app/lin/issues"
   },
   "module": "src/index.ts",
+  "bin": {
+    "lin": "bin/lin.mjs"
+  },
   "files": [
     "bin",
     "dist"
@@ -30,6 +33,8 @@
   },
   "dependencies": {
     "@cross/deepmerge": "npm:@jsr/cross__deepmerge",
+    "citty": "^0.1.6",
+    "consola": "^3.2.3",
     "openai": "^4.56.0",
     "unconfig": "^0.5.5"
   },

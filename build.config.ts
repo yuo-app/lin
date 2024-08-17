@@ -1,8 +1,10 @@
 import { defineBuildConfig } from 'unbuild'
+import { dependencies } from './package.json'
 
 export default defineBuildConfig({
   entries: [
     'src/index',
+    'src/cli',
   ],
   clean: true,
   declaration: true,
@@ -11,9 +13,5 @@ export default defineBuildConfig({
       minify: true,
     },
   },
-  externals: [
-    'consola',
-    'citty',
-    'unconfig',
-  ],
+  externals: Object.keys(dependencies),
 })

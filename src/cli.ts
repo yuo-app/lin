@@ -1,3 +1,4 @@
+import process from 'node:process'
 import { defineCommand, runMain } from 'citty'
 import { consola } from 'consola'
 import { description, name, version } from '../package.json'
@@ -13,6 +14,14 @@ const main = defineCommand({
     version: {
       alias: 'v',
       type: 'boolean',
+      description: 'show version',
+    },
+    cwd: {
+      alias: 'c',
+      type: 'string',
+      description: 'project root',
+      default: process.cwd(),
+      valueHint: '.',
     },
   },
   subCommands: commands,
