@@ -1,5 +1,5 @@
 {
-  "name": "lin",
+  "name": "@yuo/lin",
   "type": "module",
   "version": "0.0.0",
   "packageManager": "bun@1.1.25",
@@ -27,6 +27,11 @@
   },
   "peerDependencies": {
     "typescript": "^5.5.4"
+  },
+  "dependencies": {
+    "@cross/deepmerge": "npm:@jsr/cross__deepmerge",
+    "openai": "^4.56.0",
+    "unconfig": "^0.5.5"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^2.26.0",
