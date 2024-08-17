@@ -1,8 +1,8 @@
-import process from 'node:process'
 import { defineCommand, runMain } from 'citty'
-import { consola } from 'consola'
 import { description, name, version } from '../package.json'
+import { console } from './utils'
 import { commands } from './commands'
+import { commonArgs } from './config'
 
 const main = defineCommand({
   meta: {
@@ -16,18 +16,12 @@ const main = defineCommand({
       type: 'boolean',
       description: 'show version',
     },
-    cwd: {
-      alias: 'c',
-      type: 'string',
-      description: 'project root',
-      default: process.cwd(),
-      valueHint: '.',
-    },
+    ...commonArgs,
   },
   subCommands: commands,
   run({ args }) {
     if (args.version)
-      consola.log(`${name} \`v${version}\``)
+      console.log(`${name} \`v${version}\``)
   },
 })
 

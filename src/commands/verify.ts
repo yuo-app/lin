@@ -1,4 +1,4 @@
-import { defineCommand, parseArgs } from 'citty'
+import { defineCommand } from 'citty'
 import { resolveConfig } from '../config'
 
 export default defineCommand({
@@ -7,8 +7,7 @@ export default defineCommand({
     description: 'check everything is setup correctly',
   },
   async run({ args }) {
-    console.log('verify', args)
-
-    // const { config } = await resolveConfig(args)
+    const { config } = await resolveConfig(args)
+    console.log('verify', config)
   },
 })

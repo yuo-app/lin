@@ -2,11 +2,17 @@ import process from 'node:process'
 import type OpenAI from 'openai'
 import { loadConfig } from 'unconfig'
 import { simpleMerge } from '@cross/deepmerge'
+import type { ArgDef } from 'citty'
+
+type ChatModel = OpenAI.ChatModel
 
 export const integrations = [
+  'i18n',
+  'i18next',
   'astro',
   'astro-routing',
   'nextjs',
+  'vue-i18n',
   '@nuxtjs/i18n',
   'sveltekit-i18n',
 ] as const
@@ -30,24 +36,104 @@ export interface Config {
    * OpenAI chat model to use
    * @default gpt-4o-mini
    */
-  model?: OpenAI.ChatModel
+  model?: ChatModel
 
   /**
    * the environment variable that contains the OpenAI token.
    * @default OPENAI_API_TOKEN
    */
-  tokenEnv?: string
+  env?: string
 }
 
 export const DEFAULT_CONFIG: Config = {
   cwd: '',
   model: 'gpt-4o-mini',
-  tokenEnv: 'OPENAI_API_TOKEN',
+  env: 'OPENAI_API_TOKEN',
 }
 
-export async function resolveConfig<T extends Config>(
-  options: T,
+type Args = {
+  [key in keyof Config]-?: ArgDef
+}
+
+export const commonArgs: Args = {
+  cwd: {
+    alias: 'c',
+    type: 'string',
+    description: 'project root',
+    default: process.cwd(),
+  },
+  i18n: {
+    alias: 'i',
+    type: 'string',
+    description: 'the i18n integration used',
+  },
+  model: {
+    alias: 'm',
+    type: 'string',
+    description: 'OpenAI chat model to use',
+  },
+  env: {
+    alias: 'e',
+    type: 'string',
+    description: 'the environment variable that contains the OpenAI token',
+  },
+}
+
+export const models: ChatModel[] = [
+  'gpt-4o',
+  'gpt-4o-2024-05-13',
+  'gpt-4o-2024-08-06',
+  'gpt-4o-mini',
+  'gpt-4o-mini-2024-07-18',
+  'gpt-4-turbo',
+  'gpt-4-turbo-2024-04-09',
+  'gpt-4-0125-preview',
+  'gpt-4-turbo-preview',
+  'gpt-4-1106-preview',
+  'gpt-4-vision-preview',
+  'gpt-4',
+  'gpt-4-0314',
+  'gpt-4-0613',
+  'gpt-4-32k',
+  'gpt-4-32k-0314',
+  'gpt-4-32k-0613',
+  'gpt-3.5-turbo',
+  'gpt-3.5-turbo-16k',
+  'gpt-3.5-turbo-0301',
+  'gpt-3.5-turbo-0613',
+  'gpt-3.5-turbo-1106',
+  'gpt-3.5-turbo-0125',
+  'gpt-3.5-turbo-16k-0613',
+]
+
+function checkArg(name: string | undefined, list: readonly string[]) {
+  if (name && !list.includes(name))
+    throw new Error(`"\`${name}\`" is invalid, must be one of ${list.join(', ')}`)
+}
+
+function normalizeArgs(args: Config): Partial<Config> {
+  const normalized: Partial<Config> = { ...args } as any
+
+  Object.entries(commonArgs).forEach(([fullName, def]) => {
+    if ('alias' in def) {
+      if (def.alias && normalized[def.alias as keyof Config] !== undefined && normalized[fullName as keyof Config] === undefined) {
+        normalized[fullName as keyof Config] = normalized[def.alias as keyof Config] as any
+        delete normalized[def.alias as keyof Config]
+      }
+    }
+  })
+
+  checkArg(normalized.i18n, integrations)
+  checkArg(normalized.model, models)
+
+  return normalized
+}
+
+export async function resolveConfig(
+  args: Record<string, any>,
 ): Promise<ReturnType<typeof loadConfig<Config>>> {
+  const options = normalizeArgs(args)
+
   const { config, sources, dependencies } = await loadConfig<Config>({
     sources: [
       {
