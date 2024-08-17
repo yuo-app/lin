@@ -87,6 +87,6 @@ export async function resolveConfig<T extends Config>(
   }
 }
 
-export function defineConfig(config: Partial<Config>) {
+export function defineConfig(config: Partial<Config>): Config {
   return config
 }
