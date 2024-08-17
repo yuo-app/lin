@@ -1,5 +1,13 @@
 {
   "name": "@yuo/lin",
   "version": "0.0.0",
-  "exports": "./src/index.ts"
+  "exports": "./src/index.ts",
+  "publish": {
+    "include": [
+      "package.json",
+      "LICENSE",
+      "README.md",
+      "src/**/*.ts"
+    ]
+  }
 }
