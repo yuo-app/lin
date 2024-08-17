@@ -28,7 +28,7 @@ export interface Config {
 
   /**
    * OpenAI chat model to use
-   * @default gpt-4o
+   * @default gpt-4o-mini
    */
   model?: OpenAI.ChatModel
 
@@ -41,7 +41,7 @@ export interface Config {
 
 export const DEFAULT_CONFIG: Config = {
   cwd: '',
-  model: 'gpt-4o',
+  model: 'gpt-4o-mini',
   tokenEnv: 'OPENAI_API_TOKEN',
 }
 
