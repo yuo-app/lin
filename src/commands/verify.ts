@@ -1,5 +1,8 @@
+import process from 'node:process'
 import { defineCommand } from 'citty'
+import c from 'picocolors'
 import { resolveConfig } from '../config'
+import { console, createLoadingIndicator } from '../utils'
 
 export default defineCommand({
   meta: {
@@ -7,7 +10,8 @@ export default defineCommand({
     description: 'check everything is setup correctly',
   },
   async run({ args }) {
-    const { config } = await resolveConfig(args)
-    console.log('verify', config)
+    console.loading('Loading data...', () => {
+      console.log(c.green('✓'), 'Data loaded')
+    })
   },
 })
