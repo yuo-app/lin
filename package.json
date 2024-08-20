@@ -35,6 +35,7 @@
     "@cross/deepmerge": "npm:@jsr/cross__deepmerge",
     "citty": "^0.1.6",
     "openai": "^4.56.0",
+    "picocolors": "^1.0.1",
     "unconfig": "^0.5.5"
   },
   "devDependencies": {
