@@ -36,6 +36,7 @@ export default defineCommand({
               content: defaultLocale,
             },
           ],
+          temperature: 0,
           model: config.model as OpenAI.ChatModel,
         })
 
