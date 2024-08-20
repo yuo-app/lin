@@ -11,7 +11,7 @@ export default defineCommand({
   },
   async run({ args }) {
     console.loading('Loading data...', () => {
-      console.log(c.green('✓ Data loaded!'))
+      console.log(c.green('✓'), 'Data loaded')
     })
   },
 })
