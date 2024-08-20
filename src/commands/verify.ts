@@ -10,8 +10,8 @@ export default defineCommand({
     description: 'check everything is setup correctly',
   },
   async run({ args }) {
-    console.loading('Loading data...', () => {
-      console.log(c.green('✓'), 'Data loaded')
+    console.loading('Load data', async () => {
+      await new Promise(resolve => setTimeout(resolve, 3000))
     })
   },
 })

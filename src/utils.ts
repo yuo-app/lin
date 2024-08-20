@@ -22,11 +22,11 @@ export function createLoadingIndicator(message: string) {
   const interval = setInterval(() => {
     process.stdout.clearLine(0)
     process.stdout.cursorTo(0)
-    process.stdout.write(`${c.yellow(frames[i])} ${message}`)
+    process.stdout.write(`${c.yellow(frames[i])} ${message}...`)
     i = (i + 1) % frames.length
   }, 100)
 
-  return () => {
+  return async () => {
     clearInterval(interval)
     process.stdout.clearLine(0)
     process.stdout.cursorTo(0)
@@ -39,13 +39,20 @@ class ConsoleExtended extends Console {
     super.log(formatLog(message), ...optionalParams)
   }
 
-  loading(message: string, callback: () => void) {
+  async loading<T>(message: string, callback: () => Promise<T>): Promise<T> {
     const stopLoading = createLoadingIndicator(message)
 
-    setTimeout(() => {
+    try {
+      const result = await callback()
+      await stopLoading()
+      this.log(`${c.green('✓')} ${message}`)
+      return result
+    }
+    catch (error) {
       stopLoading()
-      callback()
-    }, 3000)
+      this.log(`${c.red('✗')} ${message}`)
+      throw error
+    }
   }
 }
 
