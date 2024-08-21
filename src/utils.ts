@@ -13,6 +13,20 @@ export function r(file: string, i18n?: I18nConfig) {
 }
 // #endregion
 
+// #region Type utils
+export type DeepReadonly<T> = {
+  readonly [K in keyof T]: keyof T[K] extends never ? T[K] : DeepReadonly<T[K]>
+}
+
+export type DeepPartial<T> = {
+  [K in keyof T]?: keyof T[K] extends never ? T[K] : DeepPartial<T[K]>
+}
+
+export type DeepRequired<T> = {
+  [K in keyof T]-?: keyof T[K] extends never ? T[K] : DeepRequired<T[K]>
+}
+// #endregion
+
 // #region Utils
 export function haveSameShape(obj1: any, obj2: any): boolean {
   if (typeof obj1 !== 'object' || typeof obj2 !== 'object' || obj1 === null || obj2 === null) {
@@ -43,14 +57,23 @@ export function haveSameShape(obj1: any, obj2: any): boolean {
 // #endregion
 
 // #region Console utils
-function formatLog(str: unknown) {
-  if (typeof str !== 'string')
-    return str
-  return str
-    .replace(/`([^`]+)`/g, (_, p1) => `${c.cyan(p1)}`)
-    .replace(/\*\*([^*]+)\*\*/g, (_, p1) => `${c.bold(p1)}`)
-    .replace(/\*([^*]+)\*/g, (_, p1) => `${c.italic(p1)}`)
-    .replace(/__([^_]+)__/g, (_, p1) => `${c.underline(p1)}`)
+export const ICONS = {
+  success: c.green('✓'),
+  error: c.red('✗'),
+  note: c.blue('ℹ'),
+}
+
+function formatLog(...messages: string[]) {
+  const lines: string[] = []
+  for (const message of messages) {
+    lines.push(message
+      .replace(/`([^`]+)`/g, (_, p1) => `${c.cyan(p1)}`)
+      .replace(/\*\*([^*]+)\*\*/g, (_, p1) => `${c.bold(p1)}`)
+      .replace(/\*([^*]+)\*/g, (_, p1) => `${c.italic(p1)}`)
+      .replace(/__([^_]+)__/g, (_, p1) => `${c.underline(p1)}`),
+    )
+  }
+  return lines.join(' ')
 }
 
 function createLoadingIndicator(message: string) {
@@ -59,7 +82,7 @@ function createLoadingIndicator(message: string) {
   const interval = setInterval(() => {
     process.stdout.clearLine(0)
     process.stdout.cursorTo(0)
-    process.stdout.write(`${c.yellow(frames[i])} ${message}...`)
+    process.stdout.write(`${c.yellow(frames[i])} ${formatLog(message)}`)
     i = (i + 1) % frames.length
   }, 100)
 
@@ -71,9 +94,8 @@ function createLoadingIndicator(message: string) {
 }
 
 class ConsoleExtended extends Console {
-  log(...data: any[]): void
-  log(message?: unknown, ...optionalParams: unknown[]): void {
-    super.log(formatLog(message), ...optionalParams)
+  log(...messages: string[]): void {
+    super.log(formatLog(...messages))
   }
 
   async loading<T>(message: string, callback: () => Promise<T>): Promise<T> {
@@ -82,12 +104,12 @@ class ConsoleExtended extends Console {
     try {
       const result = await callback()
       await stopLoading()
-      this.log(`${c.green('✓')} ${message}`)
+      this.log(`${ICONS.success} ${message}`)
       return result
     }
     catch (error) {
       stopLoading()
-      this.log(`${c.red('✗')} ${message}`)
+      this.log(`${ICONS.error} ${message}`)
       throw error
     }
   }

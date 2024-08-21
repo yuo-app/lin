@@ -3,9 +3,10 @@ import type OpenAI from 'openai'
 import { loadConfig } from 'unconfig'
 import { simpleMerge } from '@cross/deepmerge'
 import type { ArgDef } from 'citty'
+import type { DeepRequired } from './utils'
 
 type ChatModel = OpenAI.ChatModel
-type OpenAIOptions = Pick<OpenAI.ChatCompletionCreateParamsNonStreaming, 'model'
+type OpenAIOptions = Partial<Pick<OpenAI.ChatCompletionCreateParamsNonStreaming, 'model'
 | 'frequency_penalty'
 | 'logit_bias'
 | 'max_tokens'
@@ -13,7 +14,7 @@ type OpenAIOptions = Pick<OpenAI.ChatCompletionCreateParamsNonStreaming, 'model'
 | 'seed'
 | 'service_tier'
 | 'temperature'
-| 'top_p'>
+| 'top_p'>>
 
 export const integrations = [
   'i18n',
@@ -137,15 +138,13 @@ function normalizeArgs(args: Partial<Config>): Partial<Config> {
 
   checkArg(normalized.i18n, integrations)
   checkArg(normalized.options?.model, models)
-  console.log('options', normalized.options)
-  console.log('options parsed', JSON.parse(normalized.options as unknown as string || '{}'))
 
   return normalized
 }
 
 export async function resolveConfig(
   args: Record<string, any>,
-): Promise<ReturnType<typeof loadConfig<Config>>> {
+): Promise<ReturnType<typeof loadConfig<DeepRequired<Config>>>> {
   const options = normalizeArgs(args)
 
   const { config, sources, dependencies } = await loadConfig<Config>({
@@ -181,7 +180,7 @@ export async function resolveConfig(
   })
 
   return {
-    config: simpleMerge(config, options) as Config,
+    config: simpleMerge(config, options) as DeepRequired<Config>,
     sources,
     dependencies,
   }

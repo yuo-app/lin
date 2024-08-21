@@ -5,7 +5,7 @@ import OpenAI from 'openai'
 import { defineCommand } from 'citty'
 import { loadI18nConfig } from '../i18n'
 import { resolveConfig } from '../config'
-import { console, haveSameShape, r } from '../utils'
+import { ICONS, console, haveSameShape, r } from '../utils'
 
 export default defineCommand({
   meta: {
@@ -13,7 +13,12 @@ export default defineCommand({
     description: 'translate locales',
   },
   args: {
-
+    force: {
+      alias: 'f',
+      type: 'boolean',
+      description: 'force to translate all locales',
+      default: false,
+    },
   },
   async run({ args }) {
     const { config } = await resolveConfig(args)
@@ -23,12 +28,16 @@ export default defineCommand({
     const defaultLocale = await fs.readFile(r(`${i18n.default}.json`, i18n), { encoding: 'utf8' })
 
     for (const locale of i18n.locales.filter(l => l !== i18n.default)) {
-      const localeJson = await fs.readFile(r(`${locale}.json`, i18n), { encoding: 'utf8' })
+      if (!args.force) {
+        const localeJson = await fs.readFile(r(`${locale}.json`, i18n), { encoding: 'utf8' })
 
-      if (haveSameShape(JSON.parse(defaultLocale), JSON.parse(localeJson)))
-        continue
+        if (haveSameShape(JSON.parse(defaultLocale), JSON.parse(localeJson))) {
+          console.log(ICONS.note, `Skipped: **${locale}**`)
+          continue
+        }
+      }
 
-      await console.loading(`Translate ${locale}`, async () => {
+      await console.loading(`Translate: **${locale}**`, async () => {
         const completion = await openai.chat.completions.create({
           messages: [
             {
