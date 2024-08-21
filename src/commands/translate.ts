@@ -5,7 +5,7 @@ import OpenAI from 'openai'
 import { defineCommand } from 'citty'
 import { loadI18nConfig } from '../i18n'
 import { resolveConfig } from '../config'
-import { console, r } from '../utils'
+import { console, haveSameShape, r } from '../utils'
 
 export default defineCommand({
   meta: {
@@ -23,6 +23,11 @@ export default defineCommand({
     const defaultLocale = await fs.readFile(r(`${i18n.default}.json`, i18n), { encoding: 'utf8' })
 
     for (const locale of i18n.locales.filter(l => l !== i18n.default)) {
+      const localeJson = await fs.readFile(r(`${locale}.json`, i18n), { encoding: 'utf8' })
+
+      if (haveSameShape(JSON.parse(defaultLocale), JSON.parse(localeJson)))
+        continue
+
       await console.loading(`Translate ${locale}`, async () => {
         const completion = await openai.chat.completions.create({
           messages: [
@@ -36,8 +41,8 @@ Your recieve just the input json and return just the translated json.`,
               content: defaultLocale,
             },
           ],
-          temperature: 0,
-          model: config.model,
+          ...config.options,
+          response_format: { type: 'json_object' },
         })
 
         await fs.writeFile(r(`${locale}.json`, i18n), completion.choices[0].message.content as string, { encoding: 'utf8' })

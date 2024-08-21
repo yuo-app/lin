@@ -4,13 +4,45 @@ import { Console } from 'node:console'
 import c from 'picocolors'
 import type { I18nConfig } from './i18n'
 
+// #region Path utils
 const cwd = process.env.INIT_CWD || process.cwd()
 export function r(file: string, i18n?: I18nConfig) {
   if (i18n)
     return path.join(i18n.directory, file)
   return path.join(cwd, file)
 }
+// #endregion
 
+// #region Utils
+export function haveSameShape(obj1: any, obj2: any): boolean {
+  if (typeof obj1 !== 'object' || typeof obj2 !== 'object' || obj1 === null || obj2 === null) {
+    return false
+  }
+
+  const keys1 = Object.keys(obj1)
+  const keys2 = Object.keys(obj2)
+
+  if (keys1.length !== keys2.length) {
+    return false
+  }
+
+  for (const key of keys1) {
+    if (!keys2.includes(key)) {
+      return false
+    }
+
+    if (typeof obj1[key] === 'object' && typeof obj2[key] === 'object') {
+      if (!haveSameShape(obj1[key], obj2[key])) {
+        return false
+      }
+    }
+  }
+
+  return true
+}
+// #endregion
+
+// #region Console utils
 function formatLog(str: unknown) {
   if (typeof str !== 'string')
     return str
@@ -21,7 +53,7 @@ function formatLog(str: unknown) {
     .replace(/__([^_]+)__/g, (_, p1) => `${c.underline(p1)}`)
 }
 
-export function createLoadingIndicator(message: string) {
+function createLoadingIndicator(message: string) {
   const frames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
   let i = 0
   const interval = setInterval(() => {
@@ -63,3 +95,4 @@ class ConsoleExtended extends Console {
 
 const consoleExtended = new ConsoleExtended(process.stdout, process.stderr, false)
 export { consoleExtended as console }
+// #endregion
