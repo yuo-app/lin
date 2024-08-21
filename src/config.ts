@@ -5,6 +5,15 @@ import { simpleMerge } from '@cross/deepmerge'
 import type { ArgDef } from 'citty'
 
 type ChatModel = OpenAI.ChatModel
+type OpenAIOptions = Pick<OpenAI.ChatCompletionCreateParamsNonStreaming, 'model'
+| 'frequency_penalty'
+| 'logit_bias'
+| 'max_tokens'
+| 'presence_penalty'
+| 'seed'
+| 'service_tier'
+| 'temperature'
+| 'top_p'>
 
 export const integrations = [
   'i18n',
@@ -33,23 +42,25 @@ export interface Config {
   i18n: Integration
 
   /**
-   * OpenAI chat model to use
-   * @default gpt-4o-mini
-   */
-  model: ChatModel
-
-  /**
    * the environment variable that contains the OpenAI token.
    * @default OPENAI_API_TOKEN
    */
   env: string
+
+  /**
+   * the OpenAI options, like the model to use
+   */
+  options: OpenAIOptions
 }
 
 export const DEFAULT_CONFIG: Config = {
   i18n: 'i18n',
   cwd: '',
-  model: 'gpt-4o-mini',
   env: 'OPENAI_API_TOKEN',
+  options: {
+    model: 'gpt-4o-mini',
+    temperature: 0,
+  },
 }
 
 type Args = {
@@ -68,15 +79,15 @@ export const commonArgs: Args = {
     type: 'string',
     description: 'the i18n integration used',
   },
-  model: {
-    alias: 'm',
-    type: 'string',
-    description: 'OpenAI chat model to use',
-  },
   env: {
     alias: 'e',
     type: 'string',
     description: 'the environment variable that contains the OpenAI token',
+  },
+  options: {
+    alias: 'o',
+    type: 'string',
+    description: 'the OpenAI options, like the model to use',
   },
 }
 
@@ -125,7 +136,9 @@ function normalizeArgs(args: Partial<Config>): Partial<Config> {
   })
 
   checkArg(normalized.i18n, integrations)
-  checkArg(normalized.model, models)
+  checkArg(normalized.options?.model, models)
+  console.log('options', normalized.options)
+  console.log('options parsed', JSON.parse(normalized.options as unknown as string || '{}'))
 
   return normalized
 }
