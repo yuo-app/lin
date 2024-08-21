@@ -24,35 +24,36 @@ export interface Config {
    * project root
    * @default process.cwd()
    */
-  cwd?: string
+  cwd: string
 
   /**
    * the i18n integration used, by default `lin` will try to infer this
    * @default undefined
    */
-  i18n?: Integration
+  i18n: Integration
 
   /**
    * OpenAI chat model to use
    * @default gpt-4o-mini
    */
-  model?: ChatModel
+  model: ChatModel
 
   /**
    * the environment variable that contains the OpenAI token.
    * @default OPENAI_API_TOKEN
    */
-  env?: string
+  env: string
 }
 
 export const DEFAULT_CONFIG: Config = {
+  i18n: 'i18n',
   cwd: '',
   model: 'gpt-4o-mini',
   env: 'OPENAI_API_TOKEN',
 }
 
 type Args = {
-  [key in keyof Config]-?: ArgDef
+  [key in keyof Config]: ArgDef
 }
 
 export const commonArgs: Args = {
@@ -111,7 +112,7 @@ function checkArg(name: string | undefined, list: readonly string[]) {
     throw new Error(`"\`${name}\`" is invalid, must be one of ${list.join(', ')}`)
 }
 
-function normalizeArgs(args: Config): Partial<Config> {
+function normalizeArgs(args: Partial<Config>): Partial<Config> {
   const normalized: Partial<Config> = { ...args } as any
 
   Object.entries(commonArgs).forEach(([fullName, def]) => {
@@ -167,12 +168,12 @@ export async function resolveConfig(
   })
 
   return {
-    config: simpleMerge(config, options),
+    config: simpleMerge(config, options) as Config,
     sources,
     dependencies,
   }
 }
 
-export function defineConfig(config: Partial<Config>): Config {
+export function defineConfig(config: Partial<Config>): Partial<Config> {
   return config
 }

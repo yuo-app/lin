@@ -2,9 +2,14 @@ import path from 'node:path'
 import process from 'node:process'
 import { Console } from 'node:console'
 import c from 'picocolors'
+import type { I18nConfig } from './i18n'
 
 const cwd = process.env.INIT_CWD || process.cwd()
-export const r = (file: string) => path.join(cwd, file)
+export function r(file: string, i18n?: I18nConfig) {
+  if (i18n)
+    return path.join(i18n.directory, file)
+  return path.join(cwd, file)
+}
 
 function formatLog(str: unknown) {
   if (typeof str !== 'string')

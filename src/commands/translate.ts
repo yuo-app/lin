@@ -1,27 +1,26 @@
 import 'dotenv/config'
 import process from 'node:process'
 import fs from 'node:fs/promises'
-import path from 'node:path'
-import { defineCommand } from 'citty'
 import OpenAI from 'openai'
+import { defineCommand } from 'citty'
 import { loadI18nConfig } from '../i18n'
 import { resolveConfig } from '../config'
-import { console } from '../utils'
+import { console, r } from '../utils'
 
 export default defineCommand({
   meta: {
     name: 'translate',
     description: 'translate locales',
   },
+  args: {
+
+  },
   async run({ args }) {
     const { config } = await resolveConfig(args)
     const i18n = loadI18nConfig()
-    const openai = new OpenAI({ apiKey: process.env[config.env as string] })
+    const openai = new OpenAI({ apiKey: process.env[config.env] })
 
-    const defaultLocale = await fs.readFile(
-      path.join(i18n.directory, `${i18n.default}.json`),
-      { encoding: 'utf8' },
-    )
+    const defaultLocale = await fs.readFile(r(`${i18n.default}.json`, i18n), { encoding: 'utf8' })
 
     for (const locale of i18n.locales.filter(l => l !== i18n.default)) {
       await console.loading(`Translate ${locale}`, async () => {
@@ -29,7 +28,8 @@ export default defineCommand({
           messages: [
             {
               role: 'system',
-              content: `You are a simple api that translates locale jsons from ${i18n.default} to ${locale}. Your recieve just the input json and return just the translated json.`,
+              content: `You are a simple api that translates locale jsons from ${i18n.default} to ${locale}.
+Your recieve just the input json and return just the translated json.`,
             },
             {
               role: 'user',
@@ -37,14 +37,10 @@ export default defineCommand({
             },
           ],
           temperature: 0,
-          model: config.model as OpenAI.ChatModel,
+          model: config.model,
         })
 
-        await fs.writeFile(
-          path.join(i18n.directory, `${locale}.json`),
-          completion.choices[0].message.content as string,
-          { encoding: 'utf8' },
-        )
+        await fs.writeFile(r(`${locale}.json`, i18n), completion.choices[0].message.content as string, { encoding: 'utf8' })
       })
     }
   },
