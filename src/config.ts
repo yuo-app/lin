@@ -2,7 +2,7 @@ import process from 'node:process'
 import type OpenAI from 'openai'
 import { loadConfig } from 'unconfig'
 import { simpleMerge } from '@cross/deepmerge'
-import type { ArgDef } from 'citty'
+import type { ArgDef, StringArgDef } from 'citty'
 import type { DeepRequired } from './utils'
 
 type ChatModel = OpenAI.ChatModel
@@ -54,7 +54,7 @@ export interface Config {
   options: OpenAIOptions
 }
 
-export const DEFAULT_CONFIG: Config = {
+export const DEFAULT_CONFIG = {
   i18n: 'i18n',
   cwd: '',
   env: 'OPENAI_API_TOKEN',
@@ -62,10 +62,13 @@ export const DEFAULT_CONFIG: Config = {
     model: 'gpt-4o-mini',
     temperature: 0,
   },
-}
+} satisfies Config
 
 type Args = {
-  [key in keyof Config]: ArgDef
+  [key in keyof Config as key extends 'options' ? never : key]: ArgDef
+} & {
+  model: ArgDef
+  temperature: ArgDef
 }
 
 export const commonArgs: Args = {
@@ -84,11 +87,19 @@ export const commonArgs: Args = {
     alias: 'e',
     type: 'string',
     description: 'the environment variable that contains the OpenAI token',
+    default: DEFAULT_CONFIG.env,
   },
-  options: {
-    alias: 'o',
+  model: {
+    alias: 'm',
     type: 'string',
-    description: 'the OpenAI options, like the model to use',
+    description: 'the model to use',
+    default: DEFAULT_CONFIG.options.model,
+  },
+  temperature: {
+    alias: 't',
+    type: 'string',
+    description: 'the temperature to use',
+    default: DEFAULT_CONFIG.options.temperature.toString(),
   },
 }
 
@@ -124,22 +135,38 @@ function checkArg(name: string | undefined, list: readonly string[]) {
     throw new Error(`"\`${name}\`" is invalid, must be one of ${list.join(', ')}`)
 }
 
-function normalizeArgs(args: Partial<Config>): Partial<Config> {
-  const normalized: Partial<Config> = { ...args } as any
+function normalizeArgs(args: Partial<Args>): Partial<Config> {
+  const normalized: Partial<Args> = { ...args }
 
   Object.entries(commonArgs).forEach(([fullName, def]) => {
     if ('alias' in def) {
-      if (def.alias && normalized[def.alias as keyof Config] !== undefined && normalized[fullName as keyof Config] === undefined) {
-        normalized[fullName as keyof Config] = normalized[def.alias as keyof Config] as any
-        delete normalized[def.alias as keyof Config]
+      const fullKey = fullName as keyof Args
+      const configKey = def.alias as keyof Args
+
+      if (def.alias && normalized[configKey] !== undefined && normalized[fullKey] === undefined) {
+        normalized[fullKey] = normalized[configKey]
+        delete normalized[configKey]
       }
     }
   })
 
-  checkArg(normalized.i18n, integrations)
-  checkArg(normalized.options?.model, models)
+  const config = convertType(normalized)
+  checkArg(config.i18n, integrations)
+  checkArg(config.options?.model, models)
 
-  return normalized
+  return config
+}
+
+function convertType(config: any): Partial<Config> {
+  const { model, temperature, ...rest } = config
+
+  return {
+    ...rest,
+    options: {
+      model,
+      temperature,
+    },
+  }
 }
 
 export async function resolveConfig(
