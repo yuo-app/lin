@@ -65,7 +65,7 @@ export const ICONS = {
 
 function formatLog(message: any): string {
   if (typeof message !== 'string')
-    message = String(message)
+    return message
 
   return (message as string)
     .replace(/`([^`]+)`/g, (_, p1) => `${c.cyan(p1)}`)
@@ -93,10 +93,7 @@ function createLoadingIndicator(message: string) {
 
 class ConsoleExtended extends Console {
   log(...messages: any[]): void {
-    if (typeof messages[0] === 'string')
-      super.log(...messages.map(formatLog))
-    else
-      super.log(...messages)
+    super.log(...messages.map(formatLog))
   }
 
   async loading<T>(message: string, callback: () => Promise<T>): Promise<T> {
