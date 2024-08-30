@@ -63,17 +63,15 @@ export const ICONS = {
   note: c.blue('ℹ'),
 }
 
-function formatLog(...messages: string[]) {
-  const lines: string[] = []
-  for (const message of messages) {
-    lines.push(message
-      .replace(/`([^`]+)`/g, (_, p1) => `${c.cyan(p1)}`)
-      .replace(/\*\*([^*]+)\*\*/g, (_, p1) => `${c.bold(p1)}`)
-      .replace(/\*([^*]+)\*/g, (_, p1) => `${c.italic(p1)}`)
-      .replace(/__([^_]+)__/g, (_, p1) => `${c.underline(p1)}`),
-    )
-  }
-  return lines.join(' ')
+function formatLog(message: any): string {
+  if (typeof message !== 'string')
+    message = String(message)
+
+  return (message as string)
+    .replace(/`([^`]+)`/g, (_, p1) => `${c.cyan(p1)}`)
+    .replace(/\*\*([^*]+)\*\*/g, (_, p1) => `${c.bold(p1)}`)
+    .replace(/\*([^*]+)\*/g, (_, p1) => `${c.italic(p1)}`)
+    .replace(/__([^_]+)__/g, (_, p1) => `${c.underline(p1)}`)
 }
 
 function createLoadingIndicator(message: string) {
@@ -94,8 +92,11 @@ function createLoadingIndicator(message: string) {
 }
 
 class ConsoleExtended extends Console {
-  log(...messages: string[]): void {
-    super.log(formatLog(...messages))
+  log(...messages: any[]): void {
+    if (typeof messages[0] === 'string')
+      super.log(...messages.map(formatLog))
+    else
+      super.log(...messages)
   }
 
   async loading<T>(message: string, callback: () => Promise<T>): Promise<T> {
