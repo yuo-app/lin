@@ -1,8 +1,5 @@
-import process from 'node:process'
 import { defineCommand } from 'citty'
-import c from 'picocolors'
-import { resolveConfig } from '../config'
-import { console, createLoadingIndicator } from '../utils'
+import { console } from '../utils'
 
 export default defineCommand({
   meta: {

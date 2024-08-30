@@ -2,9 +2,19 @@ import process from 'node:process'
 import type OpenAI from 'openai'
 import { loadConfig } from 'unconfig'
 import { simpleMerge } from '@cross/deepmerge'
-import type { ArgDef } from 'citty'
+import type { ArgDef, StringArgDef } from 'citty'
+import type { DeepRequired } from './utils'
 
 type ChatModel = OpenAI.ChatModel
+type OpenAIOptions = Partial<Pick<OpenAI.ChatCompletionCreateParamsNonStreaming, 'model'
+| 'frequency_penalty'
+| 'logit_bias'
+| 'max_tokens'
+| 'presence_penalty'
+| 'seed'
+| 'service_tier'
+| 'temperature'
+| 'top_p'>>
 
 export const integrations = [
   'i18n',
@@ -24,35 +34,41 @@ export interface Config {
    * project root
    * @default process.cwd()
    */
-  cwd?: string
+  cwd: string
 
   /**
    * the i18n integration used, by default `lin` will try to infer this
    * @default undefined
    */
-  i18n?: Integration
-
-  /**
-   * OpenAI chat model to use
-   * @default gpt-4o-mini
-   */
-  model?: ChatModel
+  i18n: Integration
 
   /**
    * the environment variable that contains the OpenAI token.
    * @default OPENAI_API_TOKEN
    */
-  env?: string
+  env: string
+
+  /**
+   * the OpenAI options, like the model to use
+   */
+  options: OpenAIOptions
 }
 
-export const DEFAULT_CONFIG: Config = {
+export const DEFAULT_CONFIG = {
+  i18n: 'i18n',
   cwd: '',
-  model: 'gpt-4o-mini',
   env: 'OPENAI_API_TOKEN',
-}
+  options: {
+    model: 'gpt-4o-mini',
+    temperature: 0,
+  },
+} satisfies Config
 
 type Args = {
-  [key in keyof Config]-?: ArgDef
+  [key in keyof Config as key extends 'options' ? never : key]: ArgDef
+} & {
+  model: ArgDef
+  temperature: ArgDef
 }
 
 export const commonArgs: Args = {
@@ -67,15 +83,23 @@ export const commonArgs: Args = {
     type: 'string',
     description: 'the i18n integration used',
   },
-  model: {
-    alias: 'm',
-    type: 'string',
-    description: 'OpenAI chat model to use',
-  },
   env: {
     alias: 'e',
     type: 'string',
     description: 'the environment variable that contains the OpenAI token',
+    default: DEFAULT_CONFIG.env,
+  },
+  model: {
+    alias: 'm',
+    type: 'string',
+    description: 'the model to use',
+    default: DEFAULT_CONFIG.options.model,
+  },
+  temperature: {
+    alias: 't',
+    type: 'string',
+    description: 'the temperature to use',
+    default: DEFAULT_CONFIG.options.temperature.toString(),
   },
 }
 
@@ -111,27 +135,43 @@ function checkArg(name: string | undefined, list: readonly string[]) {
     throw new Error(`"\`${name}\`" is invalid, must be one of ${list.join(', ')}`)
 }
 
-function normalizeArgs(args: Config): Partial<Config> {
-  const normalized: Partial<Config> = { ...args } as any
+function normalizeArgs(args: Partial<Args>): Partial<Config> {
+  const normalized: Partial<Args> = { ...args }
 
   Object.entries(commonArgs).forEach(([fullName, def]) => {
     if ('alias' in def) {
-      if (def.alias && normalized[def.alias as keyof Config] !== undefined && normalized[fullName as keyof Config] === undefined) {
-        normalized[fullName as keyof Config] = normalized[def.alias as keyof Config] as any
-        delete normalized[def.alias as keyof Config]
+      const fullKey = fullName as keyof Args
+      const configKey = def.alias as keyof Args
+
+      if (def.alias && normalized[configKey] !== undefined && normalized[fullKey] === undefined) {
+        normalized[fullKey] = normalized[configKey]
+        delete normalized[configKey]
       }
     }
   })
 
-  checkArg(normalized.i18n, integrations)
-  checkArg(normalized.model, models)
+  const config = convertType(normalized)
+  checkArg(config.i18n, integrations)
+  checkArg(config.options?.model, models)
 
-  return normalized
+  return config
+}
+
+function convertType(config: any): Partial<Config> {
+  const { model, temperature, ...rest } = config
+
+  return {
+    ...rest,
+    options: {
+      model,
+      temperature,
+    },
+  }
 }
 
 export async function resolveConfig(
   args: Record<string, any>,
-): Promise<ReturnType<typeof loadConfig<Config>>> {
+): Promise<ReturnType<typeof loadConfig<DeepRequired<Config>>>> {
   const options = normalizeArgs(args)
 
   const { config, sources, dependencies } = await loadConfig<Config>({
@@ -167,12 +207,12 @@ export async function resolveConfig(
   })
 
   return {
-    config: simpleMerge(config, options),
+    config: simpleMerge(config, options) as DeepRequired<Config>,
     sources,
     dependencies,
   }
 }
 
-export function defineConfig(config: Partial<Config>): Config {
+export function defineConfig(config: Partial<Config>): Partial<Config> {
   return config
 }
