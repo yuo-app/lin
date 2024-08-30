@@ -28,7 +28,7 @@ export type DeepRequired<T> = {
 // #endregion
 
 // #region Utils
-export function haveSameShape(obj1: any, obj2: any): boolean {
+export function shapeMatches(obj1: any, obj2: any): boolean {
   if (typeof obj1 !== 'object' || typeof obj2 !== 'object' || obj1 === null || obj2 === null) {
     return false
   }
@@ -46,7 +46,7 @@ export function haveSameShape(obj1: any, obj2: any): boolean {
     }
 
     if (typeof obj1[key] === 'object' && typeof obj2[key] === 'object') {
-      if (!haveSameShape(obj1[key], obj2[key])) {
+      if (!shapeMatches(obj1[key], obj2[key])) {
         return false
       }
     }
