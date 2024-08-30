@@ -27,6 +27,8 @@ export default defineCommand({
 
     const defaultLocale = await fs.readFile(r(`${i18n.default}.json`, i18n), { encoding: 'utf8' })
 
+    // TODO: filter out done locales
+    // TODO: send half-done locales
     for (const locale of i18n.locales.filter(l => l !== i18n.default)) {
       if (!args.force) {
         const localeJson = await fs.readFile(r(`${locale}.json`, i18n), { encoding: 'utf8' })
