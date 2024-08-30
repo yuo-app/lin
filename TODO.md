@@ -1,15 +1,30 @@
 # TODO
 
-- [ ] `translate` command
-  - [x] Base functionality: translates all locales
-  - [x] skip locale json files that are completely translated
-  - [ ] if there is an incomplete local json, then the gpt will add the missing parts (still put everything in the context window)
-  - [ ] Usage with `--manual [key]`: Prompts the user to enter the translation for each key in all the locales that are not yet translated. If a key is specified then all languages are prompted.
-- [ ] `add` command (`lin add <key>`)
-  - [ ] Default usage: Running `lin add <key>` prompts the user to enter the translation for the key in the default language. It is then automatically translated to all the locales and saved in the locale json files.
-  - [ ] If a key already exists, show error and prompt to use `lin translate --manual [key]` instead.
-  - [ ] Usage with `--locale`: Prompts the user to enter the translation for the key in the specified locale.
-  - [ ] Usage with `--manual`: Prompts the user to enter the translation for the key for all the locales.
-- [ ] `convert` command
+## v0.1.0
+
+- [ ] **`translate [...locales]`**: sync all locale json files with the default locale json file.
+  - [x] translates all locales, skip locales that exactly match the default locale
+  - [ ] find missing keys in locales, add placeholder strings, get translations with one gpt request, put translations back to their correct places
+  - [ ] if no locales are provided, then prompt the user to translate them
+  - **options:**
+    - [x] `-f, --force`: force to translate all locales
+
+- [ ] **`add <key> [...text]`**: add a key (or more keys) to the default locale json file, and translate it to all the locales.
+  - [ ] if key already exists, show error and prompt to use
+  - **options:**
+    - [ ] `-l, --locale <locale>`: translate only the specified locale
+    - [ ] `-f, --force`: force to translate the key even if it already exists
+
+- [ ] locales: `all` is every locale, `def` is the default locale, and `en` is a shorthand for `en-**`
+
+- [ ] **`verify`**: check everything is setup correctly.
+
+- [ ] **context window:** provide a way to add extra information to the gpt request
+  - [ ] `context: string` config: this just gets added to the prompt by default
+  - `-w, --with [locale]`
+    - [ ] `string` commonarg: add a locale json to the prompt
+    - [ ] `boolean` commonarg: do not add the context string to the prompt
+
+- [ ] **`convert` command:** convert a project to use i18n by extracting all the strings from the code and adding them to the locale json files.
 - [ ] i18n loader
 - [ ] support for other i18n integrations

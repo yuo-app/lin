@@ -25,6 +25,9 @@ const main = defineCommand({
 
     if (rawArgs.length === 0)
       showUsage(cmd)
+
+    if (args.debug)
+      console.log(args)
   },
 })
 

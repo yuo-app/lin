@@ -52,6 +52,12 @@ export interface Config {
    * the OpenAI options, like the model to use
    */
   options: OpenAIOptions
+
+  /**
+   * DEBUG mode
+   * @default false
+   */
+  debug: boolean
 }
 
 export const DEFAULT_CONFIG = {
@@ -62,6 +68,7 @@ export const DEFAULT_CONFIG = {
     model: 'gpt-4o-mini',
     temperature: 0,
   },
+  debug: false,
 } satisfies Config
 
 type Args = {
@@ -100,6 +107,12 @@ export const commonArgs: Args = {
     type: 'string',
     description: 'the temperature to use',
     default: DEFAULT_CONFIG.options.temperature.toString(),
+  },
+  debug: {
+    alias: 'd',
+    type: 'boolean',
+    description: 'debug mode',
+    default: DEFAULT_CONFIG.debug,
   },
 }
 
