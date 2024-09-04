@@ -2,7 +2,7 @@
   "name": "@yuo/lin",
   "type": "module",
   "version": "0.0.0",
-  "packageManager": "bun@1.1.25",
+  "packageManager": "bun@1.1.26",
   "description": "auto-i18n",
   "license": "MIT",
   "homepage": "https://github.com/yuo-app/lin#readme",
@@ -32,18 +32,19 @@
     "typescript": "^5.5.4"
   },
   "dependencies": {
+    "@clack/prompts": "^0.7.0",
     "@cross/deepmerge": "npm:@jsr/cross__deepmerge",
     "citty": "^0.1.6",
     "dotenv": "^16.4.5",
-    "openai": "^4.56.0",
-    "picocolors": "^1.0.1",
+    "openai": "^4.57.2",
+    "picocolors": "^1.1.0",
     "unconfig": "^0.5.5"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^2.26.0",
+    "@antfu/eslint-config": "^3.2.0",
     "@types/bun": "latest",
-    "bumpp": "^9.5.1",
-    "eslint": "^9.9.0",
+    "bumpp": "^9.5.2",
+    "eslint": "^9.9.1",
     "unbuild": "^2.0.0"
   }
 }
