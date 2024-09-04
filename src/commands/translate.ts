@@ -5,7 +5,7 @@ import OpenAI from 'openai'
 import { defineCommand } from 'citty'
 import { loadI18nConfig } from '../i18n'
 import { resolveConfig } from '../config'
-import { ICONS, console, haveSameShape, r } from '../utils'
+import { ICONS, console, r, shapeMatches } from '../utils'
 
 export default defineCommand({
   meta: {
@@ -31,7 +31,7 @@ export default defineCommand({
       if (!args.force) {
         const localeJson = await fs.readFile(r(`${locale}.json`, i18n), { encoding: 'utf8' })
 
-        if (haveSameShape(JSON.parse(defaultLocale), JSON.parse(localeJson))) {
+        if (shapeMatches(JSON.parse(defaultLocale), JSON.parse(localeJson))) {
           console.log(ICONS.note, `Skipped: **${locale}**`)
           continue
         }

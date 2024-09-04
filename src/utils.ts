@@ -28,7 +28,7 @@ export type DeepRequired<T> = {
 // #endregion
 
 // #region Utils
-export function haveSameShape(obj1: any, obj2: any): boolean {
+export function shapeMatches(obj1: any, obj2: any): boolean {
   if (typeof obj1 !== 'object' || typeof obj2 !== 'object' || obj1 === null || obj2 === null) {
     return false
   }
@@ -46,7 +46,7 @@ export function haveSameShape(obj1: any, obj2: any): boolean {
     }
 
     if (typeof obj1[key] === 'object' && typeof obj2[key] === 'object') {
-      if (!haveSameShape(obj1[key], obj2[key])) {
+      if (!shapeMatches(obj1[key], obj2[key])) {
         return false
       }
     }
@@ -63,17 +63,15 @@ export const ICONS = {
   note: c.blue('ℹ'),
 }
 
-function formatLog(...messages: string[]) {
-  const lines: string[] = []
-  for (const message of messages) {
-    lines.push(message
-      .replace(/`([^`]+)`/g, (_, p1) => `${c.cyan(p1)}`)
-      .replace(/\*\*([^*]+)\*\*/g, (_, p1) => `${c.bold(p1)}`)
-      .replace(/\*([^*]+)\*/g, (_, p1) => `${c.italic(p1)}`)
-      .replace(/__([^_]+)__/g, (_, p1) => `${c.underline(p1)}`),
-    )
-  }
-  return lines.join(' ')
+function formatLog(message: any): string {
+  if (typeof message !== 'string')
+    return message
+
+  return (message as string)
+    .replace(/`([^`]+)`/g, (_, p1) => `${c.cyan(p1)}`)
+    .replace(/\*\*([^*]+)\*\*/g, (_, p1) => `${c.bold(p1)}`)
+    .replace(/\*([^*]+)\*/g, (_, p1) => `${c.italic(p1)}`)
+    .replace(/__([^_]+)__/g, (_, p1) => `${c.underline(p1)}`)
 }
 
 function createLoadingIndicator(message: string) {
@@ -94,8 +92,8 @@ function createLoadingIndicator(message: string) {
 }
 
 class ConsoleExtended extends Console {
-  log(...messages: string[]): void {
-    super.log(formatLog(...messages))
+  log(...messages: any[]): void {
+    super.log(...messages.map(formatLog))
   }
 
   async loading<T>(message: string, callback: () => Promise<T>): Promise<T> {

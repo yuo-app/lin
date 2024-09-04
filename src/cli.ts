@@ -1,4 +1,4 @@
-import { defineCommand, runMain } from 'citty'
+import { defineCommand, runMain, showUsage } from 'citty'
 import { description, name, version } from '../package.json'
 import { console } from './utils'
 import { commands } from './commands'
@@ -19,9 +19,15 @@ const main = defineCommand({
     ...commonArgs,
   },
   subCommands: commands,
-  run({ args }) {
+  run({ args, cmd, rawArgs }) {
     if (args.version)
       console.log(`${name} \`v${version}\``)
+
+    if (rawArgs.length === 0)
+      showUsage(cmd)
+
+    if (args.debug)
+      console.log(args)
   },
 })
 
