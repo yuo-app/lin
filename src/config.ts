@@ -3,7 +3,7 @@ import type OpenAI from 'openai'
 import { loadConfig } from 'unconfig'
 import { simpleMerge } from '@cross/deepmerge'
 import type { ArgDef } from 'citty'
-import type { DeepRequired } from './utils'
+import type { DeepRequired } from './types'
 
 type ChatModel = OpenAI.ChatModel
 type OpenAIOptions = Partial<Pick<OpenAI.ChatCompletionCreateParamsNonStreaming, 'model'

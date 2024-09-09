@@ -3,9 +3,9 @@ import process from 'node:process'
 import fs from 'node:fs/promises'
 import OpenAI from 'openai'
 import { defineCommand } from 'citty'
-import { loadI18nConfig } from '../i18n'
+import { ICONS, console, normalizeLocales, r, shapeMatches } from '../utils'
 import { resolveConfig } from '../config'
-import { ICONS, console, r, shapeMatches } from '../utils'
+import { loadI18nConfig } from '../i18n'
 
 export default defineCommand({
   meta: {
@@ -13,6 +13,12 @@ export default defineCommand({
     description: 'translate locales',
   },
   args: {
+    locales: {
+      alias: 'l',
+      type: 'positional',
+      description: 'the locales to translate',
+      required: false,
+    },
     force: {
       alias: 'f',
       type: 'boolean',
@@ -25,13 +31,21 @@ export default defineCommand({
     const i18n = loadI18nConfig()
     const openai = new OpenAI({ apiKey: process.env[config.env] })
 
-    const defaultLocale = await fs.readFile(r(`${i18n.default}.json`, i18n), { encoding: 'utf8' })
+    const locales = normalizeLocales(args._, i18n)
 
-    for (const locale of i18n.locales.filter(l => l !== i18n.default)) {
+    for (const locale of locales) {
+      if (!i18n.locales.includes(locale))
+        throw new Error(`"${locale}" is not a valid locale`)
+    }
+
+    const localesToCheck = args._.length > 0 ? args._ : i18n.locales.filter(l => l !== i18n.default)
+    const defaultLocaleJson = await fs.readFile(r(`${i18n.default}.json`, i18n), { encoding: 'utf8' })
+
+    for (const locale of localesToCheck) {
       if (!args.force) {
         const localeJson = await fs.readFile(r(`${locale}.json`, i18n), { encoding: 'utf8' })
 
-        if (shapeMatches(JSON.parse(defaultLocale), JSON.parse(localeJson))) {
+        if (shapeMatches(JSON.parse(defaultLocaleJson), JSON.parse(localeJson))) {
           console.log(ICONS.note, `Skipped: **${locale}**`)
           continue
         }
@@ -47,7 +61,7 @@ Your recieve just the input json and return just the translated json.`,
             },
             {
               role: 'user',
-              content: defaultLocale,
+              content: defaultLocaleJson,
             },
           ],
           ...config.options,

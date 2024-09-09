@@ -13,20 +13,6 @@ export function r(file: string, i18n?: I18nConfig) {
 }
 // #endregion
 
-// #region Type utils
-export type DeepReadonly<T> = {
-  readonly [K in keyof T]: keyof T[K] extends never ? T[K] : DeepReadonly<T[K]>
-}
-
-export type DeepPartial<T> = {
-  [K in keyof T]?: keyof T[K] extends never ? T[K] : DeepPartial<T[K]>
-}
-
-export type DeepRequired<T> = {
-  [K in keyof T]-?: keyof T[K] extends never ? T[K] : DeepRequired<T[K]>
-}
-// #endregion
-
 // #region Utils
 export function shapeMatches(obj1: any, obj2: any): boolean {
   if (typeof obj1 !== 'object' || typeof obj2 !== 'object' || obj1 === null || obj2 === null) {
@@ -53,6 +39,27 @@ export function shapeMatches(obj1: any, obj2: any): boolean {
   }
 
   return true
+}
+
+export function normalizeLocales(locales: string[], i18n: I18nConfig): string[] {
+  const normalized: string[] = []
+
+  for (const locale of locales) {
+    if (locale === 'all') {
+      normalized.push(...i18n.locales)
+    }
+    if (locale === 'def') {
+      normalized.push(i18n.default)
+    }
+    else if (locale.includes('-')) {
+      normalized.push(locale)
+    }
+    else {
+      normalized.push(...i18n.locales.filter(l => l.startsWith(locale)))
+    }
+  }
+
+  return normalized
 }
 // #endregion
 
