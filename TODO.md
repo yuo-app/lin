@@ -4,8 +4,7 @@
 
 - [ ] **`translate [...locales]`**: sync all locale json files with the default locale json file.
   - [x] translates all locales, skip locales that exactly match the default locale
-  - [ ] find missing keys in locales, add placeholder strings, get translations with one gpt request, put translations back to their correct places
-  - [ ] if no locales are provided, then prompt the user to translate them
+  - [x] find missing keys in locales, add placeholder strings, get translations with one gpt request, put translations back to their correct places
   - **options:**
     - [x] `-f, --force`: force to translate all locales
 

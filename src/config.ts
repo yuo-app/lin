@@ -220,7 +220,7 @@ export async function resolveConfig(
   })
 
   return {
-    config: simpleMerge(config, options) as DeepRequired<Config>,
+    config: simpleMerge(options, config) as DeepRequired<Config>,
     sources,
     dependencies,
   }
