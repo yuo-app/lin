@@ -6,7 +6,7 @@ export interface I18nConfig {
 
 export function loadI18nConfig(): I18nConfig {
   return {
-    locales: ['en-US', 'hu-HU', 'ko-KR'],
+    locales: ['en-US', 'hu-HU', 'ko-KR', 'zh-CN'],
     default: 'en-US',
     directory: './locales',
   }

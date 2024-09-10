@@ -4,7 +4,7 @@ import fs from 'node:fs/promises'
 import OpenAI from 'openai'
 import { defineCommand } from 'citty'
 import { ICONS, console, findMissingKeys, mergeMissingTranslations, normalizeLocales, r, shapeMatches } from '../utils'
-import { resolveConfig } from '../config'
+import { commonArgs, resolveConfig } from '../config'
 import { loadI18nConfig } from '../i18n'
 
 export default defineCommand({
@@ -25,6 +25,7 @@ export default defineCommand({
       description: 'force to translate all locales',
       default: false,
     },
+    ...commonArgs,
   },
   async run({ args }) {
     const { config } = await resolveConfig(args)
@@ -43,7 +44,7 @@ export default defineCommand({
       }
       catch (error: any) {
         if (error.code === 'ENOENT') {
-          console.log(ICONS.warning, `File not found for locale ${locale}. Creating a new one.`)
+          console.log(ICONS.warning, `File not found for locale **${locale}**. Creating a new one.`)
           localeJson = {}
         }
         else {
@@ -62,9 +63,11 @@ export default defineCommand({
       }
     }
 
-    console.log(ICONS.note, `Found: ${JSON.stringify(missingKeysPerLocale)}`)
+    if (config.debug)
+      console.log(ICONS.note, `Found: ${JSON.stringify(missingKeysPerLocale)}`)
+
     if (Object.keys(missingKeysPerLocale).length > 0) {
-      await console.loading(`Translating missing keys for ${Object.keys(missingKeysPerLocale).join(', ')}`, async () => {
+      await console.loading(`Translating missing keys for ${Object.keys(missingKeysPerLocale).map(l => `**${l}**`).join(', ')}`, async () => {
         const completion = await openai.chat.completions.create({
           messages: [
             {
@@ -87,7 +90,8 @@ export default defineCommand({
         })
 
         const translations = JSON.parse(completion.choices[0].message.content || '{}')
-        console.log(ICONS.note, `Translations: ${JSON.stringify(translations)}`)
+        if (config.debug)
+          console.log(ICONS.note, `Translations: ${JSON.stringify(translations)}`)
 
         for (const [locale, missingTranslations] of Object.entries(translations)) {
           const localeFilePath = r(`${locale}.json`, i18n)
@@ -96,12 +100,8 @@ export default defineCommand({
             existingTranslations = JSON.parse(await fs.readFile(localeFilePath, { encoding: 'utf8' }))
           }
           catch (error: any) {
-            if (error.code === 'ENOENT') {
-              console.log(ICONS.warning, `Creating new file for locale ${locale}`)
-            }
-            else {
+            if (error.code !== 'ENOENT')
               throw error
-            }
           }
 
           const mergedTranslations = mergeMissingTranslations(existingTranslations, missingTranslations)
