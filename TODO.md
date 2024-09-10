@@ -15,7 +15,7 @@
     - [ ] `-l, --locale <locale>`: translate only the specified locale
     - [ ] `-f, --force`: force to translate the key even if it already exists
 
-- [ ] locales: `all` is every locale, `def` is the default locale, and `en` is a shorthand for `en-**`
+- [x] locales: `all` is every locale, `def` is the default locale, and `en` is a shorthand for `en-**`
 
 - [ ] **`verify`**: check everything is setup correctly.
 

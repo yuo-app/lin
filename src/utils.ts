@@ -48,14 +48,21 @@ export function normalizeLocales(locales: string[], i18n: I18nConfig): string[] 
     if (locale === 'all') {
       normalized.push(...i18n.locales)
     }
-    if (locale === 'def') {
+    else if (locale === 'def') {
       normalized.push(i18n.default)
     }
     else if (locale.includes('-')) {
+      if (!i18n.locales.includes(locale))
+        throw new Error(`Invalid locale: ${locale}`)
+
       normalized.push(locale)
     }
     else {
-      normalized.push(...i18n.locales.filter(l => l.startsWith(locale)))
+      const matchingLocales = i18n.locales.filter(l => l.startsWith(locale))
+      if (matchingLocales.length === 0)
+        throw new Error(`Invalid locale: ${locale}`)
+
+      normalized.push(...matchingLocales)
     }
   }
 

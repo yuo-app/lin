@@ -32,13 +32,7 @@ export default defineCommand({
     const openai = new OpenAI({ apiKey: process.env[config.env] })
 
     const locales = normalizeLocales(args._, i18n)
-
-    for (const locale of locales) {
-      if (!i18n.locales.includes(locale))
-        throw new Error(`"${locale}" is not a valid locale`)
-    }
-
-    const localesToCheck = args._.length > 0 ? args._ : i18n.locales.filter(l => l !== i18n.default)
+    const localesToCheck = locales.length > 0 ? locales : i18n.locales.filter(l => l !== i18n.default)
     const defaultLocaleJson = await fs.readFile(r(`${i18n.default}.json`, i18n), { encoding: 'utf8' })
 
     for (const locale of localesToCheck) {
