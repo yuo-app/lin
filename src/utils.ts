@@ -13,20 +13,6 @@ export function r(file: string, i18n?: I18nConfig) {
 }
 // #endregion
 
-// #region Type utils
-export type DeepReadonly<T> = {
-  readonly [K in keyof T]: keyof T[K] extends never ? T[K] : DeepReadonly<T[K]>
-}
-
-export type DeepPartial<T> = {
-  [K in keyof T]?: keyof T[K] extends never ? T[K] : DeepPartial<T[K]>
-}
-
-export type DeepRequired<T> = {
-  [K in keyof T]-?: keyof T[K] extends never ? T[K] : DeepRequired<T[K]>
-}
-// #endregion
-
 // #region Utils
 export function shapeMatches(obj1: any, obj2: any): boolean {
   if (typeof obj1 !== 'object' || typeof obj2 !== 'object' || obj1 === null || obj2 === null) {
@@ -54,11 +40,78 @@ export function shapeMatches(obj1: any, obj2: any): boolean {
 
   return true
 }
+
+export function normalizeLocales(locales: string[], i18n: I18nConfig): string[] {
+  const normalized: string[] = []
+
+  for (const locale of locales) {
+    if (locale === 'all') {
+      normalized.push(...i18n.locales)
+    }
+    else if (locale === 'def') {
+      normalized.push(i18n.default)
+    }
+    else if (locale.includes('-')) {
+      if (!i18n.locales.includes(locale))
+        throw new Error(`Invalid locale: ${locale}`)
+
+      normalized.push(locale)
+    }
+    else {
+      const matchingLocales = i18n.locales.filter(l => l.split('-')[0] === locale)
+      if (matchingLocales.length === 0)
+        throw new Error(`Invalid locale: ${locale}`)
+
+      normalized.push(...matchingLocales)
+    }
+  }
+
+  return normalized
+}
+
+export function findMissingKeys(defaultObj: any, localeObj: any, prefix = ''): any {
+  const missingKeys: Record<string, any> = {}
+
+  for (const key in defaultObj) {
+    const fullKey = prefix ? `${prefix}.${key}` : key
+
+    if (typeof defaultObj[key] === 'object' && defaultObj[key] !== null) {
+      const nestedMissing = findMissingKeys(defaultObj[key], localeObj[key] || {}, fullKey)
+      Object.assign(missingKeys, nestedMissing)
+    }
+    else if (!(key in localeObj)) {
+      missingKeys[fullKey] = defaultObj[key]
+    }
+  }
+
+  return missingKeys
+}
+
+export function mergeMissingTranslations(existingTranslations: any, missingTranslations: any): any {
+  const result = { ...existingTranslations }
+
+  for (const [key, value] of Object.entries(missingTranslations)) {
+    const keys = key.split('.')
+    let current = result
+
+    for (let i = 0; i < keys.length - 1; i++) {
+      if (!(keys[i] in current)) {
+        current[keys[i]] = {}
+      }
+      current = current[keys[i]]
+    }
+
+    current[keys[keys.length - 1]] = value
+  }
+
+  return result
+}
 // #endregion
 
 // #region Console utils
 export const ICONS = {
   success: c.green('✓'),
+  warning: c.yellow('⚠'),
   error: c.red('✗'),
   note: c.blue('ℹ'),
 }

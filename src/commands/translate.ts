@@ -3,9 +3,9 @@ import process from 'node:process'
 import fs from 'node:fs/promises'
 import OpenAI from 'openai'
 import { defineCommand } from 'citty'
+import { ICONS, console, findMissingKeys, mergeMissingTranslations, normalizeLocales, r, shapeMatches } from '../utils'
+import { commonArgs, resolveConfig } from '../config'
 import { loadI18nConfig } from '../i18n'
-import { resolveConfig } from '../config'
-import { ICONS, console, r, shapeMatches } from '../utils'
 
 export default defineCommand({
   meta: {
@@ -13,49 +13,117 @@ export default defineCommand({
     description: 'translate locales',
   },
   args: {
+    locales: {
+      alias: 'l',
+      type: 'positional',
+      description: 'the locales to translate',
+      required: false,
+    },
     force: {
       alias: 'f',
       type: 'boolean',
-      description: 'force to translate all locales',
+      description: 'ignore checks and translate the whole locale json',
       default: false,
     },
+    ...commonArgs,
   },
   async run({ args }) {
     const { config } = await resolveConfig(args)
     const i18n = loadI18nConfig()
     const openai = new OpenAI({ apiKey: process.env[config.env] })
 
-    const defaultLocale = await fs.readFile(r(`${i18n.default}.json`, i18n), { encoding: 'utf8' })
+    const locales = normalizeLocales(args._, i18n)
+    const localesToCheck = locales.length > 0 ? locales : i18n.locales.filter(l => l !== i18n.default)
+    const defaultLocaleJson = JSON.parse(await fs.readFile(r(`${i18n.default}.json`, i18n), { encoding: 'utf8' }))
 
-    for (const locale of i18n.locales.filter(l => l !== i18n.default)) {
-      if (!args.force) {
-        const localeJson = await fs.readFile(r(`${locale}.json`, i18n), { encoding: 'utf8' })
+    const keysToTranslate: Record<string, any> = {}
+    for (const locale of localesToCheck) {
+      if (args.force) {
+        keysToTranslate[locale] = defaultLocaleJson
+        console.log(ICONS.note, `Force translating entire JSON for locale: **${locale}**`)
+      }
+      else {
+        let localeJson
+        try {
+          localeJson = JSON.parse(await fs.readFile(r(`${locale}.json`, i18n), { encoding: 'utf8' }))
+        }
+        catch (error: any) {
+          if (error.code === 'ENOENT') {
+            console.log(ICONS.warning, `File not found for locale **${locale}**. Creating a new one.`)
+            localeJson = {}
+          }
+          else {
+            throw error
+          }
+        }
 
-        if (shapeMatches(JSON.parse(defaultLocale), JSON.parse(localeJson))) {
+        if (shapeMatches(defaultLocaleJson, localeJson)) {
           console.log(ICONS.note, `Skipped: **${locale}**`)
           continue
         }
-      }
 
-      await console.loading(`Translate: **${locale}**`, async () => {
+        const missingKeys = findMissingKeys(defaultLocaleJson, localeJson)
+        if (Object.keys(missingKeys).length > 0) {
+          keysToTranslate[locale] = missingKeys
+        }
+      }
+    }
+
+    if (config.debug)
+      console.log(ICONS.note, `To translate: ${JSON.stringify(keysToTranslate)}`)
+
+    if (Object.keys(keysToTranslate).length > 0) {
+      await console.loading(`Translating ${args.force ? 'entire JSON' : 'missing keys'} for ${Object.keys(keysToTranslate).map(l => `**${l}**`).join(', ')}`, async () => {
         const completion = await openai.chat.completions.create({
           messages: [
             {
               role: 'system',
-              content: `You are a simple api that translates locale jsons from ${i18n.default} to ${locale}.
-Your recieve just the input json and return just the translated json.`,
+              content: `You are a translation API that translates locale JSON files. 
+              For each locale, translate the values from the default locale (${i18n.default}) language to the corresponding languages (denoted by the locale keys). 
+              Return a JSON object where each top key is a locale, and the value is an object containing the translations for that locale.
+              Example input:
+              {"fr-FR": {"title": "Title"}}
+              Example output:
+              {"fr-FR": {"title": "Titre"}}`,
             },
             {
               role: 'user',
-              content: defaultLocale,
+              content: JSON.stringify(keysToTranslate),
             },
           ],
           ...config.options,
           response_format: { type: 'json_object' },
         })
 
-        await fs.writeFile(r(`${locale}.json`, i18n), completion.choices[0].message.content as string, { encoding: 'utf8' })
+        const translations = JSON.parse(completion.choices[0].message.content || '{}')
+        if (config.debug)
+          console.log(ICONS.note, `Translations: ${JSON.stringify(translations)}`)
+
+        for (const [locale, newTranslations] of Object.entries(translations)) {
+          const localeFilePath = r(`${locale}.json`, i18n)
+          let finalTranslations
+
+          if (args.force) {
+            finalTranslations = newTranslations
+          }
+          else {
+            let existingTranslations = {}
+            try {
+              existingTranslations = JSON.parse(await fs.readFile(localeFilePath, { encoding: 'utf8' }))
+            }
+            catch (error: any) {
+              if (error.code !== 'ENOENT')
+                throw error
+            }
+            finalTranslations = mergeMissingTranslations(existingTranslations, newTranslations)
+          }
+
+          await fs.writeFile(localeFilePath, JSON.stringify(finalTranslations, null, 2), { encoding: 'utf8' })
+        }
       })
+    }
+    else {
+      console.log(ICONS.success, 'All locales are up to date.')
     }
   },
 })

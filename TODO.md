@@ -2,10 +2,9 @@
 
 ## v0.1.0
 
-- [ ] **`translate [...locales]`**: sync all locale json files with the default locale json file.
+- [x] **`translate [...locales]`**: sync all locale json files with the default locale json file.
   - [x] translates all locales, skip locales that exactly match the default locale
-  - [ ] find missing keys in locales, add placeholder strings, get translations with one gpt request, put translations back to their correct places
-  - [ ] if no locales are provided, then prompt the user to translate them
+  - [x] find missing keys in locales, add placeholder strings, get translations with one gpt request, put translations back to their correct places
   - **options:**
     - [x] `-f, --force`: force to translate all locales
 
@@ -15,7 +14,7 @@
     - [ ] `-l, --locale <locale>`: translate only the specified locale
     - [ ] `-f, --force`: force to translate the key even if it already exists
 
-- [ ] locales: `all` is every locale, `def` is the default locale, and `en` is a shorthand for `en-**`
+- [x] locales: `all` is every locale, `def` is the default locale, and `en` is a shorthand for `en-**`
 
 - [ ] **`verify`**: check everything is setup correctly.
 
@@ -25,6 +24,9 @@
     - [ ] `string` commonarg: add a locale json to the prompt
     - [ ] `boolean` commonarg: do not add the context string to the prompt
 
-- [ ] **`convert` command:** convert a project to use i18n by extracting all the strings from the code and adding them to the locale json files.
 - [ ] i18n loader
 - [ ] support for other i18n integrations
+
+### v0.2.0
+
+- [ ] **`convert` command:** convert a project to use i18n by extracting all the strings from the code and adding them to the locale json files.
