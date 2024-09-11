@@ -3,7 +3,15 @@ import process from 'node:process'
 import fs from 'node:fs/promises'
 import OpenAI from 'openai'
 import { defineCommand } from 'citty'
-import { ICONS, console, findMissingKeys, mergeMissingTranslations, normalizeLocales, r, shapeMatches } from '../utils'
+import {
+  ICONS,
+  console,
+  findMissingKeys,
+  mergeMissingTranslations,
+  normalizeLocales,
+  r,
+  shapeMatches,
+} from '../utils'
 import { commonArgs, resolveConfig } from '../config'
 import { loadI18nConfig } from '../i18n'
 

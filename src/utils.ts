@@ -106,6 +106,21 @@ export function mergeMissingTranslations(existingTranslations: any, missingTrans
 
   return result
 }
+
+export function setNestedKey(obj: any, key: string, value: any) {
+  const keys = key.split('.')
+  let current = obj
+  keys.forEach((key, index) => {
+    if (!current[key]) {
+      current[key] = {}
+    }
+    if (index === keys.length - 1) {
+      current[key] = value
+    }
+    current = current[key]
+  })
+  return obj
+}
 // #endregion
 
 // #region Console utils

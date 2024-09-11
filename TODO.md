@@ -8,11 +8,14 @@
   - **options:**
     - [x] `-f, --force`: force to translate all locales
 
-- [ ] **`add <key> [...text]`**: add a key (or more keys) to the default locale json file, and translate it to all the locales.
-  - [ ] if key already exists, show error and prompt to use
+- [x] **`add <key> [...text]`**: add a key (or more keys) to the default locale json file, and translate it to all the locales.
+  - [ ] known issue: doesn't create new locale json files if they don't exist
+  - [ ] if key already exists, show error and prompt to use `--force`
   - **options:**
     - [ ] `-l, --locale <locale>`: translate only the specified locale
-    - [ ] `-f, --force`: force to translate the key even if it already exists
+    - [ ] `-f, --force`: force add key overriding existing ones
+
+- [ ] **`del <key>`**: delete a key from all the locales.
 
 - [x] locales: `all` is every locale, `def` is the default locale, and `en` is a shorthand for `en-**`
 
