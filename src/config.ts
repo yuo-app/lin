@@ -177,7 +177,7 @@ function convertType(config: any): Partial<Config> {
     ...rest,
     options: {
       model,
-      temperature,
+      temperature: Number(temperature),
     },
   }
 }
@@ -220,7 +220,7 @@ export async function resolveConfig(
   })
 
   return {
-    config: simpleMerge(options, config) as DeepRequired<Config>,
+    config: simpleMerge(config, options) as DeepRequired<Config>,
     sources,
     dependencies,
   }
