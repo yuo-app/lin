@@ -1,8 +1,8 @@
 import process from 'node:process'
-import type OpenAI from 'openai'
-import { loadConfig } from 'unconfig'
 import { simpleMerge } from '@cross/deepmerge'
+import { loadConfig } from 'unconfig'
 import type { ArgDef } from 'citty'
+import type OpenAI from 'openai'
 import type { DeepRequired } from './types'
 
 type ChatModel = OpenAI.ChatModel

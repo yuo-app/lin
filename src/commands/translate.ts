@@ -1,11 +1,11 @@
-import 'dotenv/config'
-import process from 'node:process'
 import fs from 'node:fs/promises'
-import OpenAI from 'openai'
+import process from 'node:process'
 import { defineCommand } from 'citty'
-import { ICONS, console, findMissingKeys, mergeMissingTranslations, normalizeLocales, r, shapeMatches } from '../utils'
+import OpenAI from 'openai'
 import { commonArgs, resolveConfig } from '../config'
 import { loadI18nConfig } from '../i18n'
+import { console, findMissingKeys, ICONS, mergeMissingTranslations, normalizeLocales, r, shapeMatches } from '../utils'
+import 'dotenv/config'
 
 export default defineCommand({
   meta: {

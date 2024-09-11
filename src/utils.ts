@@ -1,6 +1,6 @@
+import { Console } from 'node:console'
 import path from 'node:path'
 import process from 'node:process'
-import { Console } from 'node:console'
 import c from 'picocolors'
 import type { I18nConfig } from './i18n'
 
@@ -69,14 +69,18 @@ export function normalizeLocales(locales: string[], i18n: I18nConfig): string[] 
   return normalized
 }
 
-export function findMissingKeys(defaultObj: any, localeObj: any, prefix = ''): any {
-  const missingKeys: Record<string, any> = {}
+interface LocaleJson {
+  [key: string]: string | LocaleJson
+}
+
+export function findMissingKeys(defaultObj: LocaleJson, localeObj: LocaleJson, prefix = ''): LocaleJson {
+  const missingKeys: LocaleJson = {}
 
   for (const key in defaultObj) {
     const fullKey = prefix ? `${prefix}.${key}` : key
 
     if (typeof defaultObj[key] === 'object' && defaultObj[key] !== null) {
-      const nestedMissing = findMissingKeys(defaultObj[key], localeObj[key] || {}, fullKey)
+      const nestedMissing = findMissingKeys(defaultObj[key], localeObj[key] as LocaleJson || {}, fullKey)
       Object.assign(missingKeys, nestedMissing)
     }
     else if (!(key in localeObj)) {
@@ -87,7 +91,7 @@ export function findMissingKeys(defaultObj: any, localeObj: any, prefix = ''): a
   return missingKeys
 }
 
-export function mergeMissingTranslations(existingTranslations: any, missingTranslations: any): any {
+export function mergeMissingTranslations(existingTranslations: LocaleJson, missingTranslations: LocaleJson): LocaleJson {
   const result = { ...existingTranslations }
 
   for (const [key, value] of Object.entries(missingTranslations)) {
@@ -98,7 +102,7 @@ export function mergeMissingTranslations(existingTranslations: any, missingTrans
       if (!(keys[i] in current)) {
         current[keys[i]] = {}
       }
-      current = current[keys[i]]
+      current = current[keys[i]] as LocaleJson
     }
 
     current[keys[keys.length - 1]] = value
