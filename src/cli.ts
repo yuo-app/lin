@@ -1,8 +1,8 @@
 import { defineCommand, runMain, showUsage } from 'citty'
 import { description, name, version } from '../package.json'
-import { console } from './utils'
 import { commands } from './commands'
 import { commonArgs, models, resolveConfig } from './config'
+import { console } from './utils'
 
 const main = defineCommand({
   meta: {
