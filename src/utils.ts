@@ -69,7 +69,7 @@ export function normalizeLocales(locales: string[], i18n: I18nConfig): string[] 
   return normalized
 }
 
-interface LocaleJson {
+export interface LocaleJson {
   [key: string]: string | LocaleJson
 }
 
