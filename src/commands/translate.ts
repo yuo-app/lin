@@ -1,19 +1,20 @@
-import 'dotenv/config'
-import process from 'node:process'
 import fs from 'node:fs/promises'
-import OpenAI from 'openai'
+import process from 'node:process'
 import { defineCommand } from 'citty'
+import OpenAI from 'openai'
+import { commonArgs, resolveConfig } from '../config'
+import { loadI18nConfig } from '../i18n'
 import {
-  ICONS,
   console,
   findMissingKeys,
+  ICONS,
+  type LocaleJson,
   mergeMissingTranslations,
   normalizeLocales,
   r,
   shapeMatches,
 } from '../utils'
-import { commonArgs, resolveConfig } from '../config'
-import { loadI18nConfig } from '../i18n'
+import 'dotenv/config'
 
 export default defineCommand({
   meta: {
@@ -103,13 +104,13 @@ export default defineCommand({
           response_format: { type: 'json_object' },
         })
 
-        const translations = JSON.parse(completion.choices[0].message.content || '{}')
+        const translations = JSON.parse(completion.choices[0].message.content || '{}') as Record<string, LocaleJson>
         if (config.debug)
           console.log(ICONS.note, `Translations: ${JSON.stringify(translations)}`)
 
         for (const [locale, newTranslations] of Object.entries(translations)) {
           const localeFilePath = r(`${locale}.json`, i18n)
-          let finalTranslations
+          let finalTranslations: LocaleJson
 
           if (args.force) {
             finalTranslations = newTranslations
