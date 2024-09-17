@@ -1,8 +1,8 @@
+import type { I18nConfig } from './i18n'
 import { Console } from 'node:console'
 import path from 'node:path'
 import process from 'node:process'
 import c from 'picocolors'
-import type { I18nConfig } from './i18n'
 
 // #region Path utils
 const cwd = process.env.INIT_CWD || process.cwd()

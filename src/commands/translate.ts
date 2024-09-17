@@ -14,7 +14,6 @@ import {
   r,
   shapeMatches,
 } from '../utils'
-import 'dotenv/config'
 
 export default defineCommand({
   meta: {
@@ -23,7 +22,6 @@ export default defineCommand({
   },
   args: {
     locales: {
-      alias: 'l',
       type: 'positional',
       description: 'the locales to translate',
       required: false,
@@ -88,12 +86,12 @@ export default defineCommand({
             {
               role: 'system',
               content: `You are a translation API that translates locale JSON files. 
-              For each locale, translate the values from the default locale (${i18n.default}) language to the corresponding languages (denoted by the locale keys). 
-              Return a JSON object where each top key is a locale, and the value is an object containing the translations for that locale.
-              Example input:
-              {"fr-FR": {"title": "Title"}}
-              Example output:
-              {"fr-FR": {"title": "Titre"}}`,
+For each locale, translate the values from the default locale (${i18n.default}) language to the corresponding languages (denoted by the locale keys). 
+Return a JSON object where each top key is a locale, and the value is an object containing the translations for that locale.
+Example input:
+{"fr-FR": {"title": "Title"}}
+Example output:
+{"fr-FR": {"title": "Titre"}}`,
             },
             {
               role: 'user',

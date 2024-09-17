@@ -8,8 +8,9 @@
   - **options:**
     - [x] `-f, --force`: force to translate all locales
 
-- [x] **`add <key> [...text]`**: add a key (or more keys) to the default locale json file, and translate it to all the locales.
+- [x] **`add <key> [...text]`**: add a key to the default locale json file, and translate it to all the locales.
   - [ ] known issue: doesn't create new locale json files if they don't exist
+  - [ ] USE THE SAME PROMPT AS `translate`
   - [ ] if key already exists, show error and prompt to use `--force`
   - **options:**
     - [ ] `-l, --locale <locale>`: translate only the specified locale
