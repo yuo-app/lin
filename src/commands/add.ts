@@ -1,4 +1,4 @@
-import fs from 'node:fs/promises'
+import fs from 'node:fs'
 import process from 'node:process'
 import { text } from '@clack/prompts'
 import { defineCommand } from 'citty'
@@ -78,7 +78,7 @@ export default defineCommand({
     for (const locale of localesToCheck) {
       let localeJson
       try {
-        localeJson = JSON.parse(await fs.readFile(r(`${locale}.json`, i18n), { encoding: 'utf8' }))
+        localeJson = JSON.parse(fs.readFileSync(r(`${locale}.json`, i18n), { encoding: 'utf8' }))
       }
       catch (error: any) {
         if (error.code === 'ENOENT') {
@@ -127,7 +127,7 @@ export default defineCommand({
 
           let existingTranslations = {}
           try {
-            existingTranslations = JSON.parse(await fs.readFile(localeFilePath, { encoding: 'utf8' }))
+            existingTranslations = JSON.parse(fs.readFileSync(localeFilePath, { encoding: 'utf8' }))
           }
           catch (error: any) {
             if (error.code !== 'ENOENT')
@@ -136,7 +136,7 @@ export default defineCommand({
 
           const finalTranslations = mergeMissingTranslations(existingTranslations, newTranslations)
 
-          await fs.writeFile(localeFilePath, JSON.stringify(finalTranslations, null, 2), { encoding: 'utf8' })
+          fs.writeFileSync(localeFilePath, JSON.stringify(finalTranslations, null, 2), { encoding: 'utf8' })
         }
       })
     }
