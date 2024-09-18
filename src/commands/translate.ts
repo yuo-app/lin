@@ -1,4 +1,4 @@
-import fs from 'node:fs/promises'
+import fs from 'node:fs'
 import process from 'node:process'
 import { defineCommand } from 'citty'
 import OpenAI from 'openai'
@@ -42,7 +42,7 @@ export default defineCommand({
 
     const locales = normalizeLocales(args._, i18n)
     const localesToCheck = locales.length > 0 ? locales : i18n.locales.filter(l => l !== i18n.default)
-    const defaultLocaleJson = JSON.parse(await fs.readFile(r(`${i18n.default}.json`, i18n), { encoding: 'utf8' }))
+    const defaultLocaleJson = JSON.parse(fs.readFileSync(r(`${i18n.default}.json`, i18n), { encoding: 'utf8' }))
 
     const keysToTranslate: Record<string, any> = {}
     for (const locale of localesToCheck) {
@@ -53,7 +53,7 @@ export default defineCommand({
       else {
         let localeJson
         try {
-          localeJson = JSON.parse(await fs.readFile(r(`${locale}.json`, i18n), { encoding: 'utf8' }))
+          localeJson = JSON.parse(fs.readFileSync(r(`${locale}.json`, i18n), { encoding: 'utf8' }))
         }
         catch (error: any) {
           if (error.code === 'ENOENT') {
@@ -97,7 +97,7 @@ export default defineCommand({
           else {
             let existingTranslations = {}
             try {
-              existingTranslations = JSON.parse(await fs.readFile(localeFilePath, { encoding: 'utf8' }))
+              existingTranslations = JSON.parse(fs.readFileSync(localeFilePath, { encoding: 'utf8' }))
             }
             catch (error: any) {
               if (error.code !== 'ENOENT')
@@ -106,7 +106,7 @@ export default defineCommand({
             finalTranslations = mergeMissingTranslations(existingTranslations, newTranslations)
           }
 
-          await fs.writeFile(localeFilePath, JSON.stringify(finalTranslations, null, 2), { encoding: 'utf8' })
+          fs.writeFileSync(localeFilePath, JSON.stringify(finalTranslations, null, 2), { encoding: 'utf8' })
         }
       })
     }
