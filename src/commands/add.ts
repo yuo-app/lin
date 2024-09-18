@@ -90,7 +90,7 @@ export default defineCommand({
         }
       }
 
-      if (findNestedKey(localeJson, args.key) !== undefined) {
+      if (findNestedKey(localeJson, args.key).value !== undefined) {
         if (args.force) {
           toOverwrite.push(locale)
         }

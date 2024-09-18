@@ -120,15 +120,67 @@ export function mergeMissingTranslations(existingTranslations: LocaleJson, missi
   return result
 }
 
-export function findNestedKey(obj: any, key: string) {
-  const keys = key.split('.')
-  let current = obj
-  for (const key of keys) {
-    if (!(key in current))
-      return undefined
-    current = current[key]
+// export function findNestedKey(obj: any, key: string) {
+//   const keys = key.split('.')
+//   let current = obj
+//   for (const key of keys) {
+//     if (!(key in current))
+//       return undefined
+//     current = current[key]
+//   }
+//   return current
+// }
+
+type Primitive = string | number | boolean | null | undefined
+
+type NestedKeyOf<T> = T extends Primitive
+  ? never
+  : T extends any[]
+    ? never
+    : {
+        [K in keyof T & (string | number)]: K extends string | number
+          ? `${K}` | `${K}.${NestedKeyOf<T[K]>}`
+          : never;
+      }[keyof T & (string | number)]
+
+type NestedValueOf<T, K extends string> = K extends keyof T
+  ? T[K]
+  : K extends `${infer F}.${infer R}`
+    ? F extends keyof T
+      ? NestedValueOf<T[F], R>
+      : never
+    : never
+
+export function findNestedKey<T extends Record<string | number, any>, K extends NestedKeyOf<T>>(
+  obj: T,
+  key: K,
+) {
+  const keys = key.split('.').map(k => !Number.isNaN(Number(k)) ? Number(k) : k)
+  let current: any = obj
+  const parents: any[] = []
+
+  for (let i = 0; i < keys.length - 1; i++) {
+    const k = keys[i]
+    if (!(k in current)) {
+      current[k] = typeof keys[i + 1] === 'number' ? [] : {}
+    }
+    parents.push(current)
+    current = current[k]
   }
-  return current
+
+  const lastKey = keys[keys.length - 1]
+
+  return {
+    value: current[lastKey] as NestedValueOf<T, K>,
+    set: (newValue: NestedValueOf<T, K>) => {
+      current[lastKey] = newValue
+      return obj
+    },
+    delete: () => {
+      delete current[lastKey]
+      return obj
+    },
+  }
 }
 
 export async function translateKeys(keysToTranslate: Record<string, LocaleJson>, config: DeepRequired<Config>, i18n: I18nConfig, openai: OpenAI) {
