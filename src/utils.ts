@@ -131,38 +131,23 @@ export function mergeMissingTranslations(existingTranslations: LocaleJson, missi
 //   return current
 // }
 
-type Primitive = string | number | boolean | null | undefined
-
-type NestedKeyOf<T> = T extends Primitive
-  ? never
-  : T extends any[]
-    ? never
-    : {
-        [K in keyof T & (string | number)]: K extends string | number
-          ? `${K}` | `${K}.${NestedKeyOf<T[K]>}`
-          : never;
-      }[keyof T & (string | number)]
-
-type NestedValueOf<T, K extends string> = K extends keyof T
-  ? T[K]
-  : K extends `${infer F}.${infer R}`
-    ? F extends keyof T
-      ? NestedValueOf<T[F], R>
-      : never
-    : never
-
-export function findNestedKey<T extends Record<string | number, any>, K extends NestedKeyOf<T>>(
-  obj: T,
-  key: K,
-) {
-  const keys = key.split('.').map(k => !Number.isNaN(Number(k)) ? Number(k) : k)
-  let current: any = obj
+export function findNestedKey<T extends Record<string, infer V>>(obj: T, key: string) {
+  const keys = key.split('.')
+  let current = obj
   const parents: any[] = []
 
   for (let i = 0; i < keys.length - 1; i++) {
     const k = keys[i]
     if (!(k in current)) {
-      current[k] = typeof keys[i + 1] === 'number' ? [] : {}
+      return {
+        value: undefined,
+        set: () => {
+          throw new Error('Cannot set value. Parent object does not exist.')
+        },
+        delete: () => {
+          throw new Error('Cannot delete value. Parent object does not exist.')
+        },
+      }
     }
     parents.push(current)
     current = current[k]
@@ -171,8 +156,8 @@ export function findNestedKey<T extends Record<string | number, any>, K extends 
   const lastKey = keys[keys.length - 1]
 
   return {
-    value: current[lastKey] as NestedValueOf<T, K>,
-    set: (newValue: NestedValueOf<T, K>) => {
+    value: current[lastKey],
+    set: (newValue: any) => {
       current[lastKey] = newValue
       return obj
     },
