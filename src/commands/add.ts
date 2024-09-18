@@ -6,8 +6,14 @@ import OpenAI from 'openai'
 import { commonArgs, resolveConfig } from '../config'
 import { loadI18nConfig } from '../i18n'
 import {
+  console,
+  findNestedKey,
+  ICONS,
+  type LocaleJson,
+  mergeMissingTranslations,
+  normalizeLocales,
   r,
-  setNestedKey,
+  translateKeys,
 } from '../utils'
 
 export default defineCommand({
@@ -44,6 +50,7 @@ export default defineCommand({
   async run({ args }) {
     const { config } = await resolveConfig(args)
     const i18n = loadI18nConfig()
+    const openai = new OpenAI({ apiKey: process.env[config.env] })
 
     args._.shift() // remove the key
     let prompt: string | symbol
@@ -61,46 +68,80 @@ export default defineCommand({
       prompt = args._.join(' ')
     }
 
-    for (const locale of i18n.locales) {
-      const localeFilePath = r(`${locale}.json`, i18n)
-      const localeJson = JSON.parse(await fs.readFile(localeFilePath, { encoding: 'utf8' }))
-      let translation = prompt
+    let locales = typeof args.locale === 'string' ? [args.locale] : args.locale || []
+    locales = normalizeLocales(locales, i18n)
+    const localesToCheck = locales.length > 0 ? locales : i18n.locales
 
-      const openai = new OpenAI({ apiKey: process.env[config.env] })
-      if (locale !== i18n.default) {
-        const completion = await openai.chat.completions.create({
-          messages: [
-            {
-              role: 'system',
-              content: `You are a simple translator API that translates text from ${i18n.default} to ${locale}.
-You are given a key which provides important context, and the text to translate.
-Return a JSON object with just the translated text, so omit the key.`,
-            },
-            {
-              role: 'user',
-              content: `{"key": "${args.key}", "text": "${prompt}"}`,
-            },
-          ],
-          ...config.options,
-          response_format: { type: 'json_object' },
-        })
-
-        let content
-        try {
-          content = JSON.parse(completion.choices[0].message.content || '{}').text
+    const keysToTranslate: Record<string, LocaleJson> = {}
+    const keysToTranslateAndDefault: Record<string, LocaleJson> = {}
+    const toOverwrite: string[] = []
+    for (const locale of localesToCheck) {
+      let localeJson
+      try {
+        localeJson = JSON.parse(await fs.readFile(r(`${locale}.json`, i18n), { encoding: 'utf8' }))
+      }
+      catch (error: any) {
+        if (error.code === 'ENOENT') {
+          console.log(ICONS.warning, `File not found for locale **${locale}**. Creating a new one.`)
+          localeJson = {}
         }
-        catch {
-          throw new Error('Error while translating text')
+        else {
+          throw error
         }
-
-        if (typeof content !== 'string')
-          throw new Error('Error while translating text')
-
-        translation = content
       }
 
-      setNestedKey(localeJson, args.key, translation)
-      await fs.writeFile(localeFilePath, JSON.stringify(localeJson, null, 2), { encoding: 'utf8' })
+      if (findNestedKey(localeJson, args.key) !== undefined) {
+        if (args.force) {
+          toOverwrite.push(locale)
+        }
+        else {
+          console.log(ICONS.note, `Skipped: **${locale}**`)
+          continue
+        }
+      }
+
+      if (locale !== i18n.default)
+        keysToTranslate[locale] = { [args.key]: prompt }
+      keysToTranslateAndDefault[locale] = { [args.key]: prompt }
+    }
+
+    if (toOverwrite.length > 0)
+      console.log(ICONS.note, `Overwriting translation for locale${toOverwrite.length > 1 ? 's' : ''}: ${toOverwrite.map(l => `**${l}**`).join(', ')}`)
+
+    if (config.debug)
+      console.log(ICONS.note, `To translate: ${JSON.stringify(keysToTranslate)}`)
+
+    if (Object.keys(keysToTranslateAndDefault).length > 0) {
+      await console.loading(`Adding \`${args.key}\` to ${Object.keys(keysToTranslateAndDefault).map(l => `**${l}**`).join(', ')}`, async () => {
+        const translations = Object.keys(keysToTranslate).length > 0
+          ? await translateKeys(keysToTranslate, config, i18n, openai)
+          : {}
+
+        translations[i18n.default] = keysToTranslateAndDefault[i18n.default]
+
+        if (config.debug)
+          console.log(ICONS.note, `Translations: ${JSON.stringify(translations)}`)
+
+        for (const [locale, newTranslations] of Object.entries(translations)) {
+          const localeFilePath = r(`${locale}.json`, i18n)
+
+          let existingTranslations = {}
+          try {
+            existingTranslations = JSON.parse(await fs.readFile(localeFilePath, { encoding: 'utf8' }))
+          }
+          catch (error: any) {
+            if (error.code !== 'ENOENT')
+              throw error
+          }
+
+          const finalTranslations = mergeMissingTranslations(existingTranslations, newTranslations)
+
+          await fs.writeFile(localeFilePath, JSON.stringify(finalTranslations, null, 2), { encoding: 'utf8' })
+        }
+      })
+    }
+    else {
+      console.log(ICONS.success, 'All locales are up to date.')
     }
   },
 })

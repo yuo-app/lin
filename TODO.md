@@ -9,18 +9,21 @@
     - [x] `-f, --force`: force to translate all locales
 
 - [x] **`add <key> [...text]`**: add a key to the default locale json file, and translate it to all the locales.
-  - [ ] known issue: doesn't create new locale json files if they don't exist
-  - [ ] USE THE SAME PROMPT AS `translate`
-  - [ ] if key already exists, show error and prompt to use `--force`
+  - [x] known issue: doesn't create new locale json files if they don't exist
+  - [x] USE THE SAME PROMPT AS `translate`
   - **options:**
-    - [ ] `-l, --locale <locale>`: translate only the specified locale
-    - [ ] `-f, --force`: force add key overriding existing ones
+    - [x] `-l, --locale <locale>`: translate only the specified locale
+    - [x] `-f, --force`: force add key overriding existing ones
 
 - [ ] **`del <key>`**: delete a key from all the locales.
 
 - [x] locales: `all` is every locale, `def` is the default locale, and `en` is a shorthand for `en-**`
 
+- [ ] `-v, --verbose`: add and translate should show the keys that were translated and added
+
 - [ ] **`verify`**: check everything is setup correctly.
+
+- [ ] **`tidy`**: reorder locale json files alphabetically or to the default locale json (ordering can get messed up when using `add`), it can also be a quick way to check if all locals have the same shape (or the translate command is needed)
 
 - [ ] **context window:** provide a way to add extra information to the gpt request
   - [ ] `context: string` config: this just gets added to the prompt by default

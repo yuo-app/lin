@@ -1,4 +1,7 @@
+import type OpenAI from 'openai'
+import type { Config } from './config'
 import type { I18nConfig } from './i18n'
+import type { DeepRequired } from './types'
 import { Console } from 'node:console'
 import path from 'node:path'
 import process from 'node:process'
@@ -92,6 +95,12 @@ export function findMissingKeys(defaultObj: LocaleJson, localeObj: LocaleJson, p
 }
 
 export function mergeMissingTranslations(existingTranslations: LocaleJson, missingTranslations: LocaleJson): LocaleJson {
+  if (existingTranslations === undefined)
+    return missingTranslations
+
+  if (missingTranslations === undefined)
+    return existingTranslations
+
   const result = { ...existingTranslations }
 
   for (const [key, value] of Object.entries(missingTranslations)) {
@@ -111,19 +120,39 @@ export function mergeMissingTranslations(existingTranslations: LocaleJson, missi
   return result
 }
 
-export function setNestedKey(obj: any, key: string, value: any) {
+export function findNestedKey(obj: any, key: string) {
   const keys = key.split('.')
   let current = obj
-  keys.forEach((key, index) => {
-    if (!current[key]) {
-      current[key] = {}
-    }
-    if (index === keys.length - 1) {
-      current[key] = value
-    }
+  for (const key of keys) {
+    if (!(key in current))
+      return undefined
     current = current[key]
+  }
+  return current
+}
+
+export async function translateKeys(keysToTranslate: Record<string, LocaleJson>, config: DeepRequired<Config>, i18n: I18nConfig, openai: OpenAI) {
+  const completion = await openai.chat.completions.create({
+    messages: [
+      {
+        role: 'system',
+        content: `You are a translation API that translates locale JSON files. 
+For each locale, translate the values from the default locale (${i18n.default}) language to the corresponding languages (denoted by the locale keys). 
+Return a JSON object where each top key is a locale, and the value is an object containing the translations for that locale.
+Example input:
+{"fr-FR": {"title": "Title"}}
+Example output:
+{"fr-FR": {"title": "Titre"}}`,
+      },
+      {
+        role: 'user',
+        content: JSON.stringify(keysToTranslate),
+      },
+    ],
+    ...config.options,
+    response_format: { type: 'json_object' },
   })
-  return obj
+  return JSON.parse(completion.choices[0].message.content || '{}') as Record<string, LocaleJson>
 }
 // #endregion
 
