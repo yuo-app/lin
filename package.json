@@ -2,7 +2,7 @@
   "name": "@yuo-app/lin",
   "type": "module",
   "version": "0.0.0",
-  "packageManager": "bun@1.1.27",
+  "packageManager": "bun@1.1.28",
   "description": "auto-i18n",
   "license": "MIT",
   "homepage": "https://github.com/yuo-app/lin#readme",
@@ -36,7 +36,7 @@
     "@cross/deepmerge": "npm:@jsr/cross__deepmerge",
     "citty": "^0.1.6",
     "dotenv": "^16.4.5",
-    "openai": "^4.61.1",
+    "openai": "^4.62.1",
     "picocolors": "^1.1.0",
     "unconfig": "^0.5.5"
   },
