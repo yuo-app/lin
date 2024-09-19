@@ -131,23 +131,46 @@ export function mergeMissingTranslations(existingTranslations: LocaleJson, missi
 //   return current
 // }
 
-export function findNestedKey<T extends Record<string, infer V>>(obj: T, key: string) {
-  const keys = key.split('.')
-  let current = obj
+type Primitive = string | number | boolean | null | undefined
+
+type NestedKeyOf<T> = T extends Primitive
+  ? never
+  : T extends any[]
+    ? never
+    : {
+        [K in keyof T & (string | number)]: K extends string | number
+          ? `${K}` | `${K}.${NestedKeyOf<T[K]>}`
+          : never;
+      }[keyof T & (string | number)]
+
+type NestedValueOf<T, K extends string> = K extends keyof T
+  ? T[K]
+  : K extends `${infer F}.${infer R}`
+    ? F extends keyof T
+      ? NestedValueOf<T[F], R>
+      : never
+    : never
+
+type DeleteType<T, K extends string> = K extends keyof T
+  ? Omit<T, K>
+  : K extends `${infer F}.${infer R}`
+    ? F extends keyof T
+      ? Omit<T, F> & Record<F, DeleteType<T[F], R>>
+      : T
+    : T
+
+export function findNestedKey<T extends Record<string | number, any>, K extends NestedKeyOf<T>>(
+  obj: T,
+  key: K,
+) {
+  const keys = key.split('.').map(k => !Number.isNaN(Number(k)) ? Number(k) : k)
+  let current: any = obj
   const parents: any[] = []
 
   for (let i = 0; i < keys.length - 1; i++) {
     const k = keys[i]
     if (!(k in current)) {
-      return {
-        value: undefined,
-        set: () => {
-          throw new Error('Cannot set value. Parent object does not exist.')
-        },
-        delete: () => {
-          throw new Error('Cannot delete value. Parent object does not exist.')
-        },
-      }
+      current[k] = typeof keys[i + 1] === 'number' ? [] : {}
     }
     parents.push(current)
     current = current[k]
@@ -156,17 +179,30 @@ export function findNestedKey<T extends Record<string, infer V>>(obj: T, key: st
   const lastKey = keys[keys.length - 1]
 
   return {
-    value: current[lastKey],
-    set: (newValue: any) => {
-      current[lastKey] = newValue
-      return obj
-    },
-    delete: () => {
+    value: current[lastKey] as NestedValueOf<T, K>,
+    delete: (): DeleteType<T, K> => {
       delete current[lastKey]
-      return obj
+      return obj as DeleteType<T, K>
     },
   }
 }
+
+const obj = {
+  error: {
+    500: {
+      title: 'Internal Server Error',
+      message: 'Something went wrong',
+    },
+    404: {
+      title: 'Not Found',
+    },
+    title: 'error title',
+  },
+}
+
+const before = findNestedKey(obj, 'error.500')
+const after = before.delete()
+const test = findNestedKey(after, 'error.500') // error
 
 export async function translateKeys(keysToTranslate: Record<string, LocaleJson>, config: DeepRequired<Config>, i18n: I18nConfig, openai: OpenAI) {
   const completion = await openai.chat.completions.create({

@@ -38,7 +38,7 @@ export default defineCommand({
     const localesToCheck = locales.length > 0 ? locales : i18n.locales
 
     for (const locale of localesToCheck) {
-      const localeJson = JSON.parse(fs.readFileSync(r(`${locale}.json`, i18n), { encoding: 'utf8' }))
+      const localeJson = JSON.parse(fs.readFileSync(r(`${locale}.json`, i18n), { encoding: 'utf8' })) as LocaleJson
 
       const nestedKey = findNestedKey(localeJson, args.key)
       if (nestedKey.value !== undefined) {
