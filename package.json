@@ -29,7 +29,7 @@
     "release": "bumpp && npm publish --access public"
   },
   "peerDependencies": {
-    "typescript": "^5.5.4"
+    "typescript": "^5.6.2"
   },
   "dependencies": {
     "@clack/prompts": "^0.7.0",
