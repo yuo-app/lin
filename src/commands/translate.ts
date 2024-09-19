@@ -7,6 +7,7 @@ import { loadI18nConfig } from '../i18n'
 import {
   console,
   findMissingKeys,
+  getWithLocales,
   ICONS,
   type LocaleJson,
   mergeMissingTranslations,
@@ -22,7 +23,7 @@ export default defineCommand({
     description: 'translate locales',
   },
   args: {
-    locales: {
+    locale: {
       type: 'positional',
       description: 'the locales to translate',
       required: false,
@@ -32,6 +33,11 @@ export default defineCommand({
       type: 'boolean',
       description: 'ignore checks and translate the whole locale json',
       default: false,
+    },
+    with: {
+      alias: 'w',
+      type: 'string',
+      description: 'add a locale json to the context window',
     },
     ...commonArgs,
   },
@@ -43,6 +49,15 @@ export default defineCommand({
     const locales = normalizeLocales(args._, i18n)
     const localesToCheck = locales.length > 0 ? locales : i18n.locales.filter(l => l !== i18n.default)
     const defaultLocaleJson = JSON.parse(fs.readFileSync(r(`${i18n.default}.json`, i18n), { encoding: 'utf8' }))
+
+    const { withLocales, includeContext } = getWithLocales(args, i18n)
+    const withLocaleJsons: Record<string, LocaleJson> = {}
+    for (const locale of withLocales) {
+      withLocaleJsons[locale] = JSON.parse(fs.readFileSync(r(`${locale}.json`, i18n), { encoding: 'utf8' }))
+    }
+
+    if (withLocales.length > 0)
+      console.log(ICONS.note, `With: ${withLocales.map(l => `**${l}**`).join(', ')}`)
 
     const keysToTranslate: Record<string, any> = {}
     for (const locale of localesToCheck) {
@@ -77,14 +92,14 @@ export default defineCommand({
       }
     }
 
-    if (config.debug)
+    if (args.debug)
       console.log(ICONS.note, `To translate: ${JSON.stringify(keysToTranslate)}`)
 
     if (Object.keys(keysToTranslate).length > 0) {
       await console.loading(`Translating ${args.force ? 'entire JSON' : 'missing keys'} for ${Object.keys(keysToTranslate).map(l => `**${l}**`).join(', ')}`, async () => {
-        const translations = await translateKeys(keysToTranslate, config, i18n, openai)
+        const translations = await translateKeys(keysToTranslate, config, i18n, openai, withLocaleJsons, includeContext)
 
-        if (config.debug)
+        if (args.debug)
           console.log(ICONS.note, `Translations: ${JSON.stringify(translations)}`)
 
         for (const [locale, newTranslations] of Object.entries(translations)) {

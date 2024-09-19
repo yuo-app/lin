@@ -2,6 +2,7 @@ export interface I18nConfig {
   locales: string[]
   default: string
   directory: string
+  context?: string
 }
 
 export function loadI18nConfig(): I18nConfig {
