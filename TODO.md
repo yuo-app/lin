@@ -15,7 +15,8 @@
     - [x] `-l, --locale <locale>`: translate only the specified locale
     - [x] `-f, --force`: force add key overriding existing ones
 
-- [ ] **`del <key>`**: delete a key from all the locales.
+- [x] **`del <...keys>`**: delete keys from locales.
+  - [x] `-l, --locale <locale>`: delete only from the specified locale
 
 - [x] locales: `all` is every locale, `def` is the default locale, and `en` is a shorthand for `en-**`
 

@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import { defineCommand } from 'citty'
-import { commonArgs, resolveConfig } from '../config'
+import { commonArgs } from '../config'
 import { loadI18nConfig } from '../i18n'
 import {
   console,
@@ -14,12 +14,12 @@ import {
 export default defineCommand({
   meta: {
     name: 'del',
-    description: 'remove a key from every locale',
+    description: 'remove one or more keys from every locale',
   },
   args: {
     key: {
       type: 'positional',
-      description: 'the keys to remove',
+      description: 'the keys to remove (comma-separated)',
       required: true,
       valueHint: 'a.b.c',
     },
@@ -37,22 +37,41 @@ export default defineCommand({
     locales = normalizeLocales(locales, i18n)
     const localesToCheck = locales.length > 0 ? locales : i18n.locales
 
-    const deletedLocales: string[] = []
+    const keys = args._
+    const deletedKeysByLocale: Record<string, string[]> = {}
+
     for (const locale of localesToCheck) {
       const localeJson = JSON.parse(fs.readFileSync(r(`${locale}.json`, i18n), { encoding: 'utf8' })) as LocaleJson
 
-      const nestedKey = findNestedKey(localeJson, args.key)
-      if (nestedKey.value !== undefined) {
-        nestedKey.delete()
-        deletedLocales.push(locale)
-        fs.writeFileSync(r(`${locale}.json`, i18n), JSON.stringify(localeJson, null, 2), { encoding: 'utf8' })
-      }
-      else {
-        console.log(ICONS.note, `Skipped: **${locale}** *(key not found)*`)
+      for (const key of keys) {
+        const nestedKey = findNestedKey(localeJson, key.trim())
+        if (nestedKey.value !== undefined) {
+          nestedKey.delete()
+
+          if (!deletedKeysByLocale[locale])
+            deletedKeysByLocale[locale] = []
+
+          deletedKeysByLocale[locale].push(key)
+          fs.writeFileSync(r(`${locale}.json`, i18n), JSON.stringify(localeJson, null, 2), { encoding: 'utf8' })
+        }
+        else {
+          console.log(ICONS.note, `Skipped: **${locale}** *(key \`${key}\` not found)*`)
+        }
       }
     }
 
-    if (deletedLocales.length > 0)
-      console.log(ICONS.note, `Deleted key \`${args.key}\` from ${deletedLocales.map(l => `**${l}**`).join(', ')}`)
+    const deletedLocalesByKey: Record<string, string[]> = {}
+
+    for (const locale in deletedKeysByLocale) {
+      for (const key of deletedKeysByLocale[locale]) {
+        if (!deletedLocalesByKey[key])
+          deletedLocalesByKey[key] = []
+        deletedLocalesByKey[key].push(locale)
+      }
+    }
+
+    for (const key of Object.keys(deletedLocalesByKey)) {
+      console.log(ICONS.success, `Deleted key \`${key}\` from ${deletedLocalesByKey[key].map(l => `**${l}**`).join(', ')}`)
+    }
   },
 })
