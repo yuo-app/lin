@@ -19,7 +19,7 @@ export default defineCommand({
   args: {
     key: {
       type: 'positional',
-      description: 'the key to remove',
+      description: 'the keys to remove',
       required: true,
       valueHint: 'a.b.c',
     },
@@ -37,18 +37,22 @@ export default defineCommand({
     locales = normalizeLocales(locales, i18n)
     const localesToCheck = locales.length > 0 ? locales : i18n.locales
 
+    const deletedLocales: string[] = []
     for (const locale of localesToCheck) {
       const localeJson = JSON.parse(fs.readFileSync(r(`${locale}.json`, i18n), { encoding: 'utf8' })) as LocaleJson
 
       const nestedKey = findNestedKey(localeJson, args.key)
       if (nestedKey.value !== undefined) {
         nestedKey.delete()
-        console.log(ICONS.note, `Deleted key \`${args.key}\` from **${locale}**`)
+        deletedLocales.push(locale)
         fs.writeFileSync(r(`${locale}.json`, i18n), JSON.stringify(localeJson, null, 2), { encoding: 'utf8' })
       }
       else {
         console.log(ICONS.note, `Skipped: **${locale}** *(key not found)*`)
       }
     }
+
+    if (deletedLocales.length > 0)
+      console.log(ICONS.note, `Deleted key \`${args.key}\` from ${deletedLocales.map(l => `**${l}**`).join(', ')}`)
   },
 })

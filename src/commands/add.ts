@@ -76,7 +76,7 @@ export default defineCommand({
     const keysToTranslateAndDefault: Record<string, LocaleJson> = {}
     const toOverwrite: string[] = []
     for (const locale of localesToCheck) {
-      let localeJson
+      let localeJson: LocaleJson
       try {
         localeJson = JSON.parse(fs.readFileSync(r(`${locale}.json`, i18n), { encoding: 'utf8' }))
       }

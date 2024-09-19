@@ -16,7 +16,7 @@ export function r(file: string, i18n?: I18nConfig) {
 }
 // #endregion
 
-// #region Utils
+// #region Locale utils
 export function shapeMatches(obj1: any, obj2: any): boolean {
   if (typeof obj1 !== 'object' || typeof obj2 !== 'object' || obj1 === null || obj2 === null) {
     return false
@@ -120,17 +120,6 @@ export function mergeMissingTranslations(existingTranslations: LocaleJson, missi
   return result
 }
 
-// export function findNestedKey(obj: any, key: string) {
-//   const keys = key.split('.')
-//   let current = obj
-//   for (const key of keys) {
-//     if (!(key in current))
-//       return undefined
-//     current = current[key]
-//   }
-//   return current
-// }
-
 type Primitive = string | number | boolean | null | undefined
 
 type NestedKeyOf<T> = T extends Primitive
@@ -186,24 +175,9 @@ export function findNestedKey<T extends Record<string | number, any>, K extends 
     },
   }
 }
+// #endregion
 
-const obj = {
-  error: {
-    500: {
-      title: 'Internal Server Error',
-      message: 'Something went wrong',
-    },
-    404: {
-      title: 'Not Found',
-    },
-    title: 'error title',
-  },
-}
-
-const before = findNestedKey(obj, 'error.500')
-const after = before.delete()
-const test = findNestedKey(after, 'error.500') // error
-
+// #region GPT utils
 export async function translateKeys(keysToTranslate: Record<string, LocaleJson>, config: DeepRequired<Config>, i18n: I18nConfig, openai: OpenAI) {
   const completion = await openai.chat.completions.create({
     messages: [
