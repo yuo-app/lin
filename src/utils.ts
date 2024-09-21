@@ -237,7 +237,9 @@ export const ICONS = {
   success: c.green('✓'),
   warning: c.yellow('⚠'),
   error: c.red('✗'),
-  note: c.blue('ℹ'),
+  info: c.blue('ℹ'),
+  note: c.dim('●'),
+  result: c.green('>.. '),
 }
 
 function formatLog(message: any): string {
@@ -271,6 +273,10 @@ function createLoadingIndicator(message: string) {
 class ConsoleExtended extends Console {
   log(...messages: any[]): void {
     super.log(...messages.map(formatLog))
+  }
+
+  logL(...messages: any[]): void {
+    process.stdout.write(`${(messages.map(formatLog)).join(' ')}`)
   }
 
   async loading<T>(message: string, callback: () => Promise<T>): Promise<T> {
