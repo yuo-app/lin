@@ -8,6 +8,7 @@ import { loadI18nConfig } from '../i18n'
 import {
   console,
   findNestedKey,
+  getWithLocales,
   ICONS,
   type LocaleJson,
   mergeMissingTranslations,
@@ -72,6 +73,15 @@ export default defineCommand({
     locales = normalizeLocales(locales, i18n)
     const localesToCheck = locales.length > 0 ? locales : i18n.locales
 
+    const { withLocales, includeContext } = getWithLocales(args, i18n)
+    const withLocaleJsons: Record<string, LocaleJson> = {}
+    for (const locale of withLocales) {
+      withLocaleJsons[locale] = JSON.parse(fs.readFileSync(r(`${locale}.json`, i18n), { encoding: 'utf8' }))
+    }
+
+    if (withLocales.length > 0)
+      console.log(ICONS.note, `With: ${withLocales.map(l => `**${l}**`).join(', ')}`)
+
     const keysToTranslate: Record<string, LocaleJson> = {}
     const keysToTranslateAndDefault: Record<string, LocaleJson> = {}
     const toOverwrite: string[] = []
@@ -108,18 +118,18 @@ export default defineCommand({
     if (toOverwrite.length > 0)
       console.log(ICONS.note, `Overwriting translation for locale${toOverwrite.length > 1 ? 's' : ''}: ${toOverwrite.map(l => `**${l}**`).join(', ')}`)
 
-    if (config.debug)
+    if (args.debug)
       console.log(ICONS.note, `To translate: ${JSON.stringify(keysToTranslate)}`)
 
     if (Object.keys(keysToTranslateAndDefault).length > 0) {
       await console.loading(`Adding \`${args.key}\` to ${Object.keys(keysToTranslateAndDefault).map(l => `**${l}**`).join(', ')}`, async () => {
         const translations = Object.keys(keysToTranslate).length > 0
-          ? await translateKeys(keysToTranslate, config, i18n, openai)
+          ? await translateKeys(keysToTranslate, config, i18n, openai, withLocaleJsons, includeContext)
           : {}
 
         translations[i18n.default] = keysToTranslateAndDefault[i18n.default]
 
-        if (config.debug)
+        if (args.debug)
           console.log(ICONS.note, `Translations: ${JSON.stringify(translations)}`)
 
         for (const [locale, newTranslations] of Object.entries(translations)) {

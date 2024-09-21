@@ -178,18 +178,34 @@ export function findNestedKey<T extends Record<string | number, any>, K extends 
 // #endregion
 
 // #region GPT utils
-export async function translateKeys(keysToTranslate: Record<string, LocaleJson>, config: DeepRequired<Config>, i18n: I18nConfig, openai: OpenAI) {
+export function getWithLocales(args: Record<string, any>, i18n: I18nConfig) {
+  const includeContext = args.with === ''
+  const withArg = typeof args.with === 'string' ? [args.with] : args.with || []
+  const withLocales = normalizeLocales(withArg, i18n)
+  return { withLocales, includeContext }
+}
+
+export async function translateKeys(
+  keysToTranslate: Record<string, LocaleJson>,
+  config: DeepRequired<Config>,
+  i18n: I18nConfig,
+  openai: OpenAI,
+  withLocaleJsons?: Record<string, LocaleJson>,
+  includeContext?: boolean,
+) {
   const completion = await openai.chat.completions.create({
     messages: [
       {
         role: 'system',
         content: `You are a translation API that translates locale JSON files. 
+${includeContext && i18n.context ? `Additional information from user: ${i18n.context}` : ''}
 For each locale, translate the values from the default locale (${i18n.default}) language to the corresponding languages (denoted by the locale keys). 
 Return a JSON object where each top key is a locale, and the value is an object containing the translations for that locale.
+${withLocaleJsons ? `Other locale JSONs from the user's codebase for context: ${JSON.stringify(withLocaleJsons)}\nAlways use dot notation when dealing with nested keys:` : ''}
 Example input:
-{"fr-FR": {"title": "Title"}}
+{"fr-FR": {"ui.home.title": "Title"}}
 Example output:
-{"fr-FR": {"title": "Titre"}}`,
+{"fr-FR": {"ui.home.title": "Titre"}}`,
       },
       {
         role: 'user',
