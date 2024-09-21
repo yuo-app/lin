@@ -191,9 +191,12 @@ export function countKeys(obj: Record<string, any>): number {
 // #endregion
 
 // #region GPT utils
-export function getWithLocales(args: Record<string, any>, i18n: I18nConfig) {
-  const includeContext = args.with === ''
-  const withArg = typeof args.with === 'string' ? [args.with] : args.with || []
+export function getWithLocales(withLocale: string | string[], i18n: I18nConfig) {
+  const withArg = typeof withLocale === 'string' ? [withLocale] : withLocale || []
+  const includeContext = !withArg.includes('')
+  if (withArg.length <= 1)
+    return { withLocales: [], includeContext }
+
   const withLocales = normalizeLocales(withArg, i18n)
   return { withLocales, includeContext }
 }
@@ -242,7 +245,7 @@ export const ICONS = {
   result: c.green('>.. '),
 }
 
-function formatLog(message: any): string {
+export function formatLog(message: any): string {
   if (typeof message !== 'string')
     return message
 

@@ -46,6 +46,11 @@ export default defineCommand({
       description: 'force add key overriding existing ones',
       default: false,
     },
+    with: {
+      alias: 'w',
+      type: 'string',
+      description: 'add a locale json to the context window',
+    },
     ...commonArgs,
   },
   async run({ args }) {
@@ -73,7 +78,7 @@ export default defineCommand({
     locales = normalizeLocales(locales, i18n)
     const localesToCheck = locales.length > 0 ? locales : i18n.locales
 
-    const { withLocales, includeContext } = getWithLocales(args, i18n)
+    const { withLocales, includeContext } = getWithLocales(args.with, i18n)
     const withLocaleJsons: Record<string, LocaleJson> = {}
     for (const locale of withLocales) {
       withLocaleJsons[locale] = JSON.parse(fs.readFileSync(r(`${locale}.json`, i18n), { encoding: 'utf8' }))

@@ -10,6 +10,7 @@ import {
   console,
   countKeys,
   findMissingKeys,
+  formatLog,
   getWithLocales,
   ICONS,
   type LocaleJson,
@@ -53,7 +54,7 @@ export default defineCommand({
     const localesToCheck = locales.length > 0 ? locales : i18n.locales.filter(l => l !== i18n.default)
     const defaultLocaleJson = JSON.parse(fs.readFileSync(r(`${i18n.default}.json`, i18n), { encoding: 'utf8' }))
 
-    const { withLocales, includeContext } = getWithLocales(args, i18n)
+    const { withLocales, includeContext } = getWithLocales(args.with, i18n)
     const withLocaleJsons: Record<string, LocaleJson> = {}
     for (const locale of withLocales) {
       withLocaleJsons[locale] = JSON.parse(fs.readFileSync(r(`${locale}.json`, i18n), { encoding: 'utf8' }))
@@ -131,34 +132,35 @@ export default defineCommand({
           }
 
           keyCountsAfter[locale] = countKeys(finalTranslations)
-          // fs.writeFileSync(localeFilePath, JSON.stringify(finalTranslations, null, 2), { encoding: 'utf8' })
           translationsToWrite[localeFilePath] = finalTranslations
         }
       })
 
       console.logL(ICONS.result)
-      let shouldContinue = false
-      for (const locale of Object.keys(keyCountsBefore)) {
+
+      const negativeDiffs: Record<string, number> = {}
+      for (const [index, locale] of Object.keys(keyCountsBefore).entries()) {
         const diff = keyCountsAfter[locale] - keyCountsBefore[locale]
 
-        if (diff > 0) {
-          if (Object.keys(keyCountsBefore).length === 1)
-            console.logL(`${locale} (+${diff})`)
-          else
-            console.logL(`${locale} (+${diff}), `)
-        }
-        else if (diff < 0 && shouldContinue) {
-          const result = await confirm({
-            message: (ICONS.error, `This will remove ${-diff} keys from ${locale}. Continue?`),
-            initialValue: false,
-          })
-          if (typeof result === 'boolean' && result)
-            shouldContinue = true
-          else
-            return
-        }
+        const isLast = index === locales.length - 1
+        if (Object.keys(keyCountsBefore).length === 1 || isLast)
+          console.logL(`${locale} (${diff > 0 ? '+' : ''}${diff})`)
+        else
+          console.logL(`${locale} (${diff > 0 ? '+' : ''}${diff}), `)
+
+        if (diff < 0)
+          negativeDiffs[locale] = diff
       }
-      console.logL('\n')
+      console.log()
+
+      if (Object.keys(negativeDiffs).length > 0) {
+        const result = await confirm({
+          message: formatLog(`${ICONS.error} This will remove ${Object.keys(negativeDiffs).map(l => `\`${-negativeDiffs[l]}\``).join(', ')} keys from ${Object.keys(negativeDiffs).map(l => `**${l}**`).join(', ')}. Continue?`),
+          initialValue: false,
+        })
+        if (typeof result !== 'boolean' || !result)
+          return
+      }
 
       for (const localePath of Object.keys(translationsToWrite)) {
         fs.writeFileSync(localePath, JSON.stringify(translationsToWrite[localePath], null, 2), { encoding: 'utf8' })
