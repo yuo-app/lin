@@ -175,6 +175,19 @@ export function findNestedKey<T extends Record<string | number, any>, K extends 
     },
   }
 }
+
+export function countKeys(obj: Record<string, any>): number {
+  let count = 0
+
+  for (const key of Object.keys(obj)) {
+    count++
+
+    if (typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key]))
+      count += countKeys(obj[key])
+  }
+
+  return count
+}
 // #endregion
 
 // #region GPT utils
