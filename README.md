@@ -4,7 +4,7 @@
 
 <h1 align="center">
   <p>lin</p>
-  <p style="font-size: 1rem;">Let's Internationalize!</p>
+  <p style="font-size: 14px;">Let's Internationalize!</p>
 </h1>
 
 [![NPM Version](https://img.shields.io/npm/v/%40yuo-app%2Flin?color=red)](https://www.npmjs.com/package/%40yuo-app%2Flin)
