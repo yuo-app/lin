@@ -9,7 +9,7 @@ import {
   type LocaleJson,
   normalizeLocales,
   r,
-} from '../utils'
+} from '../utils/'
 
 export default defineCommand({
   meta: {

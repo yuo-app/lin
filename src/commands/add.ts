@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import process from 'node:process'
-import { confirm, text } from '@clack/prompts'
+import { text } from '@clack/prompts'
 import { defineCommand } from 'citty'
 import OpenAI from 'openai'
 import { commonArgs, resolveConfig } from '../config'
@@ -8,8 +8,8 @@ import { loadI18nConfig } from '../i18n'
 import {
   console,
   countKeys,
+  deletionGuard,
   findNestedKey,
-  formatLog,
   getWithLocales,
   ICONS,
   type LocaleJson,
@@ -17,7 +17,7 @@ import {
   normalizeLocales,
   r,
   translateKeys,
-} from '../utils'
+} from '../utils/'
 
 export default defineCommand({
   meta: {
@@ -163,30 +163,9 @@ export default defineCommand({
 
       console.log(ICONS.note, `Keys: ${keyCountsAfter[i18n.default]}`)
 
-      console.logL(ICONS.result)
-      const negativeDiffs: Record<string, number> = {}
-      for (const [index, locale] of Object.keys(keyCountsBefore).entries()) {
-        const diff = keyCountsAfter[locale] - keyCountsBefore[locale]
-
-        const isLast = index === locales.length - 1
-        if (Object.keys(keyCountsBefore).length === 1 || isLast)
-          console.logL(`${locale} (${diff > 0 ? '+' : ''}${diff})`)
-        else
-          console.logL(`${locale} (${diff > 0 ? '+' : ''}${diff}), `)
-
-        if (diff < 0)
-          negativeDiffs[locale] = diff
-      }
-      console.log()
-
-      if (Object.keys(negativeDiffs).length > 0) {
-        const result = await confirm({
-          message: formatLog(`${ICONS.warning} This will remove ${Object.keys(negativeDiffs).map(l => `\`${-negativeDiffs[l]}\``).join(', ')} keys from ${Object.keys(negativeDiffs).map(l => `**${l}**`).join(', ')}. Continue?`),
-          initialValue: false,
-        })
-        if (typeof result !== 'boolean' || !result)
-          return
-      }
+      const result = await deletionGuard(keyCountsBefore, keyCountsAfter, locales)
+      if (!result)
+        return
 
       for (const localePath of Object.keys(translationsToWrite)) {
         fs.writeFileSync(localePath, JSON.stringify(translationsToWrite[localePath], null, 2), { encoding: 'utf8' })
