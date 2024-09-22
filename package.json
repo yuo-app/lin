@@ -13,6 +13,7 @@
   "bugs": {
     "url": "https://github.com/yuo-app/lin/issues"
   },
+  "keywords": ["i18n", "translation", "cli", "i18next", "llm"],
   "module": "src/index.ts",
   "bin": {
     "lin": "bin/lin.mjs"

@@ -1,9 +1,11 @@
-import type { ArgDef, ArgsDef, BooleanArgDef, CommandDef, PositionalArgDef, StringArgDef } from 'citty'
+import type { ArgDef, BooleanArgDef, StringArgDef } from 'citty'
 import type OpenAI from 'openai'
 import type { DeepRequired } from './types'
 import process from 'node:process'
 import { simpleMerge } from '@cross/deepmerge'
+import c from 'picocolors'
 import { loadConfig } from 'unconfig'
+import { catchError, checkArg, console, ICONS } from './utils'
 
 type ChatModel = OpenAI.ChatModel
 type OpenAIOptions = Partial<Pick<OpenAI.ChatCompletionCreateParamsNonStreaming, 'model'
@@ -105,7 +107,7 @@ export const commonArgs = {
   locale: {
     alias: 'l',
     type: 'string',
-    description: 'the locale to use',
+    description: 'only act on a specific locale',
     default: DEFAULT_CONFIG.locale,
   },
   cwd: {
@@ -183,11 +185,6 @@ export const models: ChatModel[] = [
   'gpt-3.5-turbo-16k-0613',
 ]
 
-function checkArg(name: string | undefined, list: readonly string[]) {
-  if (name && !list.includes(name))
-    throw new Error(`"\`${name}\`" is invalid, must be one of ${list.join(', ')}`)
-}
-
 function normalizeArgs(args: Partial<Args>): Partial<Config> {
   const normalized: Partial<Args> = { ...args }
 
@@ -204,8 +201,8 @@ function normalizeArgs(args: Partial<Args>): Partial<Config> {
   })
 
   const config = convertType(normalized)
-  checkArg(config.i18n, integrations)
-  checkArg(config.options?.model, models)
+  catchError(checkArg)(config.i18n, integrations)
+  catchError(checkArg)(config.options?.model, models)
 
   return config
 }

@@ -1,5 +1,5 @@
 import { defineCommand } from 'citty'
-import { console } from '../utils/'
+import { console } from '../utils'
 
 export default defineCommand({
   meta: {

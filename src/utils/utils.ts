@@ -2,6 +2,29 @@ import type { I18nConfig } from '../i18n'
 import type { DeleteType, NestedKeyOf, NestedValueOf } from '../types'
 import path from 'node:path'
 import process from 'node:process'
+import c from 'picocolors'
+import { console, ICONS } from './console'
+
+// #region General utils
+export function catchError<T extends (...args: any[]) => any>(
+  callback: T,
+): (...args: Parameters<T>) => ReturnType<T> {
+  return (...args: Parameters<T>): ReturnType<T> => {
+    try {
+      return callback(...args)
+    }
+    catch (error: any) {
+      console.log(ICONS.error, ` ${c.bgRed(' ERROR ')}`, error.message)
+      process.exit(1)
+    }
+  }
+}
+
+export function checkArg(name: string | undefined, list: readonly string[]) {
+  if (name && !list.includes(name))
+    throw new Error(`"\`${name}\`" is invalid, must be one of ${list.join(', ')}`)
+}
+// #endregion
 
 // #region Path utils
 const cwd = process.env.INIT_CWD || process.cwd()
@@ -44,7 +67,7 @@ export function normalizeLocales(locales: string[], i18n: I18nConfig): string[] 
   const normalized: string[] = []
 
   for (const locale of locales) {
-    if (locale === 'all') {
+    if (locale === 'all' || locale === '') {
       normalized.push(...i18n.locales)
     }
     else if (locale === 'def') {

@@ -6,6 +6,7 @@ import OpenAI from 'openai'
 import { allArgs, resolveConfig } from '../config'
 import { loadI18nConfig } from '../i18n'
 import {
+  catchError,
   console,
   countKeys,
   deletionGuard,
@@ -17,7 +18,7 @@ import {
   normalizeLocales,
   r,
   translateKeys,
-} from '../utils/'
+} from '../utils'
 
 export default defineCommand({
   meta: {
@@ -55,6 +56,10 @@ export default defineCommand({
     const i18n = loadI18nConfig()
     const openai = new OpenAI({ apiKey: process.env[config.env] })
 
+    let locales = typeof args.locale === 'string' ? [args.locale] : args.locale || []
+    locales = catchError(normalizeLocales)(locales, i18n)
+    const localesToCheck = locales.length > 0 ? locales : i18n.locales
+
     args._.shift() // remove the key
     let prompt: string | symbol
 
@@ -64,16 +69,12 @@ export default defineCommand({
         placeholder: 'Press [ENTER] to skip',
       })
 
-      if (typeof prompt === 'symbol')
+      if (typeof prompt === 'symbol' || prompt === undefined)
         return
     }
     else {
       prompt = args._.join(' ')
     }
-
-    let locales = typeof args.locale === 'string' ? [args.locale] : args.locale || []
-    locales = normalizeLocales(locales, i18n)
-    const localesToCheck = locales.length > 0 ? locales : i18n.locales
 
     const { withLocales, includeContext } = getWithLocales(args.with, i18n)
     const withLocaleJsons: Record<string, LocaleJson> = {}

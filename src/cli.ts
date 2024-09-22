@@ -2,7 +2,7 @@ import { defineCommand, runMain, showUsage } from 'citty'
 import { description, version } from '../package.json'
 import { commands } from './commands'
 import { commonArgs, models, resolveConfig } from './config'
-import { console } from './utils/'
+import { console } from './utils'
 import 'dotenv/config'
 
 const main = defineCommand({

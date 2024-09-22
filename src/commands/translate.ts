@@ -5,6 +5,7 @@ import OpenAI from 'openai'
 import { allArgs, resolveConfig } from '../config'
 import { loadI18nConfig } from '../i18n'
 import {
+  catchError,
   console,
   countKeys,
   deletionGuard,
@@ -17,7 +18,7 @@ import {
   r,
   shapeMatches,
   translateKeys,
-} from '../utils/'
+} from '../utils'
 
 export default defineCommand({
   meta: {
@@ -26,6 +27,12 @@ export default defineCommand({
   },
   args: {
     ...allArgs,
+    locale: {
+      type: 'positional',
+      description: 'the locales to translate',
+      required: false,
+      valueHint: 'all | def | en | en-US',
+    },
     force: {
       alias: 'f',
       type: 'boolean',
@@ -43,7 +50,7 @@ export default defineCommand({
     const i18n = loadI18nConfig()
     const openai = new OpenAI({ apiKey: process.env[config.env] })
 
-    const locales = normalizeLocales(args._, i18n)
+    const locales = catchError(normalizeLocales)(args._, i18n)
     const localesToCheck = locales.length > 0 ? locales : i18n.locales.filter(l => l !== i18n.default)
     const defaultLocaleJson = JSON.parse(fs.readFileSync(r(`${i18n.default}.json`, i18n), { encoding: 'utf8' }))
 
