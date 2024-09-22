@@ -14,11 +14,14 @@ jobs:
       id-token: write # The OIDC ID token is used for authentication with JSR.
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: oven-sh/setup-bun@v2
 
       - run: bun install
-      - run: bun x jsr publish
 
       - run: bun x changelogithub
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      
+      - run: bun x jsr publish
