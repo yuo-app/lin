@@ -1,9 +1,12 @@
-import type { ArgDef } from 'citty'
+import type { ArgDef, BooleanArgDef, StringArgDef } from 'citty'
 import type OpenAI from 'openai'
+import type { I18nConfig } from './i18n'
 import type { DeepRequired } from './types'
 import process from 'node:process'
 import { simpleMerge } from '@cross/deepmerge'
+import c from 'picocolors'
 import { loadConfig } from 'unconfig'
+import { catchError, checkArg, console, ICONS } from './utils'
 
 type ChatModel = OpenAI.ChatModel
 type OpenAIOptions = Partial<Pick<OpenAI.ChatCompletionCreateParamsNonStreaming, 'model'
@@ -29,7 +32,16 @@ export const integrations = [
 
 export type Integration = typeof integrations[number]
 
-export interface Config {
+export interface CommonConfig {
+  /**
+   * the locale to use
+   * @field all: every locale
+   * @field def: the default locale
+   * @field en-US: a specific locale
+   * @default all
+   */
+  locale: string
+
   /**
    * project root
    * @default process.cwd()
@@ -37,10 +49,18 @@ export interface Config {
   cwd: string
 
   /**
-   * the i18n integration used, by default `lin` will try to infer this
+   * debug mode
+   * @default false
+   */
+  debug: boolean
+}
+
+export interface LLMConfig {
+  /**
+   * the i18n integration used, by default `lin` will try to infer this, or you can pass an i18n config object
    * @default undefined
    */
-  i18n: Integration
+  i18n: Integration | I18nConfig
 
   /**
    * the environment variable that contains the OpenAI token.
@@ -54,9 +74,14 @@ export interface Config {
   options: OpenAIOptions
 }
 
+export type Config = CommonConfig & LLMConfig
+
 export const DEFAULT_CONFIG = {
-  i18n: 'i18n',
+  locale: '',
   cwd: '',
+  debug: false,
+
+  i18n: 'i18n',
   env: 'OPENAI_API_TOKEN',
   options: {
     model: 'gpt-4o-mini',
@@ -64,21 +89,43 @@ export const DEFAULT_CONFIG = {
   },
 } satisfies Config
 
-type Args = {
-  [key in keyof Config as key extends 'options' ? never : key]: ArgDef
-} & {
-  model: ArgDef
-  temperature: ArgDef
-  debug: ArgDef
+type ConfigToArgDef<T> = {
+  [K in keyof T]: T[K] extends boolean
+    ? BooleanArgDef
+    : T[K] extends string
+      ? StringArgDef
+      : ArgDef
 }
 
-export const commonArgs: Args = {
+type CommonArgs = ConfigToArgDef<CommonConfig>
+type LLMArgs = Omit<ConfigToArgDef<LLMConfig>, 'options'> & {
+  model: StringArgDef
+  temperature: StringArgDef
+}
+type Args = CommonArgs & LLMArgs
+
+export const commonArgs = {
+  locale: {
+    alias: 'l',
+    type: 'string',
+    description: 'only act on a specific locale',
+    default: DEFAULT_CONFIG.locale,
+  },
   cwd: {
     alias: 'c',
     type: 'string',
     description: 'project root',
     default: process.cwd(),
   },
+  debug: {
+    alias: 'd',
+    type: 'boolean',
+    description: 'debug mode',
+    default: false,
+  },
+} as const satisfies CommonArgs
+
+export const llmArgs = {
   i18n: {
     alias: 'i',
     type: 'string',
@@ -103,13 +150,9 @@ export const commonArgs: Args = {
     description: 'the temperature to use',
     default: DEFAULT_CONFIG.options.temperature.toString(),
   },
-  debug: {
-    alias: 'd',
-    type: 'boolean',
-    description: 'debug mode',
-    default: false,
-  },
-}
+} as const satisfies LLMArgs
+
+export const allArgs = { ...commonArgs, ...llmArgs }
 
 export const models: ChatModel[] = [
   'o1-preview',
@@ -143,11 +186,6 @@ export const models: ChatModel[] = [
   'gpt-3.5-turbo-16k-0613',
 ]
 
-function checkArg(name: string | undefined, list: readonly string[]) {
-  if (name && !list.includes(name))
-    throw new Error(`"\`${name}\`" is invalid, must be one of ${list.join(', ')}`)
-}
-
 function normalizeArgs(args: Partial<Args>): Partial<Config> {
   const normalized: Partial<Args> = { ...args }
 
@@ -157,15 +195,16 @@ function normalizeArgs(args: Partial<Args>): Partial<Config> {
       const configKey = def.alias as keyof Args
 
       if (def.alias && normalized[configKey] !== undefined && normalized[fullKey] === undefined) {
-        normalized[fullKey] = normalized[configKey]
+        normalized[fullKey] = normalized[configKey] as any
         delete normalized[configKey]
       }
     }
   })
 
   const config = convertType(normalized)
-  checkArg(config.i18n, integrations)
-  checkArg(config.options?.model, models)
+  if (typeof config.i18n !== 'object')
+    catchError(checkArg)(config.i18n, integrations)
+  catchError(checkArg)(config.options?.model, models)
 
   return config
 }
@@ -226,6 +265,12 @@ export async function resolveConfig(
   }
 }
 
-export function defineConfig(config: Partial<Config>): Partial<Config> {
+export function defineConfig(
+  config: Omit<Partial<Config>, 'locale' | 'debug'>,
+): Partial<Config> {
+  return config
+}
+
+export function defineI18nConfig(config: I18nConfig): I18nConfig {
   return config
 }

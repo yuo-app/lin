@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import { defineCommand } from 'citty'
-import { commonArgs } from '../config'
+import { allArgs, resolveConfig } from '../config'
 import { loadI18nConfig } from '../i18n'
 import {
   console,
@@ -17,21 +17,17 @@ export default defineCommand({
     description: 'remove one or more keys from every locale',
   },
   args: {
+    ...allArgs,
     key: {
       type: 'positional',
       description: 'the keys to remove (comma-separated)',
       required: true,
       valueHint: 'a.b.c',
     },
-    locale: {
-      alias: 'l',
-      type: 'string',
-      description: 'delete only from the specified locale',
-    },
-    ...commonArgs,
   },
   async run({ args }) {
-    const i18n = loadI18nConfig()
+    const { config } = await resolveConfig(args)
+    const { i18n } = await loadI18nConfig(config)
 
     let locales = typeof args.locale === 'string' ? [args.locale] : args.locale || []
     locales = normalizeLocales(locales, i18n)
@@ -55,7 +51,7 @@ export default defineCommand({
           fs.writeFileSync(r(`${locale}.json`, i18n), JSON.stringify(localeJson, null, 2), { encoding: 'utf8' })
         }
         else {
-          console.log(ICONS.note, `Skipped: **${locale}** *(key \`${key}\` not found)*`)
+          console.log(ICONS.info, `Skipped: **${locale}** *(key \`${key}\` not found)*`)
         }
       }
     }
