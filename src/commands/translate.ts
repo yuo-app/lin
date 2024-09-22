@@ -3,7 +3,6 @@ import process from 'node:process'
 import { confirm } from '@clack/prompts'
 import { defineCommand } from 'citty'
 import OpenAI from 'openai'
-import c from 'picocolors'
 import { commonArgs, resolveConfig } from '../config'
 import { loadI18nConfig } from '../i18n'
 import {
@@ -155,7 +154,7 @@ export default defineCommand({
 
       if (Object.keys(negativeDiffs).length > 0) {
         const result = await confirm({
-          message: formatLog(`${ICONS.error} This will remove ${Object.keys(negativeDiffs).map(l => `\`${-negativeDiffs[l]}\``).join(', ')} keys from ${Object.keys(negativeDiffs).map(l => `**${l}**`).join(', ')}. Continue?`),
+          message: formatLog(`${ICONS.warning} This will remove ${Object.keys(negativeDiffs).map(l => `\`${-negativeDiffs[l]}\``).join(', ')} keys from ${Object.keys(negativeDiffs).map(l => `**${l}**`).join(', ')}. Continue?`),
           initialValue: false,
         })
         if (typeof result !== 'boolean' || !result)

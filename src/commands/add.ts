@@ -1,13 +1,15 @@
 import fs from 'node:fs'
 import process from 'node:process'
-import { text } from '@clack/prompts'
+import { confirm, text } from '@clack/prompts'
 import { defineCommand } from 'citty'
 import OpenAI from 'openai'
 import { commonArgs, resolveConfig } from '../config'
 import { loadI18nConfig } from '../i18n'
 import {
   console,
+  countKeys,
   findNestedKey,
+  formatLog,
   getWithLocales,
   ICONS,
   type LocaleJson,
@@ -87,8 +89,11 @@ export default defineCommand({
     if (withLocales.length > 0)
       console.log(ICONS.info, `With: ${withLocales.map(l => `**${l}**`).join(', ')}`)
 
+    const keyCountsBefore: Record<string, number> = {}
+    const keyCountsAfter: Record<string, number> = {}
     const keysToTranslate: Record<string, LocaleJson> = {}
     const keysToTranslateAndDefault: Record<string, LocaleJson> = {}
+    const translationsToWrite: Record<string, LocaleJson> = {}
     const toOverwrite: string[] = []
     for (const locale of localesToCheck) {
       let localeJson: LocaleJson
@@ -118,6 +123,7 @@ export default defineCommand({
       if (locale !== i18n.default)
         keysToTranslate[locale] = { [args.key]: prompt }
       keysToTranslateAndDefault[locale] = { [args.key]: prompt }
+      keyCountsBefore[locale] = countKeys(localeJson)
     }
 
     if (toOverwrite.length > 0)
@@ -150,13 +156,45 @@ export default defineCommand({
           }
 
           const finalTranslations = mergeMissingTranslations(existingTranslations, newTranslations)
-
-          fs.writeFileSync(localeFilePath, JSON.stringify(finalTranslations, null, 2), { encoding: 'utf8' })
+          translationsToWrite[localeFilePath] = finalTranslations
+          keyCountsAfter[locale] = countKeys(finalTranslations)
         }
       })
+
+      console.log(ICONS.note, `Keys: ${keyCountsAfter[i18n.default]}`)
+
+      console.logL(ICONS.result)
+      const negativeDiffs: Record<string, number> = {}
+      for (const [index, locale] of Object.keys(keyCountsBefore).entries()) {
+        const diff = keyCountsAfter[locale] - keyCountsBefore[locale]
+
+        const isLast = index === locales.length - 1
+        if (Object.keys(keyCountsBefore).length === 1 || isLast)
+          console.logL(`${locale} (${diff > 0 ? '+' : ''}${diff})`)
+        else
+          console.logL(`${locale} (${diff > 0 ? '+' : ''}${diff}), `)
+
+        if (diff < 0)
+          negativeDiffs[locale] = diff
+      }
+      console.log()
+
+      if (Object.keys(negativeDiffs).length > 0) {
+        const result = await confirm({
+          message: formatLog(`${ICONS.warning} This will remove ${Object.keys(negativeDiffs).map(l => `\`${-negativeDiffs[l]}\``).join(', ')} keys from ${Object.keys(negativeDiffs).map(l => `**${l}**`).join(', ')}. Continue?`),
+          initialValue: false,
+        })
+        if (typeof result !== 'boolean' || !result)
+          return
+      }
+
+      for (const localePath of Object.keys(translationsToWrite)) {
+        fs.writeFileSync(localePath, JSON.stringify(translationsToWrite[localePath], null, 2), { encoding: 'utf8' })
+      }
     }
     else {
       console.log(ICONS.success, 'All locales are up to date.')
+      console.log(ICONS.note, `Keys: ${countKeys(JSON.parse(fs.readFileSync(r(`${i18n.default}.json`, i18n), { encoding: 'utf8' })))}`)
     }
   },
 })
