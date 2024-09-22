@@ -53,7 +53,7 @@ export default defineCommand({
   },
   async run({ args }) {
     const { config } = await resolveConfig(args)
-    const i18n = loadI18nConfig()
+    const { i18n } = await loadI18nConfig(config)
     const openai = new OpenAI({ apiKey: process.env[config.env] })
 
     let locales = typeof args.locale === 'string' ? [args.locale] : args.locale || []
@@ -65,7 +65,7 @@ export default defineCommand({
 
     if (args._.length === 0) {
       prompt = await text({
-        message: `Enter ${i18n.default} translation for key ${args.key}`,
+        message: `Enter ${i18n.defaultLocale} translation for key ${args.key}`,
         placeholder: 'Press [ENTER] to skip',
       })
 
@@ -116,7 +116,7 @@ export default defineCommand({
         }
       }
 
-      if (locale !== i18n.default)
+      if (locale !== i18n.defaultLocale)
         keysToTranslate[locale] = { [args.key]: prompt }
       keysToTranslateAndDefault[locale] = { [args.key]: prompt }
       keyCountsBefore[locale] = countKeys(localeJson)
@@ -134,7 +134,7 @@ export default defineCommand({
           ? await translateKeys(keysToTranslate, config, i18n, openai, withLocaleJsons, includeContext)
           : {}
 
-        translations[i18n.default] = keysToTranslateAndDefault[i18n.default]
+        translations[i18n.defaultLocale] = keysToTranslateAndDefault[i18n.defaultLocale]
 
         if (args.debug)
           console.log(ICONS.info, `Translations: ${JSON.stringify(translations)}`)
@@ -157,7 +157,7 @@ export default defineCommand({
         }
       })
 
-      console.log(ICONS.note, `Keys: ${keyCountsAfter[i18n.default]}`)
+      console.log(ICONS.note, `Keys: ${keyCountsAfter[i18n.defaultLocale]}`)
 
       const result = await deletionGuard(keyCountsBefore, keyCountsAfter, locales)
       if (!result)
@@ -169,7 +169,7 @@ export default defineCommand({
     }
     else {
       console.log(ICONS.success, 'All locales are up to date.')
-      console.log(ICONS.note, `Keys: ${countKeys(JSON.parse(fs.readFileSync(r(`${i18n.default}.json`, i18n), { encoding: 'utf8' })))}`)
+      console.log(ICONS.note, `Keys: ${countKeys(JSON.parse(fs.readFileSync(r(`${i18n.defaultLocale}.json`, i18n), { encoding: 'utf8' })))}`)
     }
   },
 })

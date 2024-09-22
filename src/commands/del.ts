@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import { defineCommand } from 'citty'
-import { allArgs } from '../config'
+import { allArgs, resolveConfig } from '../config'
 import { loadI18nConfig } from '../i18n'
 import {
   console,
@@ -26,7 +26,8 @@ export default defineCommand({
     },
   },
   async run({ args }) {
-    const i18n = loadI18nConfig()
+    const { config } = await resolveConfig(args)
+    const { i18n } = await loadI18nConfig(config)
 
     let locales = typeof args.locale === 'string' ? [args.locale] : args.locale || []
     locales = normalizeLocales(locales, i18n)

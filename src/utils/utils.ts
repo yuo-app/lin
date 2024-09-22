@@ -71,7 +71,7 @@ export function normalizeLocales(locales: string[], i18n: I18nConfig): string[] 
       normalized.push(...i18n.locales)
     }
     else if (locale === 'def') {
-      normalized.push(i18n.default)
+      normalized.push(i18n.defaultLocale)
     }
     else if (locale.includes('-')) {
       if (!i18n.locales.includes(locale))

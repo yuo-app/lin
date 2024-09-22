@@ -1,5 +1,6 @@
 import type { ArgDef, BooleanArgDef, StringArgDef } from 'citty'
 import type OpenAI from 'openai'
+import type { I18nConfig } from './i18n'
 import type { DeepRequired } from './types'
 import process from 'node:process'
 import { simpleMerge } from '@cross/deepmerge'
@@ -56,10 +57,10 @@ export interface CommonConfig {
 
 export interface LLMConfig {
   /**
-   * the i18n integration used, by default `lin` will try to infer this
+   * the i18n integration used, by default `lin` will try to infer this, or you can pass an i18n config object
    * @default undefined
    */
-  i18n: Integration
+  i18n: Integration | I18nConfig
 
   /**
    * the environment variable that contains the OpenAI token.
@@ -201,7 +202,8 @@ function normalizeArgs(args: Partial<Args>): Partial<Config> {
   })
 
   const config = convertType(normalized)
-  catchError(checkArg)(config.i18n, integrations)
+  if (typeof config.i18n !== 'object')
+    catchError(checkArg)(config.i18n, integrations)
   catchError(checkArg)(config.options?.model, models)
 
   return config
@@ -266,5 +268,9 @@ export async function resolveConfig(
 export function defineConfig(
   config: Omit<Partial<Config>, 'locale' | 'debug'>,
 ): Partial<Config> {
+  return config
+}
+
+export function defineI18nConfig(config: I18nConfig): I18nConfig {
   return config
 }

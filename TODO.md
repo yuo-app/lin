@@ -20,9 +20,9 @@
 
 - [x] locales: `all` is every locale, `def` is the default locale, and `en` is a shorthand for `en-**`
 
-- [ ] **`tidy`**: check the setup, reorder locale json files alphabetically or to the default locale json (ordering can get messed up when using `add`), it can also be a quick way to check if all locals have the same shape (or the translate command is needed)
+- [x] **`tidy`**: check the setup, reorder locale json files alphabetically or to the default locale json (ordering can get messed up when using `add`), it can also be a quick way to check if all locals have the same shape (or the translate command is needed)
 
-- [ ] llm protection: show key counts before and after the add or translate commands. they shouldn't remove keys under any circumstances, so prompt the user for confirmation.
+- [x] llm protection: show key counts before and after the add or translate commands. they shouldn't remove keys under any circumstances, so prompt the user for confirmation.
 
 - [x] **context window:** provide a way to add extra information to the gpt request
   - [x] `context: string` config: this just gets added to the prompt by default
@@ -30,11 +30,12 @@
     - [x] `string` commonarg: add a locale json to the prompt
     - [x] `boolean` commonarg: do not add the context string to the prompt
 
-- [ ] i18n loader
-- [ ] support for other i18n integrations
+- [x] i18n loader
 
 ### v0.2.0
 
+- [ ] support a ton of i18n frameworks
+- [ ] validate config (like locales, models, etc) with checkArg
 - [ ] **`verify`**: reflect on the quality of the translations, check if the translations are accurate
 - [ ] **`convert` command:** convert a project to use i18n by extracting all the strings from the code and adding them to the locale json files.
-- [ ] support claude and friends (what's the best way??)
+- [ ] support claude and friends (what's the best way to support them all??)

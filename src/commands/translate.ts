@@ -47,12 +47,12 @@ export default defineCommand({
   },
   async run({ args }) {
     const { config } = await resolveConfig(args)
-    const i18n = loadI18nConfig()
+    const { i18n } = await loadI18nConfig(config)
     const openai = new OpenAI({ apiKey: process.env[config.env] })
 
     const locales = catchError(normalizeLocales)(args._, i18n)
-    const localesToCheck = locales.length > 0 ? locales : i18n.locales.filter(l => l !== i18n.default)
-    const defaultLocaleJson = JSON.parse(fs.readFileSync(r(`${i18n.default}.json`, i18n), { encoding: 'utf8' }))
+    const localesToCheck = locales.length > 0 ? locales : i18n.locales.filter(l => l !== i18n.defaultLocale)
+    const defaultLocaleJson = JSON.parse(fs.readFileSync(r(`${i18n.defaultLocale}.json`, i18n), { encoding: 'utf8' }))
 
     const { withLocales, includeContext } = getWithLocales(args.with, i18n)
     const withLocaleJsons: Record<string, LocaleJson> = {}

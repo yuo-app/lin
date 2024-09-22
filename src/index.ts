@@ -1,1 +1,1 @@
-export { defineConfig } from './config'
+export { defineConfig, defineI18nConfig } from './config'
