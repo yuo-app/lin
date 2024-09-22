@@ -3,7 +3,7 @@ import process from 'node:process'
 import { text } from '@clack/prompts'
 import { defineCommand } from 'citty'
 import OpenAI from 'openai'
-import { commonArgs, resolveConfig } from '../config'
+import { allArgs, resolveConfig } from '../config'
 import { loadI18nConfig } from '../i18n'
 import {
   console,
@@ -25,6 +25,7 @@ export default defineCommand({
     description: 'add a key to the locales with all the translations',
   },
   args: {
+    ...allArgs,
     key: {
       type: 'positional',
       description: 'the key to add',
@@ -37,11 +38,6 @@ export default defineCommand({
       required: false,
       valueHint: 'some translation text',
     },
-    locale: {
-      alias: 'l',
-      type: 'string',
-      description: 'translate only the specified locale',
-    },
     force: {
       alias: 'f',
       type: 'boolean',
@@ -53,7 +49,6 @@ export default defineCommand({
       type: 'string',
       description: 'add a locale json to the context window',
     },
-    ...commonArgs,
   },
   async run({ args }) {
     const { config } = await resolveConfig(args)

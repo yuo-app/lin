@@ -1,4 +1,4 @@
-import type { ArgDef } from 'citty'
+import type { ArgDef, ArgsDef, BooleanArgDef, CommandDef, PositionalArgDef, StringArgDef } from 'citty'
 import type OpenAI from 'openai'
 import type { DeepRequired } from './types'
 import process from 'node:process'
@@ -29,13 +29,30 @@ export const integrations = [
 
 export type Integration = typeof integrations[number]
 
-export interface Config {
+export interface CommonConfig {
+  /**
+   * the locale to use
+   * @field all: every locale
+   * @field def: the default locale
+   * @field en-US: a specific locale
+   * @default all
+   */
+  locale: string
+
   /**
    * project root
    * @default process.cwd()
    */
   cwd: string
 
+  /**
+   * debug mode
+   * @default false
+   */
+  debug: boolean
+}
+
+export interface LLMConfig {
   /**
    * the i18n integration used, by default `lin` will try to infer this
    * @default undefined
@@ -54,9 +71,14 @@ export interface Config {
   options: OpenAIOptions
 }
 
+export type Config = CommonConfig & LLMConfig
+
 export const DEFAULT_CONFIG = {
-  i18n: 'i18n',
+  locale: '',
   cwd: '',
+  debug: false,
+
+  i18n: 'i18n',
   env: 'OPENAI_API_TOKEN',
   options: {
     model: 'gpt-4o-mini',
@@ -64,21 +86,43 @@ export const DEFAULT_CONFIG = {
   },
 } satisfies Config
 
-type Args = {
-  [key in keyof Config as key extends 'options' ? never : key]: ArgDef
-} & {
-  model: ArgDef
-  temperature: ArgDef
-  debug: ArgDef
+type ConfigToArgDef<T> = {
+  [K in keyof T]: T[K] extends boolean
+    ? BooleanArgDef
+    : T[K] extends string
+      ? StringArgDef
+      : ArgDef
 }
 
-export const commonArgs: Args = {
+type CommonArgs = ConfigToArgDef<CommonConfig>
+type LLMArgs = Omit<ConfigToArgDef<LLMConfig>, 'options'> & {
+  model: StringArgDef
+  temperature: StringArgDef
+}
+type Args = CommonArgs & LLMArgs
+
+export const commonArgs = {
+  locale: {
+    alias: 'l',
+    type: 'string',
+    description: 'the locale to use',
+    default: DEFAULT_CONFIG.locale,
+  },
   cwd: {
     alias: 'c',
     type: 'string',
     description: 'project root',
     default: process.cwd(),
   },
+  debug: {
+    alias: 'd',
+    type: 'boolean',
+    description: 'debug mode',
+    default: false,
+  },
+} as const satisfies CommonArgs
+
+export const llmArgs = {
   i18n: {
     alias: 'i',
     type: 'string',
@@ -103,13 +147,9 @@ export const commonArgs: Args = {
     description: 'the temperature to use',
     default: DEFAULT_CONFIG.options.temperature.toString(),
   },
-  debug: {
-    alias: 'd',
-    type: 'boolean',
-    description: 'debug mode',
-    default: false,
-  },
-}
+} as const satisfies LLMArgs
+
+export const allArgs = { ...commonArgs, ...llmArgs }
 
 export const models: ChatModel[] = [
   'o1-preview',
@@ -157,7 +197,7 @@ function normalizeArgs(args: Partial<Args>): Partial<Config> {
       const configKey = def.alias as keyof Args
 
       if (def.alias && normalized[configKey] !== undefined && normalized[fullKey] === undefined) {
-        normalized[fullKey] = normalized[configKey]
+        normalized[fullKey] = normalized[configKey] as any
         delete normalized[configKey]
       }
     }
@@ -226,6 +266,8 @@ export async function resolveConfig(
   }
 }
 
-export function defineConfig(config: Partial<Config>): Partial<Config> {
+export function defineConfig(
+  config: Omit<Partial<Config>, 'locale' | 'debug'>,
+): Partial<Config> {
   return config
 }

@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import { defineCommand } from 'citty'
-import { commonArgs } from '../config'
+import { allArgs } from '../config'
 import { loadI18nConfig } from '../i18n'
 import {
   console,
@@ -17,18 +17,13 @@ export default defineCommand({
     description: 'remove one or more keys from every locale',
   },
   args: {
+    ...allArgs,
     key: {
       type: 'positional',
       description: 'the keys to remove (comma-separated)',
       required: true,
       valueHint: 'a.b.c',
     },
-    locale: {
-      alias: 'l',
-      type: 'string',
-      description: 'delete only from the specified locale',
-    },
-    ...commonArgs,
   },
   async run({ args }) {
     const i18n = loadI18nConfig()

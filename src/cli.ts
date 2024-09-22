@@ -1,5 +1,5 @@
 import { defineCommand, runMain, showUsage } from 'citty'
-import { description, name, version } from '../package.json'
+import { description, version } from '../package.json'
 import { commands } from './commands'
 import { commonArgs, models, resolveConfig } from './config'
 import { console } from './utils/'
@@ -7,7 +7,7 @@ import 'dotenv/config'
 
 const main = defineCommand({
   meta: {
-    name,
+    name: 'lin',
     version,
     description,
   },
@@ -29,7 +29,7 @@ const main = defineCommand({
       console.log(`${name} \`v${version}\``)
 
     if (args.models)
-      console.log(JSON.stringify(models, null, 2))
+      console.log(`\`Models:\`\n${models.join('\n')}`)
 
     if (rawArgs.length === 0)
       showUsage(cmd)

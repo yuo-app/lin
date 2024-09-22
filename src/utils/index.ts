@@ -1,3 +1,3 @@
 export * from './console'
-export * from './gpt'
+export * from './llm'
 export * from './utils'

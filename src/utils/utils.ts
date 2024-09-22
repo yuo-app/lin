@@ -118,7 +118,9 @@ export function mergeMissingTranslations(existingTranslations: LocaleJson, missi
 // #endregion
 
 // #region Nested key utils
-export function findNestedKey<T extends Record<string | number, any>, K extends NestedKeyOf<T>>(
+type NestedObject = Record<string | number, any>
+
+export function findNestedKey<T extends NestedObject, K extends NestedKeyOf<T>>(
   obj: T,
   key: K,
 ) {
@@ -146,7 +148,7 @@ export function findNestedKey<T extends Record<string | number, any>, K extends 
   }
 }
 
-export function countKeys(obj: Record<string, any>): number {
+export function countKeys(obj: NestedObject): number {
   let count = 0
 
   for (const key of Object.keys(obj)) {
@@ -159,23 +161,18 @@ export function countKeys(obj: Record<string, any>): number {
   return count
 }
 
-type NestedObject = Record<string, any>
-
-export function sortKeys(obj: NestedObject): NestedObject
-export function sortKeys(obj: NestedObject, mode: 'abc'): NestedObject
-export function sortKeys(obj: NestedObject, mode: 'ref', refObj: NestedObject): NestedObject
-export function sortKeys(obj: NestedObject, mode: 'abc' | 'ref' = 'abc', refObj?: NestedObject): NestedObject {
+export function sortKeys(obj: NestedObject, refObj?: NestedObject): NestedObject {
   if (typeof obj !== 'object' || obj === null)
     return obj
 
   if (Array.isArray(obj))
-    return obj.map(item => sortKeys(item, mode as 'abc'))
+    return obj.map(item => sortKeys(item))
 
   const sortedKeys = Object.keys(obj).sort((a, b) => {
-    if (mode === 'abc') {
+    if (refObj === undefined) {
       return a.localeCompare(b)
     }
-    else if (mode === 'ref' && refObj) {
+    else if (refObj) {
       const refKeys = Object.keys(refObj)
       return refKeys.indexOf(a) - refKeys.indexOf(b)
     }
@@ -184,15 +181,14 @@ export function sortKeys(obj: NestedObject, mode: 'abc' | 'ref' = 'abc', refObj?
 
   const sortedObj: NestedObject = {}
   for (const key of sortedKeys) {
-    if (mode === 'ref' && refObj) {
+    if (refObj) {
       sortedObj[key] = sortKeys(
         obj[key],
-        mode,
         typeof refObj[key] === 'object' ? refObj[key] : undefined,
       )
     }
     else {
-      sortedObj[key] = sortKeys(obj[key], 'abc')
+      sortedObj[key] = sortKeys(obj[key])
     }
   }
 
