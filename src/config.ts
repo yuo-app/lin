@@ -56,6 +56,11 @@ export interface CommonConfig {
 
 export interface LLMConfig {
   /**
+   * extra information to include in the GPT system prompt
+   */
+  context: string
+
+  /**
    * the i18n integration used, by default `lin` will try to infer this, or you can pass an i18n config object
    * @default undefined
    */
@@ -80,6 +85,7 @@ export const DEFAULT_CONFIG = {
   cwd: '',
   debug: false,
 
+  context: '',
   i18n: 'i18n',
   env: 'OPENAI_API_TOKEN',
   options: {
@@ -125,6 +131,12 @@ export const commonArgs = {
 } as const satisfies CommonArgs
 
 export const llmArgs = {
+  context: {
+    alias: 'C',
+    type: 'string',
+    description: 'extra information to include in the GPT system prompt',
+    default: DEFAULT_CONFIG.context,
+  },
   i18n: {
     alias: 'i',
     type: 'string',

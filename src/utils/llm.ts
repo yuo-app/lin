@@ -57,7 +57,7 @@ export async function translateKeys(
       {
         role: 'system',
         content: `You are a translation API that translates locale JSON files. 
-${includeContext && i18n.context ? `Additional information from user: ${i18n.context}` : ''}
+${includeContext && config.context ? `Additional information from user: ${config.context}` : ''}
 For each locale, translate the values from the default locale (${i18n.defaultLocale}) language to the corresponding languages (denoted by the locale keys). 
 Return a JSON object where each top key is a locale, and the value is an object containing the translations for that locale.
 ${withLocaleJsons ? `Other locale JSONs from the user's codebase for context: ${JSON.stringify(withLocaleJsons)}\nAlways use dot notation when dealing with nested keys:` : ''}

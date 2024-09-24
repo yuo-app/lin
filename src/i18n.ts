@@ -6,7 +6,6 @@ export interface I18nConfig {
   locales: string[]
   defaultLocale: string
   directory: string
-  context?: string
 }
 
 export async function loadI18nConfig(options?: Config): Promise<{ i18n: I18nConfig, sources: string[] }> {

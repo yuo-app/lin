@@ -34,6 +34,7 @@
 
 ### v0.2.0
 
+- [ ] make `--cwd` actually work
 - [ ] setup command to add i18n to new projects
 - [ ] support a ton of i18n frameworks
 - [ ] validate config (like locales, models, etc) with checkArg

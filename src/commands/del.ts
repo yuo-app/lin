@@ -20,7 +20,7 @@ export default defineCommand({
     ...allArgs,
     key: {
       type: 'positional',
-      description: 'the keys to remove (comma-separated)',
+      description: 'the keys to remove (space-separated)',
       required: true,
       valueHint: 'a.b.c',
     },
