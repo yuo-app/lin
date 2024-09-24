@@ -34,8 +34,8 @@
   },
   "dependencies": {
     "@clack/prompts": "^0.7.0",
-    "@cross/deepmerge": "npm:@jsr/cross__deepmerge@^1.0.0",
     "citty": "^0.1.6",
+    "deepmerge": "^4.3.1",
     "dotenv": "^16.4.5",
     "openai": "^4.63.0",
     "picocolors": "^1.1.0",

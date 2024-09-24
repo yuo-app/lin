@@ -3,10 +3,9 @@ import type OpenAI from 'openai'
 import type { I18nConfig } from './i18n'
 import type { DeepRequired } from './types'
 import process from 'node:process'
-import { simpleMerge } from '@cross/deepmerge'
-import c from 'picocolors'
+import deepmerge from 'deepmerge'
 import { loadConfig } from 'unconfig'
-import { catchError, checkArg, console, ICONS } from './utils'
+import { catchError, checkArg } from './utils'
 
 type ChatModel = OpenAI.ChatModel
 type OpenAIOptions = Partial<Pick<OpenAI.ChatCompletionCreateParamsNonStreaming, 'model'
@@ -259,7 +258,7 @@ export async function resolveConfig(
   })
 
   return {
-    config: simpleMerge(config, options) as DeepRequired<Config>,
+    config: deepmerge(config, options) as DeepRequired<Config>,
     sources,
     dependencies,
   }

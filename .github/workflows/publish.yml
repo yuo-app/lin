@@ -23,5 +23,5 @@ jobs:
       - run: bun x changelogithub
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      
+
       - run: bun x jsr publish
