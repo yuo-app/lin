@@ -2,7 +2,7 @@ import { defineCommand, runMain, showUsage } from 'citty'
 import { description, version } from '../package.json'
 import { commands } from './commands'
 import { commonArgs, models, resolveConfig } from './config'
-import { console } from './utils'
+import { console, ICONS } from './utils'
 import 'dotenv/config'
 
 const main = defineCommand({
@@ -35,8 +35,10 @@ const main = defineCommand({
       showUsage(cmd)
 
     const { config } = await resolveConfig(args)
-    if (args.debug)
+    if (args.debug) {
+      console.log(ICONS.info, 'Config:')
       console.log(config)
+    }
   },
 })
 
