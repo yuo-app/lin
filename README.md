@@ -6,7 +6,7 @@
 [![NPM Version](https://img.shields.io/npm/v/%40yuo-app%2Flin?color=red)](https://www.npmjs.com/package/%40yuo-app%2Flin)
 [![JSR Version](https://img.shields.io/jsr/v/%40yuo/lin?color=yellow)](https://jsr.io/%40yuo/lin)
 
-## setup
+## get started
 
 ### install
 
@@ -16,12 +16,12 @@ npm i -D @yuo-app/lin
 
 or use `-g` to install globally for non-npm projects.
 
-### config
+### setup
 
 You will need:
 
 - a project with i18n set up
-- a complete default locale JSON file (e.g. `en-US.json`)
+- a default locale JSON file (e.g. `en-US.json`)
 
 `lin` needs to know 3 things to work:
 
@@ -63,12 +63,12 @@ To translate only specific locales, list them like this:
 lin translate es fr
 ```
 
-You can also use the `translate` command to add a new language.
+You can also use the `translate` command to **add a new language**.
 
 1. First add the locale code to `locales` in the i18n config
 2. Then run `lin translate` and it will create the new locale JSON file
 
-> [!NOTE] locale codes
+> [!NOTE]
 > There is some syntax around **locale codes**:
 >
 > - locale JSONs should be named with the full locale code (e.g. `en-US.json`): lanugage code 2 characters, country code 2 characters
@@ -140,12 +140,102 @@ lin tidy def
 > [!TIP]
 > All properties in the config can be used as CLI flags too.
 
+### config file
+
+<!-- sources: [
+      {
+        files: [
+          'lin.config',
+        ],
+      },
+      {
+        files: [
+          '.linrc',
+        ],
+      },
+      {
+        files: 'package.json',
+        extensions: [],
+        rewrite(config: any) {
+          return config?.lin
+        },
+      },
+      {
+        files: ['vite.config', 'nuxt.config'],
+        async rewrite(config) {
+          const resolved = await (typeof config === 'function' ? config() : config)
+          return resolved?.lin
+        },
+      },
+    ],
+    cwd: options.cwd || process.cwd(),
+    merge: true,
+    defaults: DEFAULT_CONFIG,
+  }) -->
+
+Use only one config file.
+
+- `lin.config.{ts, mts, cts, js, mjs, cjs, json}`
+- `.linrc`
+
 ### context
 
-This simple string is for adding extra information directly to the system prompt.
+This simple string is directly added to the system prompt. Use it to provide extra information to the LLM about your project.
 
 ```ts
 context: 'hello gpt friend, how do you do'
 ```
 
 ## options
+
+<!-- locale: {
+    alias: 'l',
+    type: 'string',
+    description: 'only act on a specific locale',
+    default: DEFAULT_CONFIG.locale,
+  },
+  cwd: {
+    alias: 'c',
+    type: 'string',
+    description: 'project root',
+    default: process.cwd(),
+  },
+  debug: {
+    alias: 'd',
+    type: 'boolean',
+    description: 'debug mode',
+    default: false,
+  },
+} as const satisfies CommonArgs
+
+export const llmArgs = {
+  context: {
+    alias: 'C',
+    type: 'string',
+    description: 'extra information to include in the GPT system prompt',
+    default: DEFAULT_CONFIG.context,
+  },
+  i18n: {
+    alias: 'i',
+    type: 'string',
+    description: 'the i18n integration used',
+    default: 'i18n',
+  },
+  env: {
+    alias: 'e',
+    type: 'string',
+    description: 'the environment variable that contains the OpenAI token',
+    default: DEFAULT_CONFIG.env,
+  },
+  model: {
+    alias: 'm',
+    type: 'string',
+    description: 'the model to use',
+    default: DEFAULT_CONFIG.options.model,
+  },
+  temperature: {
+    alias: 't',
+    type: 'string',
+    description: 'the temperature to use',
+    default: DEFAULT_CONFIG.options.temperature.toString(),
+  }, -->

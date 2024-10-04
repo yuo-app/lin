@@ -71,26 +71,47 @@ export async function loadI18nConfig(options?: Config): Promise<{ i18n: I18nConf
         },
       },
       {
+        files: ['i18n.config'],
+      },
+      {
+        files: ['.1i8nrc'],
+      },
+      {
         files: ['lin.config'],
         rewrite(config: any) {
           return config?.i18n
         },
       },
       {
-        files: [
-          'i18n.config',
-        ],
+        files: ['.linrc'],
+        rewrite(config: any) {
+          return config?.i18n
+        },
+      },
+      {
+        files: 'package.json',
+        extensions: [],
+        rewrite(config: any) {
+          return config?.lin?.i18n
+        },
+      },
+      {
+        files: ['vite.config', 'nuxt.config'],
+        async rewrite(config) {
+          const resolved = await (typeof config === 'function' ? config() : config)
+          return resolved?.lin?.i18n
+        },
       },
     ],
     cwd: options?.cwd || process.cwd(),
+    merge: false,
     defaults: {
       locales: [],
       defaultLocale: 'en-US',
       directory: 'locales',
     },
-    merge: false,
-  })
 
+  })
   if (!config) {
     throw new Error('No i18n configuration found')
   }

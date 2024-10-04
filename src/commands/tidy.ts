@@ -21,8 +21,8 @@ export default defineCommand({
     },
   },
   async run({ args }) {
-    const { config } = await resolveConfig(args)
-    const { i18n, sources } = await loadI18nConfig(config)
+    const { config, sources: configSources } = await resolveConfig(args)
+    const { i18n, sources: i18nSources } = await loadI18nConfig(config)
 
     let locales = typeof args.locale === 'string' ? [args.locale] : args.locale || []
     locales = catchError(normalizeLocales)(locales, i18n)
@@ -30,8 +30,8 @@ export default defineCommand({
 
     const defaultLocaleJson = JSON.parse(fs.readFileSync(r(`${i18n.defaultLocale}.json`, i18n), { encoding: 'utf8' }))
     const keyCount = countKeys(defaultLocaleJson)
-
-    console.log(ICONS.note, `Config path: ${path.dirname(sources[0])}\\\`${path.basename(sources[0])}\``)
+    console.log(ICONS.note, `Lin config path: ${path.dirname(configSources[0])}\\\`${path.basename(configSources[0])}\``)
+    console.log(ICONS.note, `I18n config path: ${path.dirname(i18nSources[0])}\\\`${path.basename(i18nSources[0])}\``)
     console.log(ICONS.note, `Locale${localesToCheck.length > 1 ? 's' : ''}: (\`${localesToCheck.length}\`) ${localesToCheck.map(l => `**${l}**`).join(', ')}`)
     console.log(ICONS.note, `Keys: \`${keyCount}\``)
 

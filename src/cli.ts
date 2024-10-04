@@ -26,7 +26,7 @@ const main = defineCommand({
   subCommands: commands,
   async run({ args, cmd, rawArgs }) {
     if (args.version)
-      console.log(`${name} \`v${version}\``)
+      console.log(`lin \`v${version}\``)
 
     if (args.models)
       console.log(`\`Models:\`\n${models.join('\n')}`)

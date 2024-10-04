@@ -240,14 +240,10 @@ export async function resolveConfig(
   const { config, sources, dependencies } = await loadConfig<Config>({
     sources: [
       {
-        files: [
-          'lin.config',
-        ],
+        files: ['lin.config'],
       },
       {
-        files: [
-          '.linrc',
-        ],
+        files: ['.linrc'],
       },
       {
         files: 'package.json',
@@ -265,7 +261,7 @@ export async function resolveConfig(
       },
     ],
     cwd: options.cwd || process.cwd(),
-    merge: true,
+    merge: false,
     defaults: DEFAULT_CONFIG,
   })
 

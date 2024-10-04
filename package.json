@@ -44,6 +44,7 @@
   "devDependencies": {
     "@antfu/eslint-config": "^3.7.1",
     "@types/bun": "latest",
+    "@yuo-app/lin": "^0.1.4",
     "bumpp": "^9.5.2",
     "eslint": "^9.11.0",
     "unbuild": "^2.0.0"
