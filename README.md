@@ -142,43 +142,44 @@ lin tidy def
 
 ### config file
 
-<!-- sources: [
-      {
-        files: [
-          'lin.config',
-        ],
-      },
-      {
-        files: [
-          '.linrc',
-        ],
-      },
-      {
-        files: 'package.json',
-        extensions: [],
-        rewrite(config: any) {
-          return config?.lin
-        },
-      },
-      {
-        files: ['vite.config', 'nuxt.config'],
-        async rewrite(config) {
-          const resolved = await (typeof config === 'function' ? config() : config)
-          return resolved?.lin
-        },
-      },
-    ],
-    cwd: options.cwd || process.cwd(),
-    merge: true,
-    defaults: DEFAULT_CONFIG,
-  }) -->
-
 Use only one config file.
 
-- `lin.config.{ts, mts, cts, js, mjs, cjs, json}`
-- `.linrc`
+#### lin config
 
-### context
+- `lin.config.ts`
+
+<details>
+<summary>Show all</summary>
+
+- `lin.config.{ts, mts, cts, js, mjs, cjs, json, ∅}`
+- `.linrc.{ts, mts, cts, js, mjs, cjs, json, ∅}`
+- `lin` in `package.json`
+- `lin` in your vite or nuxt config
+
+</details>
+
+#### i18n config
+
+- `i18n.config.ts` or `i18n` in `lin.config.ts`
+
+<details>
+<summary>Show all</summary>
+
+- `i18n` in lin config
+- `i18n.config.{ts, mts, cts, js, mjs, cjs, json, ∅}`
+- `.i18nrc.{ts, mts, cts, js, mjs, cjs, json, ∅}`
+- `lin.i18n` in `package.json`
+- `lin.i18n` in your vite or nuxt config
+
+</details>
+
+### LLM config
+
+*for the `add` and `translate` commands*
+
+The OpenAI options are exposed directly in `options` in the lin config.
+
+#### `context` in config
 
 This simple string is directly added to the system prompt. Use it to provide extra information to the LLM about your project.
 
@@ -186,56 +187,11 @@ This simple string is directly added to the system prompt. Use it to provide ext
 context: 'hello gpt friend, how do you do'
 ```
 
-## options
+#### `with` arg
 
-<!-- locale: {
-    alias: 'l',
-    type: 'string',
-    description: 'only act on a specific locale',
-    default: DEFAULT_CONFIG.locale,
-  },
-  cwd: {
-    alias: 'c',
-    type: 'string',
-    description: 'project root',
-    default: process.cwd(),
-  },
-  debug: {
-    alias: 'd',
-    type: 'boolean',
-    description: 'debug mode',
-    default: false,
-  },
-} as const satisfies CommonArgs
+You can use this flag with locales to add them to the context window.
+This will add the entire ja-JP.json file to the LLM.
 
-export const llmArgs = {
-  context: {
-    alias: 'C',
-    type: 'string',
-    description: 'extra information to include in the GPT system prompt',
-    default: DEFAULT_CONFIG.context,
-  },
-  i18n: {
-    alias: 'i',
-    type: 'string',
-    description: 'the i18n integration used',
-    default: 'i18n',
-  },
-  env: {
-    alias: 'e',
-    type: 'string',
-    description: 'the environment variable that contains the OpenAI token',
-    default: DEFAULT_CONFIG.env,
-  },
-  model: {
-    alias: 'm',
-    type: 'string',
-    description: 'the model to use',
-    default: DEFAULT_CONFIG.options.model,
-  },
-  temperature: {
-    alias: 't',
-    type: 'string',
-    description: 'the temperature to use',
-    default: DEFAULT_CONFIG.options.temperature.toString(),
-  }, -->
+```bash
+lin translate zh -w jp
+```

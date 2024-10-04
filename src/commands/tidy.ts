@@ -28,12 +28,31 @@ export default defineCommand({
     locales = catchError(normalizeLocales)(locales, i18n)
     const localesToCheck = locales.length > 0 ? locales : i18n.locales
 
+    if (configSources.length === 0)
+      console.log(ICONS.error, `Lin config not found`)
+    else
+      console.log(ICONS.note, `Lin config path: ${path.dirname(configSources[0])}\\\`${path.basename(configSources[0])}\``)
+    if (i18nSources.length === 0)
+      console.log(ICONS.error, `I18n config not found`)
+    else
+      console.log(ICONS.note, `I18n config path: ${path.dirname(i18nSources[0])}\\\`${path.basename(i18nSources[0])}\``)
+
     const defaultLocaleJson = JSON.parse(fs.readFileSync(r(`${i18n.defaultLocale}.json`, i18n), { encoding: 'utf8' }))
-    const keyCount = countKeys(defaultLocaleJson)
-    console.log(ICONS.note, `Lin config path: ${path.dirname(configSources[0])}\\\`${path.basename(configSources[0])}\``)
-    console.log(ICONS.note, `I18n config path: ${path.dirname(i18nSources[0])}\\\`${path.basename(i18nSources[0])}\``)
-    console.log(ICONS.note, `Locale${localesToCheck.length > 1 ? 's' : ''}: (\`${localesToCheck.length}\`) ${localesToCheck.map(l => `**${l}**`).join(', ')}`)
-    console.log(ICONS.note, `Keys: \`${keyCount}\``)
+    const defaultKeyCount = countKeys(defaultLocaleJson)
+    console.log(ICONS.note, `Keys: \`${defaultKeyCount}\``)
+
+    console.logL(ICONS.note, `Locale${localesToCheck.length > 1 ? 's' : ''} (\`${localesToCheck.length}\`): `)
+    for (const locale of localesToCheck) {
+      try {
+        const localeJson = JSON.parse(fs.readFileSync(r(`${locale}.json`, i18n), { encoding: 'utf8' }))
+        const keyCount = countKeys(localeJson)
+        console.logL(`**${locale}** (\`${keyCount}\`) `)
+      }
+      catch {
+        console.logL(c.red(`**${locale}**`), `(${ICONS.error}) `)
+      }
+    }
+    console.log()
 
     catchError(checkArg)(args.sort, ['abc', 'def'])
 
@@ -53,7 +72,7 @@ export default defineCommand({
       const localeFilePath = r(`${locale}.json`, i18n)
       const localeJson = JSON.parse(fs.readFileSync(localeFilePath, { encoding: 'utf8' }))
       if (!shapeMatches(defaultLocaleJson, localeJson)) {
-        const defaultLarger = keyCount > countKeys(localeJson)
+        const defaultLarger = defaultKeyCount > countKeys(localeJson)
         const missingKeys = defaultLarger ? findMissingKeys(defaultLocaleJson, localeJson) : findMissingKeys(localeJson, defaultLocaleJson)
         console.log(ICONS.warning, `Locale **${locale}** is not up to date. Skipping...`, c.dim(`(found ${defaultLarger ? 'missing' : 'extra'}: ${Object.keys(missingKeys)})`))
         continue
