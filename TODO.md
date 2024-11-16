@@ -34,10 +34,12 @@
 
 ### v0.2.0
 
+- [ ] REFACTOR (why do you think machine learning happens in steps?)
 - [ ] make `--cwd` actually work
 - [ ] setup command to add i18n to new projects
 - [ ] support a ton of i18n frameworks
 - [ ] validate config (like locales, models, etc) with checkArg
 - [ ] **`verify`**: reflect on the quality of the translations, check if the translations are accurate
 - [ ] **`convert` command:** convert a project to use i18n by extracting all the strings from the code and adding them to the locale json files.
+- [ ] **`undo`**: undo the last command, store prev file in .lin folder
 - [ ] support claude and friends (what's the best way to support them all??)

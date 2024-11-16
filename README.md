@@ -22,6 +22,7 @@ You will need:
 
 - a project with i18n set up
 - a default locale JSON file (e.g. `en-US.json`)
+- `OPENAI_API_KEY` in your .env file
 
 `lin` needs to know 3 things to work:
 
@@ -177,7 +178,7 @@ Use only one config file.
 
 *for the `add` and `translate` commands*
 
-The OpenAI options are exposed directly in `options` in the lin config.
+The OpenAI options (ex. temperature) are exposed directly in `options` in the lin config.
 
 #### `context` in config
 

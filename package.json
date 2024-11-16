@@ -14,9 +14,16 @@
     "url": "https://github.com/yuo-app/lin/issues"
   },
   "keywords": ["i18n", "translation", "cli", "i18next", "llm"],
-  "module": "dist/index.mjs",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs"
+    }
+  },
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
   "bin": {
-    "lin": "bin/lin.mjs"
+    "lin": "./bin/lin.mjs"
   },
   "files": [
     "bin",
