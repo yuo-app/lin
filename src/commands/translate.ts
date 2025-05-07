@@ -56,9 +56,8 @@ export default defineCommand({
 
     const { withLocales, includeContext } = getWithLocales(args.with, i18n)
     const withLocaleJsons: Record<string, LocaleJson> = {}
-    for (const locale of withLocales) {
+    for (const locale of withLocales)
       withLocaleJsons[locale] = JSON.parse(fs.readFileSync(r(`${locale}.json`, i18n), { encoding: 'utf8' }))
-    }
 
     if (withLocales.length > 0)
       console.log(ICONS.info, `With: ${withLocales.map(l => `**${l}**`).join(', ')}`)
@@ -140,9 +139,8 @@ export default defineCommand({
       if (!result)
         return
 
-      for (const localePath of Object.keys(translationsToWrite)) {
+      for (const localePath of Object.keys(translationsToWrite))
         fs.writeFileSync(localePath, JSON.stringify(translationsToWrite[localePath], null, 2), { encoding: 'utf8' })
-      }
     }
     else {
       console.log(ICONS.success, 'All locales are up to date.')

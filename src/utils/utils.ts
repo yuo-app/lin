@@ -37,26 +37,22 @@ export function r(file: string, i18n?: I18nConfig) {
 
 // #region Locale utils
 export function shapeMatches(obj1: any, obj2: any): boolean {
-  if (typeof obj1 !== 'object' || typeof obj2 !== 'object' || obj1 === null || obj2 === null) {
+  if (typeof obj1 !== 'object' || typeof obj2 !== 'object' || obj1 === null || obj2 === null)
     return false
-  }
 
   const keys1 = Object.keys(obj1)
   const keys2 = Object.keys(obj2)
 
-  if (keys1.length !== keys2.length) {
+  if (keys1.length !== keys2.length)
     return false
-  }
 
   for (const key of keys1) {
-    if (!keys2.includes(key)) {
+    if (!keys2.includes(key))
       return false
-    }
 
     if (typeof obj1[key] === 'object' && typeof obj2[key] === 'object') {
-      if (!shapeMatches(obj1[key], obj2[key])) {
+      if (!shapeMatches(obj1[key], obj2[key]))
         return false
-      }
     }
   }
 
@@ -127,9 +123,9 @@ export function mergeMissingTranslations(existingTranslations: LocaleJson, missi
     let current = result
 
     for (let i = 0; i < keys.length - 1; i++) {
-      if (!(keys[i] in current)) {
+      if (!(keys[i] in current))
         current[keys[i]] = {}
-      }
+
       current = current[keys[i]] as LocaleJson
     }
 
@@ -153,9 +149,9 @@ export function findNestedKey<T extends NestedObject, K extends NestedKeyOf<T>>(
 
   for (let i = 0; i < keys.length - 1; i++) {
     const k = keys[i]
-    if (!(k in current)) {
+    if (!(k in current))
       current[k] = typeof keys[i + 1] === 'number' ? [] : {}
-    }
+
     parents.push(current)
     current = current[k]
   }

@@ -112,9 +112,8 @@ export async function loadI18nConfig(options?: Config): Promise<{ i18n: I18nConf
     },
 
   })
-  if (!config) {
+  if (!config)
     throw new Error('No i18n configuration found')
-  }
 
   return { i18n: config, sources }
 }

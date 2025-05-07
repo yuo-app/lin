@@ -34,7 +34,7 @@
     "dev": "bun --bun unbuild --stub",
     "lint": "eslint . --fix",
     "test": "echo \"Error: write tests you little shit\" && exit 1",
-    "release": "bumpp && npm publish --access public"
+    "release": "bumpp && bun run build && npm publish --access public"
   },
   "peerDependencies": {
     "typescript": "^5.6.2"

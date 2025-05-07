@@ -66,8 +66,7 @@ export default defineCommand({
       }
     }
 
-    for (const key of Object.keys(deletedLocalesByKey)) {
+    for (const key of Object.keys(deletedLocalesByKey))
       console.log(ICONS.success, `Deleted key \`${key}\` from ${deletedLocalesByKey[key].map(l => `**${l}**`).join(', ')}`)
-    }
   },
 })
