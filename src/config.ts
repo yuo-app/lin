@@ -1,22 +1,50 @@
 import type { ArgDef, BooleanArgDef, StringArgDef } from 'citty'
-import type OpenAI from 'openai'
 import type { I18nConfig } from './i18n'
 import type { DeepRequired } from './types'
 import process from 'node:process'
 import deepmerge from 'deepmerge'
 import { loadConfig } from 'unconfig'
-import { catchError, checkArg } from './utils'
+import { handleCliError } from './utils' // Removed catchError, checkArg, added handleCliError
 
-type ChatModel = OpenAI.ChatModel
-type OpenAIOptions = Partial<Pick<OpenAI.ChatCompletionCreateParamsNonStreaming, 'model'
-| 'frequency_penalty'
-| 'logit_bias'
-| 'max_tokens'
-| 'presence_penalty'
-| 'seed'
-| 'service_tier'
-| 'temperature'
-| 'top_p'>>
+export interface ModelDefinition {
+  value: string
+  alias: string
+}
+
+export const providers = [
+  'openai',
+  'anthropic',
+  'google',
+  'xai',
+  'mistral',
+  'groq',
+] as const
+
+export type Provider = typeof providers[number]
+
+export type Models = Record<Provider, ModelDefinition[]>
+
+export interface LLMProviderOptions {
+  /**
+   * The LLM provider to use.
+   */
+  provider: Provider
+  /**
+   * The model to use for the specified provider.
+   * e.g., "gpt-4o-mini" for "openai" provider.
+   */
+  model: string
+  /**
+   * Optional API key for the provider. If not set, the SDK will try to use environment variables.
+   */
+  apiKey?: string
+  temperature?: number
+  maxTokens?: number
+  topP?: number
+  frequencyPenalty?: number
+  presencePenalty?: number
+  seed?: number
+}
 
 export const integrations = [
   'i18n',
@@ -67,15 +95,9 @@ export interface LLMConfig {
   i18n: Integration | I18nConfig
 
   /**
-   * the environment variable that contains the OpenAI token.
-   * @default OPENAI_API_TOKEN
+   * the LLM options, like the model to use
    */
-  env: string
-
-  /**
-   * the OpenAI options, like the model to use
-   */
-  options: OpenAIOptions
+  options: LLMProviderOptions
 }
 
 export type Config = CommonConfig & LLMConfig
@@ -87,9 +109,10 @@ export const DEFAULT_CONFIG = {
 
   context: '',
   i18n: 'i18n',
-  env: 'OPENAI_API_TOKEN',
   options: {
-    model: 'gpt-4o-mini',
+    provider: 'openai', // Changed
+    model: 'gpt-4o-mini', // Changed
+    apiKey: undefined,
     temperature: 0,
   },
 } satisfies Config
@@ -104,10 +127,10 @@ type ConfigToArgDef<T> = {
 
 type CommonArgs = ConfigToArgDef<CommonConfig>
 type LLMArgs = Omit<ConfigToArgDef<LLMConfig>, 'options'> & {
+  provider: StringArgDef // Added
   model: StringArgDef
   temperature: StringArgDef
 }
-type Args = CommonArgs & LLMArgs
 
 export const commonArgs = {
   locale: {
@@ -143,16 +166,16 @@ export const llmArgs = {
     description: 'the i18n integration used',
     default: 'i18n',
   },
-  env: {
-    alias: 'e',
+  provider: { // Added provider argument
+    alias: 'p',
     type: 'string',
-    description: 'the environment variable that contains the OpenAI token',
-    default: DEFAULT_CONFIG.env,
+    description: `the LLM provider to use (e.g., ${providers.join(', ')})`,
+    default: DEFAULT_CONFIG.options.provider,
   },
   model: {
     alias: 'm',
     type: 'string',
-    description: 'the model to use',
+    description: 'the model to use (e.g., gpt-4o-mini)',
     default: DEFAULT_CONFIG.options.model,
   },
   temperature: {
@@ -165,71 +188,99 @@ export const llmArgs = {
 
 export const allArgs = { ...commonArgs, ...llmArgs }
 
-export const models: ChatModel[] = [
-  'o1-preview',
-  'o1-preview-2024-09-12',
-  'o1-mini',
-  'o1-mini-2024-09-12',
-  'gpt-4o',
-  'gpt-4o-2024-08-06',
-  'gpt-4o-2024-05-13',
-  'chatgpt-4o-latest',
-  'gpt-4o-mini',
-  'gpt-4o-mini-2024-07-18',
-  'gpt-4-turbo',
-  'gpt-4-turbo-2024-04-09',
-  'gpt-4-0125-preview',
-  'gpt-4-turbo-preview',
-  'gpt-4-1106-preview',
-  'gpt-4-vision-preview',
-  'gpt-4',
-  'gpt-4-0314',
-  'gpt-4-0613',
-  'gpt-4-32k',
-  'gpt-4-32k-0314',
-  'gpt-4-32k-0613',
-  'gpt-3.5-turbo',
-  'gpt-3.5-turbo-16k',
-  'gpt-3.5-turbo-0301',
-  'gpt-3.5-turbo-0613',
-  'gpt-3.5-turbo-1106',
-  'gpt-3.5-turbo-0125',
-  'gpt-3.5-turbo-16k-0613',
-]
-
-function normalizeArgs(args: Partial<Args>): Partial<Config> {
-  const normalized: Partial<Args> = { ...args }
-
-  Object.entries(commonArgs).forEach(([fullName, def]) => {
-    if ('alias' in def) {
-      const fullKey = fullName as keyof Args
-      const configKey = def.alias as keyof Args
-
-      if (def.alias && normalized[configKey] !== undefined && normalized[fullKey] === undefined) {
-        normalized[fullKey] = normalized[configKey] as any
-        delete normalized[configKey]
-      }
-    }
-  })
-
-  const config = convertType(normalized)
-  if (typeof config.i18n !== 'object')
-    catchError(checkArg)(config.i18n, integrations)
-  catchError(checkArg)(config.options?.model, models)
-
-  return config
+export const availableModels: Models = {
+  openai: [
+    { value: 'gpt-4.1', alias: 'GPT 4.1' },
+    { value: 'gpt-4.1-mini', alias: 'GPT 4.1 mini' },
+    { value: 'gpt-4.1-nano', alias: 'GPT 4.1 nano' },
+    { value: 'o4-mini', alias: 'o4 mini' },
+    { value: 'o3', alias: 'o3' },
+    { value: 'o3-mini', alias: 'o3 mini' },
+    { value: 'gpt-4o', alias: 'GPT 4o' },
+    { value: 'gpt-4o-mini', alias: 'GPT 4o mini' },
+  ],
+  anthropic: [
+    { value: 'claude-3-7-sonnet-latest', alias: 'Claude 3.7 Sonnet' },
+    { value: 'claude-3-5-sonnet-latest', alias: 'Claude 3.5 Sonnet' },
+    { value: 'claude-3-5-haiku-latest', alias: 'Claude 3.5 Haiku' },
+  ],
+  google: [
+    { value: 'gemini-2.5-pro-exp-05-06', alias: 'Gemini 2.5 Pro' },
+    { value: 'gemini-2.5-flash-preview-04-17', alias: 'Gemini 2.5 Flash' },
+    { value: 'gemini-2.0-flash', alias: 'Gemini 2.0 Flash' },
+    { value: 'gemini-2.0-flash-lite', alias: 'Gemini 2.0 Flash Lite' },
+  ],
+  xai: [
+    { value: 'grok-3', alias: 'Grok 3' },
+    { value: 'grok-3-mini', alias: 'Grok 3 mini' },
+    { value: 'grok-3-fast', alias: 'Grok 3 fast' },
+    { value: 'grok-3-mini-fast', alias: 'Grok 3 mini fast' },
+  ],
+  mistral: [
+    { value: 'mistral-large-latest', alias: 'Mistral Large' },
+    { value: 'mistral-small-latest', alias: 'Mistral Small' },
+    { value: 'open-mixtral-8x22b', alias: 'Open Mixtral 8x22B' },
+    { value: 'open-mixtral-8x7b', alias: 'Open Mixtral 8x7B' },
+    { value: 'open-mistral-7b', alias: 'Open Mistral 7B' },
+  ],
+  groq: [
+    { value: 'deepseek-r1-distill-llama-70b', alias: 'DeepSeek R1 Distill Llama 70B' },
+    { value: 'qwen-qwq-32b', alias: 'QwQ 32B' },
+    { value: 'meta-llama/llama-4-maverick-17b-128e-instruct', alias: 'Llama 4 Maverick' },
+    { value: 'meta-llama/llama-4-scout-17b-16e-instruct', alias: 'Llama 4 Scout' },
+    { value: 'llama-3.3-70b-versatile', alias: 'Llama 3.3 70B' },
+    { value: 'llama-3.1-8b-instant', alias: 'Llama 3.1 8B Instant' },
+    { value: 'gemma2-9b-it', alias: 'Gemma2 9B IT' },
+  ],
 }
 
-function convertType(config: any): Partial<Config> {
-  const { model, temperature, ...rest } = config
-
-  return {
-    ...rest,
-    options: {
-      model,
-      temperature: Number(temperature),
-    },
+function normalizeArgs(args: Record<string, any>): Partial<Config> {
+  // collect only the LLM‐related overrides
+  const cliOpts: Partial<LLMProviderOptions> = {}
+  if (args.provider) {
+    if (!providers.includes(args.provider))
+      handleCliError(`Invalid provider "${args.provider}"`, `Available providers: ${providers.join(', ')}`)
+    cliOpts.provider = args.provider as Provider
   }
+  if (args.model)
+    cliOpts.model = args.model
+  if (args.apiKey)
+    cliOpts.apiKey = args.apiKey
+  if (args.temperature !== undefined) {
+    const t = Number(args.temperature)
+    if (Number.isNaN(t))
+      handleCliError(`Invalid temperature "${args.temperature}"`)
+    cliOpts.temperature = t
+  }
+
+  // only merge into options if any LLM flag was set
+  const options = Object.keys(cliOpts).length
+    ? { ...DEFAULT_CONFIG.options, ...cliOpts }
+    : undefined
+
+  // build partial Config override
+  const cfg: Partial<Config> = {
+    ...(args.locale ? { locale: args.locale } : {}),
+    ...(args.cwd ? { cwd: args.cwd } : {}),
+    ...(args.debug ? { debug: args.debug } : {}),
+    ...(args.context ? { context: args.context } : {}),
+    ...(args.i18n ? { i18n: args.i18n } : {}),
+    ...(options ? { options } : {}),
+  }
+
+  // validate model vs provider
+  if (options) {
+    const { provider, model } = options
+    const models = availableModels[provider] || []
+    if (!models.some(m => m.value === model)) {
+      handleCliError(
+        `Model "${model}" not found for provider "${provider}".`,
+        `Available: ${models.map(m => m.value).join(', ')}`,
+      )
+    }
+  }
+
+  return cfg
 }
 
 export async function resolveConfig(

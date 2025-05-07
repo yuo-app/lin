@@ -2,7 +2,6 @@ import fs from 'node:fs'
 import process from 'node:process'
 import { text } from '@clack/prompts'
 import { defineCommand } from 'citty'
-import OpenAI from 'openai'
 import { allArgs, resolveConfig } from '../config'
 import { loadI18nConfig } from '../i18n'
 import {
@@ -54,7 +53,6 @@ export default defineCommand({
   async run({ args }) {
     const { config } = await resolveConfig(args)
     const { i18n } = await loadI18nConfig(config)
-    const openai = new OpenAI({ apiKey: process.env[config.env] })
 
     let locales = typeof args.locale === 'string' ? [args.locale] : args.locale || []
     locales = catchError(normalizeLocales)(locales, i18n)
@@ -130,7 +128,7 @@ export default defineCommand({
     if (Object.keys(keysToTranslateAndDefault).length > 0) {
       await console.loading(`Adding \`${args.key}\` to ${Object.keys(keysToTranslateAndDefault).map(l => `**${l}**`).join(', ')}`, async () => {
         const translations = Object.keys(keysToTranslate).length > 0
-          ? await translateKeys(keysToTranslate, config, i18n, openai, withLocaleJsons, includeContext)
+          ? await translateKeys(keysToTranslate, config, i18n, withLocaleJsons, includeContext)
           : {}
 
         translations[i18n.defaultLocale] = keysToTranslateAndDefault[i18n.defaultLocale]

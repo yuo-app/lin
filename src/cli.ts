@@ -1,7 +1,7 @@
 import { defineCommand, runMain, showUsage } from 'citty'
 import { description, version } from '../package.json'
 import { commands } from './commands'
-import { commonArgs, models, resolveConfig } from './config'
+import { availableModels, commonArgs, resolveConfig } from './config'
 import { console, ICONS } from './utils'
 import 'dotenv/config'
 
@@ -28,10 +28,17 @@ const main = defineCommand({
     if (args.version)
       console.log(`lin \`v${version}\``)
 
-    if (args.models)
-      console.log(`\`Models:\`\n${models.join('\n')}`)
+    if (args.models) {
+      console.log('`Available Models:`')
+      for (const provider in availableModels) {
+        console.log(`  **${provider}**`)
+        availableModels[provider as keyof typeof availableModels].forEach((model) => {
+          console.log(`    - ${model.value} (${model.alias})`)
+        })
+      }
+    }
 
-    if (rawArgs.length === 0)
+    if (rawArgs.length === 0 && !args.version && !args.models) // Ensure usage is shown if no other action
       showUsage(cmd)
 
     const { config } = await resolveConfig(args)

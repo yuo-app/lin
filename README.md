@@ -22,7 +22,7 @@ You will need:
 
 - a project with i18n set up
 - a default locale JSON file (e.g. `en-US.json`)
-- `OPENAI_API_KEY` in your .env file
+- API keys for your chosen LLM providers in your .env file (e.g., `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`)
 
 `lin` needs to know 3 things to work:
 
@@ -178,7 +178,9 @@ Use only one config file.
 
 *for the `add` and `translate` commands*
 
-The OpenAI options (ex. temperature) are exposed directly in `options` in the lin config.
+`lin` uses the Vercel AI SDK to support multiple LLM providers. You need to specify the model in the format `provider:model_id` (e.g., `openai:gpt-4o-mini`) in your configuration or via the `--model` CLI flag. Make sure the corresponding API key (e.g., `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`) is set in your environment variables.
+
+The LLM options (ex. temperature) are exposed directly in `options` in the lin config.
 
 #### `context` in config
 

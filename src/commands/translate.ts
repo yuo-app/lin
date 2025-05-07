@@ -1,7 +1,6 @@
 import fs from 'node:fs'
 import process from 'node:process'
 import { defineCommand } from 'citty'
-import OpenAI from 'openai'
 import { allArgs, resolveConfig } from '../config'
 import { loadI18nConfig } from '../i18n'
 import {
@@ -48,7 +47,6 @@ export default defineCommand({
   async run({ args }) {
     const { config } = await resolveConfig(args)
     const { i18n } = await loadI18nConfig(config)
-    const openai = new OpenAI({ apiKey: process.env[config.env] })
 
     const locales = catchError(normalizeLocales)(args._, i18n)
     const localesToCheck = locales.length > 0 ? locales : i18n.locales.filter(l => l !== i18n.defaultLocale)
@@ -106,7 +104,7 @@ export default defineCommand({
 
     if (Object.keys(keysToTranslate).length > 0) {
       await console.loading(`Translating ${args.force ? 'entire JSON' : 'missing keys'} for ${Object.keys(keysToTranslate).map(l => `**${l}**`).join(', ')}`, async () => {
-        const translations = await translateKeys(keysToTranslate, config, i18n, openai, withLocaleJsons, includeContext)
+        const translations = await translateKeys(keysToTranslate, config, i18n, withLocaleJsons, includeContext)
 
         if (args.debug)
           console.log(ICONS.info, `Translations: ${JSON.stringify(translations)}`)

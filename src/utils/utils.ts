@@ -24,6 +24,15 @@ export function checkArg(name: string | undefined, list: readonly string[]) {
   if (name && !list.includes(name))
     throw new Error(`"\`${name}\`" is invalid, must be one of ${list.join(', ')}`)
 }
+
+export function handleCliError(primaryMessage: string, details?: string | string[]): never {
+  console.log(ICONS.error, primaryMessage)
+  if (details) {
+    const detailArray = Array.isArray(details) ? details : [details]
+    detailArray.forEach(detail => console.log(ICONS.info, detail))
+  }
+  process.exit(1)
+}
 // #endregion
 
 // #region Path utils
