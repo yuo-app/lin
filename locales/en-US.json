@@ -1,0 +1,142 @@
+{
+  "about": {
+    "description": "Learn more about me and my work.",
+    "title": "About"
+  },
+  "blog": {
+    "description": "Read my latest blog posts.",
+    "title": "Blog"
+  },
+  "contact": {
+    "description": "Get in touch with me and my team.",
+    "title": "Contact"
+  },
+  "error": {
+    "200": {
+      "description": "Ok",
+      "title": "200"
+    },
+    "404": {
+      "description": "Page not found.",
+      "title": "404"
+    },
+    "500": {
+      "description": "Internal server error.",
+      "title": "500"
+    }
+  },
+  "home": {
+    "description": "Welcome to my website!",
+    "title": "Home"
+  },
+  "projects": {
+    "description": "Check out my latest projects.",
+    "title": "Projects"
+  },
+  "ui": {
+    "button": {
+      "back": "Back",
+      "cancel": "Cancel",
+      "close": "Close",
+      "copy": "Copy",
+      "create": "Create",
+      "delete": "Delete",
+      "next": "Next",
+      "paste": "Paste",
+      "reset": "Reset",
+      "search": "Search",
+      "submit": "Submit",
+      "update": "Update"
+    },
+    "footer": {
+      "copyright": "Copyright © 2023 John Doe. All rights reserved.",
+      "title": "Footer"
+    },
+    "module": {
+      "finance": {
+        "balance": "Balance",
+        "budget": "Budget",
+        "description": "Finance module",
+        "expenses": "Expenses",
+        "income": "Income",
+        "title": "Finance",
+        "transactions": "Transactions"
+      },
+      "school": {
+        "announcements": "Announcements",
+        "assignments": "Assignments",
+        "attendance": "Attendance",
+        "books": "Books",
+        "calendar": "Calendar",
+        "courses": "Courses",
+        "description": "School module",
+        "events": "Events",
+        "exams": "Exams",
+        "grades": "Grades",
+        "library": "Library",
+        "news": "News",
+        "presentations": "Presentations",
+        "projects": "Projects",
+        "publications": "Publications",
+        "quizzes": "Quizzes",
+        "reports": "Reports",
+        "research": "Research",
+        "resources": "Resources",
+        "schedule": "Schedule",
+        "tests": "Tests",
+        "title": "School",
+        "videos": "Videos"
+      },
+      "todo": {
+        "description": "Todo module",
+        "notes": "Notes",
+        "reminders": "Reminders",
+        "tasks": "Tasks",
+        "title": "Todo"
+      },
+      "work": {
+        "awards": "Awards",
+        "certifications": "Certifications",
+        "description": "Work module",
+        "education": "Education",
+        "portfolio": "Portfolio",
+        "projects": "Projects",
+        "publications": "Publications",
+        "resume": "Resume",
+        "skills": "Skills",
+        "title": "Work"
+      }
+    },
+    "nav": {
+      "home": "Home",
+      "modules": "Modules",
+      "profile": "Profile",
+      "settings": "Settings"
+    },
+    "security": {
+      "accessibility": "Accessibility",
+      "cookies": "Cookies",
+      "description": "Security module",
+      "help": "Help",
+      "legal": "Legal",
+      "privacy": "Privacy",
+      "profile": "Profile",
+      "sign-in": "Sign in",
+      "sign-out": "Sign out",
+      "support": "Support",
+      "title": "Security",
+      "two-factor-authentication": "Two-factor authentication"
+    },
+    "settings": {
+      "about": "About",
+      "account": "Account",
+      "description": "Settings module",
+      "language": "Language",
+      "notifications": "Notifications",
+      "profile": "Profile",
+      "region": "Region",
+      "timezone": "Timezone",
+      "title": "Settings"
+    }
+  }
+}

@@ -1,0 +1,137 @@
+{
+  "ui": {
+    "nav": {
+      "home": "首页",
+      "settings": "设置",
+      "profile": "个人资料",
+      "modules": "模块"
+    },
+    "button": {
+      "back": "返回",
+      "next": "下一步",
+      "create": "创建",
+      "update": "更新",
+      "delete": "删除",
+      "cancel": "取消",
+      "close": "关闭",
+      "copy": "复制",
+      "paste": "粘贴",
+      "search": "搜索",
+      "submit": "提交",
+      "reset": "重置"
+    },
+    "settings": {
+      "title": "设置",
+      "description": "设置模块",
+      "profile": "个人资料",
+      "account": "账户",
+      "notifications": "通知",
+      "language": "语言",
+      "region": "地区",
+      "timezone": "时区",
+      "about": "关于"
+    },
+    "security": {
+      "title": "安全",
+      "description": "安全模块",
+      "two-factor-authentication": "双重认证",
+      "sign-out": "登出",
+      "sign-in": "登录",
+      "profile": "个人资料",
+      "help": "帮助",
+      "support": "支持",
+      "legal": "法律",
+      "privacy": "隐私",
+      "cookies": "Cookies",
+      "accessibility": "无障碍"
+    },
+    "module": {
+      "finance": {
+        "title": "财务",
+        "description": "财务模块",
+        "balance": "余额",
+        "transactions": "交易",
+        "expenses": "支出",
+        "income": "收入",
+        "budget": "预算"
+      },
+      "school": {
+        "title": "学校",
+        "description": "学校模块",
+        "courses": "课程",
+        "grades": "成绩",
+        "exams": "考试",
+        "attendance": "出勤",
+        "schedule": "日程",
+        "calendar": "日历",
+        "resources": "资源",
+        "announcements": "公告",
+        "events": "事件",
+        "news": "新闻",
+        "library": "图书馆",
+        "books": "书籍",
+        "videos": "视频",
+        "reports": "报告",
+        "research": "研究",
+        "publications": "出版物",
+        "presentations": "演示",
+        "projects": "项目",
+        "assignments": "作业",
+        "tests": "测试",
+        "quizzes": "测验"
+      },
+      "work": {
+        "title": "工作",
+        "description": "工作模块",
+        "resume": "简历",
+        "education": "教育",
+        "certifications": "认证",
+        "skills": "技能",
+        "projects": "项目",
+        "portfolio": "作品集",
+        "publications": "出版物",
+        "awards": "奖项"
+      },
+      "todo": {
+        "title": "待办事项",
+        "description": "待办事项模块",
+        "tasks": "任务",
+        "notes": "笔记",
+        "reminders": "提醒"
+      }
+    },
+    "footer": {
+      "copyright": "版权 © 2023 John Doe. 保留所有权利。"
+    }
+  },
+  "home": {
+    "title": "首页",
+    "description": "欢迎来到我的网站！"
+  },
+  "about": {
+    "title": "关于",
+    "description": "了解更多关于我和我的工作。"
+  },
+  "contact": {
+    "title": "联系",
+    "description": "与我和我的团队联系。"
+  },
+  "blog": {
+    "title": "博客",
+    "description": "阅读我最新的博客文章。"
+  },
+  "projects": {
+    "title": "项目",
+    "description": "查看我最新的项目。"
+  },
+  "error": {
+    "404": {
+      "title": "404",
+      "description": "页面未找到。"
+    },
+    "500": {
+      "title": "500",
+      "description": "内部服务器错误。"
+    }
+  }
+}

@@ -1,0 +1,142 @@
+{
+  "about": {
+    "description": "나와 내 작업에 대해 더 알아보세요.",
+    "title": "정보"
+  },
+  "blog": {
+    "description": "내 최신 블로그 게시물을 읽어보세요.",
+    "title": "블로그"
+  },
+  "contact": {
+    "description": "나와 내 팀에 연락하세요.",
+    "title": "연락처"
+  },
+  "error": {
+    "200": {
+      "description": "좋습니다",
+      "title": "200"
+    },
+    "404": {
+      "description": "페이지를 찾을 수 없습니다.",
+      "title": "404"
+    },
+    "500": {
+      "description": "내부 서버 오류.",
+      "title": "500"
+    }
+  },
+  "home": {
+    "description": "내 웹사이트에 오신 것을 환영합니다!",
+    "title": "홈"
+  },
+  "projects": {
+    "description": "내 최신 프로젝트를 확인하세요.",
+    "title": "프로젝트"
+  },
+  "ui": {
+    "button": {
+      "back": "뒤로",
+      "cancel": "취소",
+      "close": "닫기",
+      "copy": "복사",
+      "create": "생성",
+      "delete": "삭제",
+      "next": "다음",
+      "paste": "붙여넣기",
+      "reset": "초기화",
+      "search": "검색",
+      "submit": "제출",
+      "update": "업데이트"
+    },
+    "footer": {
+      "copyright": "저작권 © 2023 존 도우. 모든 권리 보유.",
+      "title": "바닥글"
+    },
+    "module": {
+      "finance": {
+        "balance": "잔액",
+        "budget": "예산",
+        "description": "재무 모듈",
+        "expenses": "지출",
+        "income": "수입",
+        "title": "재무",
+        "transactions": "거래"
+      },
+      "school": {
+        "announcements": "공지사항",
+        "assignments": "과제",
+        "attendance": "출석",
+        "books": "책",
+        "calendar": "달력",
+        "courses": "과정",
+        "description": "학교 모듈",
+        "events": "이벤트",
+        "exams": "시험",
+        "grades": "성적",
+        "library": "도서관",
+        "news": "뉴스",
+        "presentations": "발표",
+        "projects": "프로젝트",
+        "publications": "출판물",
+        "quizzes": "퀴즈",
+        "reports": "보고서",
+        "research": "연구",
+        "resources": "자료",
+        "schedule": "일정",
+        "tests": "시험",
+        "title": "학교",
+        "videos": "비디오"
+      },
+      "todo": {
+        "description": "할 일 모듈",
+        "notes": "노트",
+        "reminders": "알림",
+        "tasks": "작업",
+        "title": "할 일"
+      },
+      "work": {
+        "awards": "수상",
+        "certifications": "자격증",
+        "description": "작업 모듈",
+        "education": "교육",
+        "portfolio": "포트폴리오",
+        "projects": "프로젝트",
+        "publications": "출판물",
+        "resume": "이력서",
+        "skills": "기술",
+        "title": "작업"
+      }
+    },
+    "nav": {
+      "home": "홈",
+      "modules": "모듈",
+      "profile": "프로필",
+      "settings": "설정"
+    },
+    "security": {
+      "accessibility": "접근성",
+      "cookies": "쿠키",
+      "description": "보안 모듈",
+      "help": "도움말",
+      "legal": "법적",
+      "privacy": "개인정보",
+      "profile": "프로필",
+      "sign-in": "로그인",
+      "sign-out": "로그아웃",
+      "support": "지원",
+      "title": "보안",
+      "two-factor-authentication": "이중 인증"
+    },
+    "settings": {
+      "about": "정보",
+      "account": "계정",
+      "description": "설정 모듈",
+      "language": "언어",
+      "notifications": "알림",
+      "profile": "프로필",
+      "region": "지역",
+      "timezone": "시간대",
+      "title": "설정"
+    }
+  }
+}
