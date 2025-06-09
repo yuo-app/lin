@@ -10,7 +10,7 @@ export default defineConfig({
     // provider: 'groq',
     // model: 'deepseek-r1-distill-llama-70b',
 
-    provider: 'asd',
+    provider: 'google',
     model: 'gemini-2.5-flash-preview-05-20',
 
     // provider: 'azure',

@@ -130,11 +130,10 @@ lin tidy def # sort by default locale
 
 ### models
 
-To see a list of all available LLM providers and models, run:
+To see a list of all available LLM providers and models:
 
-```bash
-lin -M
-```
+- Run `lin -M`, `lin --models` or `lin models` to list all models.
+- To filter by provider, just specify providers after the command: `lin -M openai google`
 
 ## config
 

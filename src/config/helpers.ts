@@ -1,7 +1,6 @@
 import type { AzureLLMProviderOptions, Config, Integration, LLMProviderOptions, Provider } from './types'
-import deepmerge from 'deepmerge'
 import { handleCliError } from '../utils'
-import { availableModels, DEFAULT_CONFIG, integrations, providers } from './constants'
+import { availableModels, integrations, providers } from './constants'
 
 export function normalizeArgs(inputArgs: Record<string, any>): Partial<Config> {
   const outputConfig: Partial<Config> = {}

@@ -8,4 +8,5 @@ export const commands = {
   del: () => import('./del').then(_rDefault),
   tidy: () => import('./tidy').then(_rDefault),
   verify: () => import('./verify').then(_rDefault),
+  models: () => import('./models').then(_rDefault),
 } as const

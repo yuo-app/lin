@@ -1,0 +1,830 @@
+Directory structure:
+└── src/
+    ├── _parser.ts
+    ├── _utils.ts
+    ├── args.ts
+    ├── command.ts
+    ├── index.ts
+    ├── main.ts
+    ├── types.ts
+    └── usage.ts
+
+
+Files Content:
+
+================================================
+FILE: src/_parser.ts
+================================================
+// Parser is based on https://github.com/lukeed/mri 1.2.0 (MIT)
+// Check the main LICENSE file for more info.
+
+type Dict<T> = Record<string, T>;
+type Arrayable<T> = T | T[];
+type Default = Dict<any>;
+
+export interface Options {
+  boolean?: Arrayable<string>;
+  string?: Arrayable<string>;
+  alias?: Dict<Arrayable<string>>;
+  default?: Dict<any>;
+  unknown?(flag: string): void;
+}
+
+export type Argv<T = Default> = T & {
+  _: string[];
+};
+
+function toArr(any: any) {
+  return any == undefined ? [] : Array.isArray(any) ? any : [any];
+}
+
+function toVal(out, key, val, opts) {
+  let x;
+  const old = out[key];
+  const nxt = ~opts.string.indexOf(key)
+    ? val == undefined || val === true
+      ? ""
+      : String(val)
+    : typeof val === "boolean"
+      ? val
+      : ~opts.boolean.indexOf(key)
+        ? val === "false"
+          ? false
+          : val === "true" ||
+            (out._.push(((x = +val), x * 0 === 0) ? x : val), !!val)
+        : ((x = +val), x * 0 === 0)
+          ? x
+          : val;
+  out[key] =
+    old == undefined ? nxt : Array.isArray(old) ? old.concat(nxt) : [old, nxt];
+}
+
+export function parseRawArgs<T = Default>(
+  args: string[] = [],
+  opts: Options = {},
+): Argv<T> {
+  let k;
+  let arr;
+  let arg;
+  let name;
+  let val;
+  const out = { _: [] };
+  let i = 0;
+  let j = 0;
+  let idx = 0;
+  const len = args.length;
+
+  const alibi = opts.alias !== void 0;
+  const strict = opts.unknown !== void 0;
+  const defaults = opts.default !== void 0;
+
+  opts.alias = opts.alias || {};
+  opts.string = toArr(opts.string);
+  opts.boolean = toArr(opts.boolean);
+
+  if (alibi) {
+    for (k in opts.alias) {
+      arr = opts.alias[k] = toArr(opts.alias[k]);
+      for (i = 0; i < arr.length; i++) {
+        (opts.alias[arr[i]] = arr.concat(k)).splice(i, 1);
+      }
+    }
+  }
+
+  for (i = opts.boolean.length; i-- > 0; ) {
+    arr = opts.alias[opts.boolean[i]] || [];
+    for (j = arr.length; j-- > 0; ) {
+      opts.boolean.push(arr[j]);
+    }
+  }
+
+  for (i = opts.string.length; i-- > 0; ) {
+    arr = opts.alias[opts.string[i]] || [];
+    for (j = arr.length; j-- > 0; ) {
+      opts.string.push(arr[j]);
+    }
+  }
+
+  if (defaults) {
+    for (k in opts.default) {
+      name = typeof opts.default[k];
+      arr = opts.alias[k] = opts.alias[k] || [];
+      if (opts[name] !== void 0) {
+        opts[name].push(k);
+        for (i = 0; i < arr.length; i++) {
+          opts[name].push(arr[i]);
+        }
+      }
+    }
+  }
+
+  const keys = strict ? Object.keys(opts.alias) : [];
+
+  for (i = 0; i < len; i++) {
+    arg = args[i];
+
+    if (arg === "--") {
+      out._ = out._.concat(args.slice(++i));
+      break;
+    }
+
+    for (j = 0; j < arg.length; j++) {
+      if (arg.charCodeAt(j) !== 45) {
+        break;
+      } // "-"
+    }
+
+    if (j === 0) {
+      out._.push(arg);
+    } else if (arg.substring(j, j + 3) === "no-") {
+      name = arg.slice(Math.max(0, j + 3));
+      if (strict && !~keys.indexOf(name)) {
+        return opts.unknown(arg);
+      }
+      out[name] = false;
+    } else {
+      for (idx = j + 1; idx < arg.length; idx++) {
+        if (arg.charCodeAt(idx) === 61) {
+          break;
+        } // "="
+      }
+
+      name = arg.substring(j, idx);
+      val =
+        arg.slice(Math.max(0, ++idx)) ||
+        i + 1 === len ||
+        ("" + args[i + 1]).charCodeAt(0) === 45 ||
+        args[++i];
+      arr = j === 2 ? [name] : name;
+
+      for (idx = 0; idx < arr.length; idx++) {
+        name = arr[idx];
+        if (strict && !~keys.indexOf(name)) {
+          return opts.unknown("-".repeat(j) + name);
+        }
+        toVal(out, name, idx + 1 < arr.length || val, opts);
+      }
+    }
+  }
+
+  if (defaults) {
+    for (k in opts.default) {
+      if (out[k] === void 0) {
+        out[k] = opts.default[k];
+      }
+    }
+  }
+
+  if (alibi) {
+    for (k in out) {
+      arr = opts.alias[k] || [];
+      while (arr.length > 0) {
+        out[arr.shift()] = out[k];
+      }
+    }
+  }
+
+  return out;
+}
+
+
+
+================================================
+FILE: src/_utils.ts
+================================================
+import type { Resolvable } from "./types";
+
+export function toArray(val: any) {
+  if (Array.isArray(val)) {
+    return val;
+  }
+  return val === undefined ? [] : [val];
+}
+
+export function formatLineColumns(lines: string[][], linePrefix = "") {
+  const maxLength: number[] = [];
+  for (const line of lines) {
+    for (const [i, element] of line.entries()) {
+      maxLength[i] = Math.max(maxLength[i] || 0, element.length);
+    }
+  }
+  return lines
+    .map((l) =>
+      l
+        .map(
+          (c, i) =>
+            linePrefix + c[i === 0 ? "padStart" : "padEnd"](maxLength[i]),
+        )
+        .join("  "),
+    )
+    .join("\n");
+}
+
+export function resolveValue<T>(input: Resolvable<T>): T | Promise<T> {
+  return typeof input === "function" ? (input as any)() : input;
+}
+
+export class CLIError extends Error {
+  constructor(
+    message: string,
+    public code?: string,
+  ) {
+    super(message);
+    this.name = "CLIError";
+  }
+}
+
+
+
+================================================
+FILE: src/args.ts
+================================================
+import { kebabCase, camelCase } from "scule";
+import { parseRawArgs } from "./_parser";
+import type { Arg, ArgsDef, ParsedArgs } from "./types";
+import { CLIError, toArray } from "./_utils";
+
+export function parseArgs<T extends ArgsDef = ArgsDef>(
+  rawArgs: string[],
+  argsDef: ArgsDef,
+): ParsedArgs<T> {
+  const parseOptions = {
+    boolean: [] as string[],
+    string: [] as string[],
+    number: [] as string[],
+    enum: [] as (number | string)[],
+    mixed: [] as string[],
+    alias: {} as Record<string, string | string[]>,
+    default: {} as Record<string, boolean | number | string>,
+  };
+
+  const args = resolveArgs(argsDef);
+
+  for (const arg of args) {
+    if (arg.type === "positional") {
+      continue;
+    }
+    // eslint-disable-next-line unicorn/prefer-switch
+    if (arg.type === "string" || arg.type === "number") {
+      parseOptions.string.push(arg.name);
+    } else if (arg.type === "boolean") {
+      parseOptions.boolean.push(arg.name);
+    } else if (arg.type === "enum") {
+      parseOptions.enum.push(...(arg.options || []));
+    }
+
+    if (arg.default !== undefined) {
+      parseOptions.default[arg.name] = arg.default;
+    }
+    if (arg.alias) {
+      parseOptions.alias[arg.name] = arg.alias;
+    }
+  }
+
+  const parsed = parseRawArgs(rawArgs, parseOptions);
+  const [...positionalArguments] = parsed._;
+
+  const parsedArgsProxy = new Proxy(parsed, {
+    get(target: ParsedArgs<any>, prop: string) {
+      return target[prop] ?? target[camelCase(prop)] ?? target[kebabCase(prop)];
+    },
+  });
+
+  for (const [, arg] of args.entries()) {
+    // eslint-disable-next-line unicorn/prefer-switch
+    if (arg.type === "positional") {
+      const nextPositionalArgument = positionalArguments.shift();
+      if (nextPositionalArgument !== undefined) {
+        parsedArgsProxy[arg.name] = nextPositionalArgument;
+      } else if (arg.default === undefined && arg.required !== false) {
+        throw new CLIError(
+          `Missing required positional argument: ${arg.name.toUpperCase()}`,
+          "EARG",
+        );
+      } else {
+        parsedArgsProxy[arg.name] = arg.default;
+      }
+    } else if (arg.type === "enum") {
+      const argument = parsedArgsProxy[arg.name];
+      const options = arg.options || [];
+      if (
+        argument !== undefined &&
+        options.length > 0 &&
+        !options.includes(argument)
+      ) {
+        throw new CLIError(
+          `Invalid value for argument: \`--${arg.name}\` (\`${argument}\`). Expected one of: ${options.map((o) => `\`${o}\``).join(", ")}.`,
+          "EARG",
+        );
+      }
+    } else if (arg.type === "number") {
+      if (parsedArgsProxy[arg.name] === undefined) {
+        if (arg.required) {
+          throw new CLIError(
+            `Missing required argument: --${arg.name}`,
+            "EARG",
+          );
+        }
+        continue;
+      }
+
+      const _originalValue = parsedArgsProxy[arg.name];
+      parsedArgsProxy[arg.name] = Number.parseFloat(
+        parsedArgsProxy[arg.name] as string,
+      );
+      if (Number.isNaN(parsedArgsProxy[arg.name])) {
+        throw new CLIError(
+          `Invalid value for argument: \`--${arg.name}\` (\`${_originalValue}\`). Expected a number.`,
+          "EARG",
+        );
+      }
+    } else if (arg.required && parsedArgsProxy[arg.name] === undefined) {
+      throw new CLIError(`Missing required argument: --${arg.name}`, "EARG");
+    }
+  }
+
+  return parsedArgsProxy as ParsedArgs<T>;
+}
+
+export function resolveArgs(argsDef: ArgsDef): Arg[] {
+  const args: Arg[] = [];
+  for (const [name, argDef] of Object.entries(argsDef || {})) {
+    args.push({
+      ...argDef,
+      name,
+      alias: toArray((argDef as any).alias),
+    });
+  }
+  return args;
+}
+
+
+
+================================================
+FILE: src/command.ts
+================================================
+import type { CommandContext, CommandDef, ArgsDef } from "./types";
+import { CLIError, resolveValue } from "./_utils";
+import { parseArgs } from "./args";
+
+export function defineCommand<const T extends ArgsDef = ArgsDef>(
+  def: CommandDef<T>,
+): CommandDef<T> {
+  return def;
+}
+
+export interface RunCommandOptions {
+  rawArgs: string[];
+  data?: any;
+  showUsage?: boolean;
+}
+
+export async function runCommand<T extends ArgsDef = ArgsDef>(
+  cmd: CommandDef<T>,
+  opts: RunCommandOptions,
+): Promise<{ result: unknown }> {
+  const cmdArgs = await resolveValue(cmd.args || {});
+  const parsedArgs = parseArgs<T>(opts.rawArgs, cmdArgs);
+
+  const context: CommandContext<T> = {
+    rawArgs: opts.rawArgs,
+    args: parsedArgs,
+    data: opts.data,
+    cmd,
+  };
+
+  // Setup hook
+  if (typeof cmd.setup === "function") {
+    await cmd.setup(context);
+  }
+
+  // Handle sub command
+  let result: unknown;
+  try {
+    const subCommands = await resolveValue(cmd.subCommands);
+    if (subCommands && Object.keys(subCommands).length > 0) {
+      const subCommandArgIndex = opts.rawArgs.findIndex(
+        (arg) => !arg.startsWith("-"),
+      );
+      const subCommandName = opts.rawArgs[subCommandArgIndex];
+      if (subCommandName) {
+        if (!subCommands[subCommandName]) {
+          throw new CLIError(
+            `Unknown command \`${subCommandName}\``,
+            "E_UNKNOWN_COMMAND",
+          );
+        }
+        const subCommand = await resolveValue(subCommands[subCommandName]);
+        if (subCommand) {
+          await runCommand(subCommand, {
+            rawArgs: opts.rawArgs.slice(subCommandArgIndex + 1),
+          });
+        }
+      } else if (!cmd.run) {
+        throw new CLIError(`No command specified.`, "E_NO_COMMAND");
+      }
+    }
+
+    // Handle main command
+    if (typeof cmd.run === "function") {
+      result = await cmd.run(context);
+    }
+  } finally {
+    if (typeof cmd.cleanup === "function") {
+      await cmd.cleanup(context);
+    }
+  }
+  return { result };
+}
+
+export async function resolveSubCommand<T extends ArgsDef = ArgsDef>(
+  cmd: CommandDef<T>,
+  rawArgs: string[],
+  parent?: CommandDef<T>,
+): Promise<[CommandDef<T>, CommandDef<T>?]> {
+  const subCommands = await resolveValue(cmd.subCommands);
+  if (subCommands && Object.keys(subCommands).length > 0) {
+    const subCommandArgIndex = rawArgs.findIndex((arg) => !arg.startsWith("-"));
+    const subCommandName = rawArgs[subCommandArgIndex];
+    const subCommand = await resolveValue(subCommands[subCommandName]);
+    if (subCommand) {
+      return resolveSubCommand(
+        subCommand,
+        rawArgs.slice(subCommandArgIndex + 1),
+        cmd,
+      );
+    }
+  }
+  return [cmd, parent];
+}
+
+
+
+================================================
+FILE: src/index.ts
+================================================
+export * from "./types";
+export type { RunCommandOptions } from "./command";
+export type { RunMainOptions } from "./main";
+
+export { defineCommand, runCommand } from "./command";
+export { parseArgs } from "./args";
+export { renderUsage, showUsage } from "./usage";
+export { runMain, createMain } from "./main";
+
+
+
+================================================
+FILE: src/main.ts
+================================================
+import consola from "consola";
+import type { ArgsDef, CommandDef } from "./types";
+import { resolveSubCommand, runCommand } from "./command";
+import { CLIError } from "./_utils";
+import { showUsage as _showUsage } from "./usage";
+
+export interface RunMainOptions {
+  rawArgs?: string[];
+  showUsage?: typeof _showUsage;
+}
+
+export async function runMain<T extends ArgsDef = ArgsDef>(
+  cmd: CommandDef<T>,
+  opts: RunMainOptions = {},
+) {
+  const rawArgs = opts.rawArgs || process.argv.slice(2);
+  const showUsage = opts.showUsage || _showUsage;
+  try {
+    if (rawArgs.includes("--help") || rawArgs.includes("-h")) {
+      await showUsage(...(await resolveSubCommand(cmd, rawArgs)));
+      process.exit(0);
+    } else if (rawArgs.length === 1 && rawArgs[0] === "--version") {
+      const meta =
+        typeof cmd.meta === "function" ? await cmd.meta() : await cmd.meta;
+      if (!meta?.version) {
+        throw new CLIError("No version specified", "E_NO_VERSION");
+      }
+      consola.log(meta.version);
+    } else {
+      await runCommand(cmd, { rawArgs });
+    }
+  } catch (error: any) {
+    const isCLIError = error instanceof CLIError;
+    if (isCLIError) {
+      await showUsage(...(await resolveSubCommand(cmd, rawArgs)));
+      consola.error(error.message);
+    } else {
+      consola.error(error, "\n");
+    }
+    process.exit(1);
+  }
+}
+
+export function createMain<T extends ArgsDef = ArgsDef>(
+  cmd: CommandDef<T>,
+): (opts?: RunMainOptions) => Promise<void> {
+  return (opts: RunMainOptions = {}) => runMain(cmd, opts);
+}
+
+
+
+================================================
+FILE: src/types.ts
+================================================
+// ----- Args -----
+
+export type ArgType =
+  | "boolean"
+  | "string"
+  | "number"
+  | "enum"
+  | "positional"
+  | undefined;
+
+// Args: Definition
+
+export type _ArgDef<T extends ArgType, VT extends boolean | number | string> = {
+  type?: T;
+  description?: string;
+  valueHint?: string;
+  alias?: string | string[];
+  default?: VT;
+  required?: boolean;
+  options?: (string | number)[];
+};
+
+export type BooleanArgDef = Omit<_ArgDef<"boolean", boolean>, "options"> & {
+  negativeDescription?: string;
+};
+export type StringArgDef = Omit<_ArgDef<"string", string>, "options">;
+export type NumberArgDef = Omit<_ArgDef<"number", number>, "options">;
+export type EnumArgDef = _ArgDef<"enum", string>;
+export type PositionalArgDef = Omit<
+  _ArgDef<"positional", string>,
+  "alias" | "options"
+>;
+
+export type ArgDef =
+  | BooleanArgDef
+  | StringArgDef
+  | NumberArgDef
+  | PositionalArgDef
+  | EnumArgDef;
+
+export type ArgsDef = Record<string, ArgDef>;
+
+export type Arg = ArgDef & { name: string; alias: string[] };
+
+// Args: Parsed
+
+type ResolveParsedArgType<T extends ArgDef, VT> = T extends {
+  default?: any;
+  required?: boolean;
+}
+  ? T["default"] extends NonNullable<VT>
+    ? VT
+    : T["required"] extends true
+      ? VT
+      : VT | undefined
+  : VT | undefined;
+
+type ParsedPositionalArg<T extends ArgDef> = T extends { type: "positional" }
+  ? ResolveParsedArgType<T, string>
+  : never;
+
+type ParsedStringArg<T extends ArgDef> = T extends { type: "string" }
+  ? ResolveParsedArgType<T, string>
+  : never;
+
+type ParsedNumberArg<T extends ArgDef> = T extends { type: "number" }
+  ? ResolveParsedArgType<T, number>
+  : never;
+
+type ParsedBooleanArg<T extends ArgDef> = T extends { type: "boolean" }
+  ? ResolveParsedArgType<T, boolean>
+  : never;
+
+type ParsedEnumArg<T extends ArgDef> = T extends {
+  type: "enum";
+  options: infer U;
+}
+  ? U extends Array<any>
+    ? ResolveParsedArgType<T, U[number]>
+    : never
+  : never;
+
+type RawArgs = {
+  _: string[];
+};
+
+// prettier-ignore
+type ParsedArg<T extends ArgDef> =
+  T["type"] extends "positional" ? ParsedPositionalArg<T> :
+  T["type"] extends "boolean" ? ParsedBooleanArg<T> :
+  T["type"] extends "string" ? ParsedStringArg<T> :
+  T["type"] extends "number" ? ParsedNumberArg<T> :
+  T["type"] extends "enum" ? ParsedEnumArg<T> :
+  never;
+
+// prettier-ignore
+export type ParsedArgs<T extends ArgsDef = ArgsDef> = RawArgs &
+  { [K in keyof T]: ParsedArg<T[K]>; } & 
+  { [K in keyof T as T[K] extends { alias: string } ? T[K]["alias"] : never]: ParsedArg<T[K]> } &
+  { [K in keyof T as T[K] extends { alias: string[] } ? T[K]["alias"][number] : never]: ParsedArg<T[K]> } &
+  Record<string, string | number | boolean | string[]>;
+
+// ----- Command -----
+
+// Command: Shared
+
+export interface CommandMeta {
+  name?: string;
+  version?: string;
+  description?: string;
+  hidden?: boolean;
+}
+
+// Command: Definition
+
+export type SubCommandsDef = Record<string, Resolvable<CommandDef<any>>>;
+
+export type CommandDef<T extends ArgsDef = ArgsDef> = {
+  meta?: Resolvable<CommandMeta>;
+  args?: Resolvable<T>;
+  subCommands?: Resolvable<SubCommandsDef>;
+  setup?: (context: CommandContext<T>) => any | Promise<any>;
+  cleanup?: (context: CommandContext<T>) => any | Promise<any>;
+  run?: (context: CommandContext<T>) => any | Promise<any>;
+};
+
+export type CommandContext<T extends ArgsDef = ArgsDef> = {
+  rawArgs: string[];
+  args: ParsedArgs<T>;
+  cmd: CommandDef<T>;
+  subCommand?: CommandDef<T>;
+  data?: any;
+};
+
+// ----- Utils -----
+
+export type Awaitable<T> = () => T | Promise<T>;
+export type Resolvable<T> = T | Promise<T> | (() => T) | (() => Promise<T>);
+
+
+
+================================================
+FILE: src/usage.ts
+================================================
+import consola from "consola";
+import { colors } from "consola/utils";
+import { formatLineColumns, resolveValue } from "./_utils";
+import type { ArgsDef, CommandDef } from "./types";
+import { resolveArgs } from "./args";
+
+export async function showUsage<T extends ArgsDef = ArgsDef>(
+  cmd: CommandDef<T>,
+  parent?: CommandDef<T>,
+) {
+  try {
+    consola.log((await renderUsage(cmd, parent)) + "\n");
+  } catch (error) {
+    consola.error(error);
+  }
+}
+
+// `no` prefix matcher (kebab-case or camelCase)
+const negativePrefixRe = /^no[-A-Z]/;
+
+export async function renderUsage<T extends ArgsDef = ArgsDef>(
+  cmd: CommandDef<T>,
+  parent?: CommandDef<T>,
+) {
+  const cmdMeta = await resolveValue(cmd.meta || {});
+  const cmdArgs = resolveArgs(await resolveValue(cmd.args || {}));
+  const parentMeta = await resolveValue(parent?.meta || {});
+
+  const commandName =
+    `${parentMeta.name ? `${parentMeta.name} ` : ""}` +
+    (cmdMeta.name || process.argv[1]);
+
+  const argLines: string[][] = [];
+  const posLines: string[][] = [];
+  const commandsLines: string[][] = [];
+  const usageLine = [];
+
+  for (const arg of cmdArgs) {
+    if (arg.type === "positional") {
+      const name = arg.name.toUpperCase();
+      const isRequired = arg.required !== false && arg.default === undefined;
+      // (isRequired ? " (required)" : " (optional)"
+      const defaultHint = arg.default ? `="${arg.default}"` : "";
+      posLines.push([
+        "`" + name + defaultHint + "`",
+        arg.description || "",
+        arg.valueHint ? `<${arg.valueHint}>` : "",
+      ]);
+      usageLine.push(isRequired ? `<${name}>` : `[${name}]`);
+    } else {
+      const isRequired = arg.required === true && arg.default === undefined;
+      const argStr =
+        [...(arg.alias || []).map((a) => `-${a}`), `--${arg.name}`].join(", ") +
+        (arg.type === "string" && (arg.valueHint || arg.default)
+          ? `=${
+              arg.valueHint ? `<${arg.valueHint}>` : `"${arg.default || ""}"`
+            }`
+          : "") +
+        (arg.type === "enum" && arg.options
+          ? `=<${arg.options.join("|")}>`
+          : "");
+      argLines.push([
+        "`" + argStr + (isRequired ? " (required)" : "") + "`",
+        arg.description || "",
+      ]);
+
+      /**
+       * print negative boolean arg variant usage when
+       * - enabled by default or has `negativeDescription`
+       * - not prefixed with `no-` or `no[A-Z]`
+       */
+      if (
+        arg.type === "boolean" &&
+        (arg.default === true || arg.negativeDescription) &&
+        !negativePrefixRe.test(arg.name)
+      ) {
+        const negativeArgStr = [
+          ...(arg.alias || []).map((a) => `--no-${a}`),
+          `--no-${arg.name}`,
+        ].join(", ");
+        argLines.push([
+          "`" + negativeArgStr + (isRequired ? " (required)" : "") + "`",
+          arg.negativeDescription || "",
+        ]);
+      }
+
+      if (isRequired) {
+        usageLine.push(argStr);
+      }
+    }
+  }
+
+  if (cmd.subCommands) {
+    const commandNames: string[] = [];
+    const subCommands = await resolveValue(cmd.subCommands);
+    for (const [name, sub] of Object.entries(subCommands)) {
+      const subCmd = await resolveValue(sub);
+      const meta = await resolveValue(subCmd?.meta);
+      if (meta?.hidden) {
+        continue;
+      }
+      commandsLines.push([`\`${name}\``, meta?.description || ""]);
+      commandNames.push(name);
+    }
+    usageLine.push(commandNames.join("|"));
+  }
+
+  const usageLines: (string | undefined)[] = [];
+
+  const version = cmdMeta.version || parentMeta.version;
+
+  usageLines.push(
+    colors.gray(
+      `${cmdMeta.description} (${
+        commandName + (version ? ` v${version}` : "")
+      })`,
+    ),
+    "",
+  );
+
+  const hasOptions = argLines.length > 0 || posLines.length > 0;
+  usageLines.push(
+    `${colors.underline(colors.bold("USAGE"))} \`${commandName}${
+      hasOptions ? " [OPTIONS]" : ""
+    } ${usageLine.join(" ")}\``,
+    "",
+  );
+
+  if (posLines.length > 0) {
+    usageLines.push(colors.underline(colors.bold("ARGUMENTS")), "");
+    usageLines.push(formatLineColumns(posLines, "  "));
+    usageLines.push("");
+  }
+
+  if (argLines.length > 0) {
+    usageLines.push(colors.underline(colors.bold("OPTIONS")), "");
+    usageLines.push(formatLineColumns(argLines, "  "));
+    usageLines.push("");
+  }
+
+  if (commandsLines.length > 0) {
+    usageLines.push(colors.underline(colors.bold("COMMANDS")), "");
+    usageLines.push(formatLineColumns(commandsLines, "  "));
+    usageLines.push(
+      "",
+      `Use \`${commandName} <command> --help\` for more information about a command.`,
+    );
+  }
+
+  return usageLines.filter((l) => typeof l === "string").join("\n");
+}
+
+
