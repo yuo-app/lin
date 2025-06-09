@@ -69,6 +69,13 @@ export function normalizeArgs(inputArgs: Record<string, any>): Partial<Config> {
     llmOptsFromInput.temperature = t
   }
 
+  if (inputArgs.mode !== undefined) {
+    if (!['auto', 'json', 'custom'].includes(inputArgs.mode))
+      handleCliError(`Invalid mode "${inputArgs.mode}"`, 'Available modes: auto, json, custom')
+
+    llmOptsFromInput.mode = inputArgs.mode
+  }
+
   if (inputArgs.azureResourceName !== undefined)
     (llmOptsFromInput as Partial<AzureLLMProviderOptions>).resourceName = inputArgs.azureResourceName
   if (inputArgs.azureApiVersion !== undefined)

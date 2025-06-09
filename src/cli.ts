@@ -19,7 +19,7 @@ const main = defineCommand({
     },
     models: {
       alias: 'M',
-      type: 'boolean',
+      type: 'string',
       description: 'show models',
     },
     ...commonArgs,
@@ -28,6 +28,8 @@ const main = defineCommand({
   async run({ args, cmd, rawArgs }) {
     if (args.version)
       console.log(`lin \`v${version}\``)
+
+    console.log('Models', `"${args.models}"`)
 
     if (args.models) {
       console.log('`Available Models:`')
@@ -44,6 +46,8 @@ const main = defineCommand({
 
     const { config } = await resolveConfig(args)
     if (args.debug) {
+      console.log(ICONS.info, 'Args:')
+      console.log(args)
       console.log(ICONS.info, 'Config:')
       console.log(config)
     }

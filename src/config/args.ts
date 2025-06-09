@@ -7,6 +7,7 @@ type CommonArgs = ConfigToArgDef<CommonConfig>
 type LLMArgs = Omit<ConfigToArgDef<LLMConfig>, 'options' | 'i18n'> & {
   provider: StringArgDef
   model: StringArgDef
+  mode: StringArgDef
   temperature: StringArgDef
 }
 
@@ -35,7 +36,7 @@ export const llmArgs = {
   context: {
     alias: 'C',
     type: 'string',
-    description: 'extra information to include in the GPT system prompt',
+    description: 'extra information to include in the LLM system prompt',
     default: DEFAULT_CONFIG.context,
   },
   integration: {
@@ -53,6 +54,11 @@ export const llmArgs = {
     alias: 'm',
     type: 'string',
     description: 'the model to use (e.g., gpt-4.1-mini)',
+  },
+  mode: {
+    type: 'string',
+    description: 'the mode to use for the LLM',
+    valueHint: 'auto | json | custom',
   },
   temperature: {
     alias: 't',

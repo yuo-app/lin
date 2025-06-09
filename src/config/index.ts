@@ -93,7 +93,6 @@ export async function resolveConfig(
     { arrayMerge: (_t, s) => s },
   ) as DeepRequired<ConfigTypes.ResolvedConfig>
 
-  // Cleanup Azure-specific options if the provider is not Azure
   if (finalMergedConfig.options.provider !== 'azure') {
     delete (finalMergedConfig.options as any).resourceName
     delete (finalMergedConfig.options as any).apiVersion

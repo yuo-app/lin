@@ -8,6 +8,7 @@ export const providers = [
   'xai',
   'mistral',
   'groq',
+  'cerebras',
   'azure',
 ] as const
 
@@ -84,7 +85,26 @@ export const availableModels = {
     { value: 'llama-3.1-8b-instant', alias: 'Llama 3.1 8B Instant' },
     { value: 'gemma2-9b-it', alias: 'Gemma2 9B IT' },
   ],
-  azure: [],
+  cerebras: [
+    { value: 'qwen-3-32b', alias: 'Qwen 3 32B' },
+    { value: 'deepseek-r1-distill-llama-70b', alias: 'DeepSeek R1 Distill Llama 70B' },
+    { value: 'llama-4-scout-17b-16e-instruct', alias: 'Llama 4 Scout' },
+    { value: 'llama3.1-8b', alias: 'Llama 3.1 8B' },
+    { value: 'llama-3.3-70b', alias: 'Llama 3.3 70B' },
+  ],
+  azure: [
+    { value: 'model-router', alias: 'Auto', mode: 'json', iq: 3, speed: 4 },
+    { value: 'gpt-4.1', alias: 'GPT 4.1', mode: 'json', iq: 3, speed: 4 },
+    { value: 'gpt-4.1-mini', alias: 'GPT 4.1 mini', mode: 'json', iq: 3, speed: 4 },
+    { value: 'gpt-4.1-nano', alias: 'GPT 4.1 nano', mode: 'json', iq: 3, speed: 5 },
+    { value: 'grok-3', alias: 'Grok 3', mode: 'json', iq: 4, speed: 4 },
+    { value: 'grok-3-mini', alias: 'Grok 3 mini', mode: 'json', iq: 3, speed: 4 },
+    { value: 'DeepSeek-R1-0528', alias: 'DeepSeek R1', mode: 'custom', iq: 4, speed: 1 },
+    { value: 'DeepSeek-V3-0324', alias: 'DeepSeek V3', mode: 'custom', iq: 3, speed: 3 },
+    { value: 'gpt-4o', alias: 'GPT 4o', mode: 'json', iq: 3, speed: 4 },
+    { value: 'gpt-4o-mini', alias: 'GPT 4o mini', mode: 'json', iq: 2, speed: 4 },
+    { value: 'Phi-4', alias: 'Phi 4', mode: 'json', iq: 3, speed: 2 },
+  ],
 } as const satisfies Models
 
 export type ModelValue = (typeof availableModels)[Provider][number]['value']

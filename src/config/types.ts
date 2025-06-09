@@ -5,6 +5,9 @@ import type { I18nConfig } from '@/config/i18n'
 export interface ModelDefinition {
   value: string
   alias: string
+  mode?: 'auto' | 'json' | 'custom'
+  iq?: number
+  speed?: number
 }
 
 export type Provider = (typeof providers)[number]
@@ -22,6 +25,7 @@ interface LLMOptions {
   frequencyPenalty?: number
   presencePenalty?: number
   seed?: number
+  mode?: 'auto' | 'json' | 'custom'
 }
 
 export interface AzureLLMProviderOptions extends LLMOptions {
@@ -29,7 +33,7 @@ export interface AzureLLMProviderOptions extends LLMOptions {
   /**
    * For Azure, this is your deployment name.
    */
-  model: string
+  model: ModelValue<'azure'> | (string & {})
   /** Azure resource name. Defaults to AZURE_OPENAI_RESOURCE_NAME env var. */
   resourceName?: string
   /** Custom API version. Defaults to a version like '2024-05-01-preview'. */

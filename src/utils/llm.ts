@@ -1,21 +1,85 @@
-import type { AzureLLMProviderOptions, Config, Provider } from '../config'
+import type { AzureLLMProviderOptions, Config, ModelDefinition, Provider } from '../config'
 import type { I18nConfig } from '../config/i18n'
 import type { LocaleJson } from './locale'
 import type { DeepRequired } from '@/types'
 import { createAnthropic } from '@ai-sdk/anthropic'
 import { createAzure } from '@ai-sdk/azure'
+import { createCerebras } from '@ai-sdk/cerebras'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { createGroq } from '@ai-sdk/groq'
 import { createMistral } from '@ai-sdk/mistral'
 import { createOpenAI } from '@ai-sdk/openai'
 import { createXai } from '@ai-sdk/xai'
 import { confirm } from '@clack/prompts'
-import { generateObject } from 'ai'
+import { generateObject, type LanguageModelV1Middleware, wrapLanguageModel, zodSchema } from 'ai'
 import { z } from 'zod'
-import { providers } from '../config'
+import { availableModels, providers } from '../config'
 import { console, formatLog, ICONS } from './console'
 import { handleCliError } from './general'
 import { normalizeLocales } from './locale'
+
+function sanitizeJsonString(jsonString: string): string {
+  let processedString = jsonString
+  const thinkTagEnd = '</think>'
+  const thinkIndex = processedString.lastIndexOf(thinkTagEnd)
+  if (thinkIndex !== -1)
+    processedString = processedString.substring(thinkIndex + thinkTagEnd.length)
+
+  const match = processedString.match(/\{[\s\S]*\}/)
+  if (match)
+    processedString = match[0]
+
+  try {
+    const parsed = JSON.parse(processedString)
+    return JSON.stringify(parsed)
+  }
+  catch {
+    const cleaned = jsonString
+      .replace(/^```json\s*|```\s*$/g, '')
+      .replace(/^\s+|\s+$/g, '')
+      .replace(/^[^{]*(\{.*\})[^}]*$/, '$1')
+      .replace(/\/\/.*$/gm, '')
+      .replace(/([^S\\])\\(?!["\\/bfnrtu])/g, '$1')
+
+    return cleaned
+  }
+}
+
+const jsonExtractionMiddleware: LanguageModelV1Middleware = {
+  wrapGenerate: async ({ doGenerate }) => {
+    const result = await doGenerate()
+
+    if (result.text) {
+      try {
+        const cleaned = sanitizeJsonString(result.text)
+
+        try {
+          JSON.parse(cleaned)
+          result.text = cleaned
+        }
+        catch {
+          console.log(ICONS.warning, 'Initial sanitization failed, trying more aggressive approach')
+
+          const match = result.text.match(/\{[\s\S]*\}/)
+          if (match) {
+            const jsonCandidate = match[0]
+            try {
+              const extractedObject = JSON.parse(jsonCandidate)
+              result.text = JSON.stringify(extractedObject)
+            }
+            catch {
+              console.log(ICONS.error, 'Failed to extract valid JSON even with aggressive approach')
+            }
+          }
+        }
+      }
+      catch {
+        console.log(ICONS.error, 'JSON sanitization failed unexpectedly')
+      }
+    }
+    return result
+  },
+}
 
 export function getWithLocales(withLocale: string | string[] | undefined, i18n: I18nConfig) {
   const withArgArray = typeof withLocale === 'string' ? [withLocale] : withLocale || []
@@ -72,12 +136,20 @@ function getInstance(provider: Provider) {
       return createMistral
     case 'groq':
       return createGroq
+    case 'cerebras':
+      return createCerebras
     case 'azure':
       return createAzure
     default:
       handleCliError(`Unsupported provider: ${provider}`, `Supported providers are: ${providers.join(', ')}.`)
   }
 }
+
+const localeJsonSchema: z.ZodType<LocaleJson> = z.lazy(() =>
+  z.record(z.string(), z.union([z.string(), localeJsonSchema])),
+)
+
+const translationSchema = z.record(z.string(), localeJsonSchema)
 
 export async function translateKeys(
   keysToTranslate: Record<string, LocaleJson>,
@@ -110,33 +182,47 @@ export async function translateKeys(
   const providerClient = providerFactory(clientOptions)
   const model = providerClient.languageModel(modelId as string)
 
-  const localeJsonSchema: z.ZodType<LocaleJson> = z.lazy(() =>
-    z.record(z.string(), z.union([z.string(), localeJsonSchema])),
-  )
+  const system = `For each locale, translate the values from the default locale (${i18n.defaultLocale}) language to the corresponding languages (denoted by the locale keys).
+Return a JSON object where each top key is a locale, and the value is an object containing the translations for that locale.
+${includeContext && config.context ? `Additional information from user: ${config.context}` : ''}
+${withLocaleJsons && Object.keys(withLocaleJsons).length > 0 ? `Other locale JSONs from the user's codebase for context: ${JSON.stringify(withLocaleJsons)}\nAlways use dot notation when dealing with nested keys: ui.about.title` : ''}
+Example input:
+{"fr-FR": {"ui.home.title": "Home"}}
+Example output:
+{"fr-FR": {"ui.home.title": "Accueil"}}`
 
-  const translationSchema = z.record(z.string(), localeJsonSchema)
+  const prompt = JSON.stringify(keysToTranslate)
+
+  const modelDefinition = availableModels[provider as Provider]?.find(m => m.value === modelId) as ModelDefinition | undefined
+  const mode = modelDefinition?.mode || config.options.mode || 'auto'
+  const generateObjectMode = (mode === 'json' || mode === 'custom') ? 'json' : 'auto'
+
+  let modelToUse = model
+  if (mode === 'custom') {
+    modelToUse = wrapLanguageModel({
+      model,
+      middleware: [jsonExtractionMiddleware],
+    })
+  }
 
   const { object: translatedJson } = await generateObject({
-    model,
-    schema: translationSchema,
-    system: `You are a translation API that translates locale JSON files.
-${includeContext && config.context ? `Additional information from user: ${config.context}` : ''}
-For each locale, translate the values from the default locale (${i18n.defaultLocale}) language to the corresponding languages (denoted by the locale keys).
-Return a JSON object where each top key is a locale, and the value is an object containing the translations for that locale.
-${withLocaleJsons ? `Other locale JSONs from the user's codebase for context: ${JSON.stringify(withLocaleJsons)}\nAlways use dot notation when dealing with nested keys:` : ''}
-Example input:
-{"fr-FR": {"ui.home.title": "Title"}}
-Example output:
-{"fr-FR": {"ui.home.title": "Titre"}}`,
-    prompt: JSON.stringify(keysToTranslate),
+    model: modelToUse,
+    schema: zodSchema(translationSchema, { useReferences: true }),
+    system,
+    prompt,
     temperature: config.options.temperature,
     maxTokens: config.options.maxTokens,
     topP: config.options.topP,
     frequencyPenalty: config.options.frequencyPenalty,
     presencePenalty: config.options.presencePenalty,
     seed: config.options.seed,
-    mode: 'auto',
+    mode: generateObjectMode,
   })
+
+  if (config.debug)
+    console.log('\n', ICONS.info, `System Prompt: ${system}`)
+  if (config.debug)
+    console.log('\n', ICONS.info, `Prompt: ${prompt}`)
 
   return translatedJson as Record<string, LocaleJson>
 }
