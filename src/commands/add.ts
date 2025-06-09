@@ -159,7 +159,7 @@ export default defineCommand({
         return
 
       for (const localePath of Object.keys(translationsToWrite))
-        fs.writeFileSync(localePath, JSON.stringify(translationsToWrite[localePath], null, 2), { encoding: 'utf8' })
+        fs.writeFileSync(localePath, `${JSON.stringify(translationsToWrite[localePath], null, 2)}\n`, { encoding: 'utf8' })
     }
     else {
       console.log(ICONS.success, 'All locales are up to date.')

@@ -42,7 +42,7 @@ export default defineCommand({
             deletedKeysByLocale[locale] = []
 
           deletedKeysByLocale[locale].push(key)
-          fs.writeFileSync(r(`${locale}.json`, i18n), JSON.stringify(localeJson, null, 2), { encoding: 'utf8' })
+          fs.writeFileSync(r(`${locale}.json`, i18n), `${JSON.stringify(localeJson, null, 2)}\n`, { encoding: 'utf8' })
         }
         else {
           console.log(ICONS.info, `Skipped: **${locale}** *(key \`${key}\` not found)*`)

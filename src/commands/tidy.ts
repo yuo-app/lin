@@ -78,7 +78,7 @@ export default defineCommand({
         console.log(ICONS.warning, `Locale **${locale}** is not up to date. Skipping...`, c.dim(`(found ${defaultLarger ? 'missing' : 'extra'}: ${Object.keys(missingKeys)})`))
         continue
       }
-      fs.writeFileSync(localeFilePath, JSON.stringify(sortFn(localeJson), null, 2), { encoding: 'utf8' })
+      fs.writeFileSync(localeFilePath, `${JSON.stringify(sortFn(localeJson), null, 2)}\n`, { encoding: 'utf8' })
       successfullySortedLocales.push(locale)
     }
 
