@@ -16,6 +16,7 @@ export const mockResolvedConfig: DeepRequired<ResolvedConfig> = {
   options: {
     provider: 'openai',
     model: 'gpt-4.1-mini',
+    mode: 'auto',
     apiKey: '',
     temperature: 0.7,
     maxTokens: 1000,

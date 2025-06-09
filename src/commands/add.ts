@@ -132,7 +132,7 @@ export default defineCommand({
         translations[i18n.defaultLocale] = keysToTranslateAndDefault[i18n.defaultLocale]
 
         if (args.debug)
-          console.log('\n', ICONS.info, `Translations: ${JSON.stringify(translations)}`)
+          console.log(ICONS.info, `Translations: ${JSON.stringify(translations)}`)
 
         for (const [locale, newTranslations] of Object.entries(translations)) {
           const localeFilePath = r(`${locale}.json`, i18n)

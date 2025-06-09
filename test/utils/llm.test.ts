@@ -16,6 +16,7 @@ const mockCreateGoogleGenerativeAI = vi.fn((_options?: any) => mockProviderClien
 const mockCreateXai = vi.fn((_options?: any) => mockProviderClient)
 const mockCreateMistral = vi.fn((_options?: any) => mockProviderClient)
 const mockCreateGroq = vi.fn((_options?: any) => mockProviderClient)
+const mockCreateCerebras = vi.fn((_options?: any) => mockProviderClient)
 const mockCreateAzure = vi.fn((_options?: any) => mockProviderClient)
 const mockGenerateObject = vi.fn()
 
@@ -43,8 +44,17 @@ vi.mock('@ai-sdk/google', () => ({ createGoogleGenerativeAI: (options?: any) => 
 vi.mock('@ai-sdk/xai', () => ({ createXai: (options?: any) => mockCreateXai(options) }))
 vi.mock('@ai-sdk/mistral', () => ({ createMistral: (options?: any) => mockCreateMistral(options) }))
 vi.mock('@ai-sdk/groq', () => ({ createGroq: (options?: any) => mockCreateGroq(options) }))
+vi.mock('@ai-sdk/cerebras', () => ({ createCerebras: (options?: any) => mockCreateCerebras(options) }))
 vi.mock('@ai-sdk/azure', () => ({ createAzure: (options?: any) => mockCreateAzure(options) }))
-vi.mock('ai', () => ({ generateObject: (...args: any[]) => mockGenerateObject(...args) }))
+vi.mock('ai', async () => {
+  const actual = await vi.importActual('ai')
+  return {
+    ...actual,
+    generateObject: (...args: any[]) => mockGenerateObject(...args),
+    zodSchema: actual.zodSchema,
+    wrapLanguageModel: actual.wrapLanguageModel,
+  }
+})
 vi.mock('@/utils/general', async () => {
   const { customMockHandleCliError } = await import('../mocks/general.mock')
   return {
@@ -67,6 +77,7 @@ describe('llm utils', () => {
     mockCreateXai.mockReturnValue({ languageModel: mockLanguageModelFn })
     mockCreateMistral.mockReturnValue({ languageModel: mockLanguageModelFn })
     mockCreateGroq.mockReturnValue({ languageModel: mockLanguageModelFn })
+    mockCreateCerebras.mockReturnValue({ languageModel: mockLanguageModelFn })
     mockCreateAzure.mockReturnValue({ languageModel: mockLanguageModelFn })
   })
 
@@ -221,6 +232,7 @@ describe('llm utils', () => {
         frequencyPenalty: 0.1,
         presencePenalty: 0.1,
         seed: 12345,
+        mode: 'auto',
       },
     }
 
@@ -249,6 +261,7 @@ describe('llm utils', () => {
       mockCreateXai.mockReturnValue({ languageModel: mockLanguageModelFn })
       mockCreateMistral.mockReturnValue({ languageModel: mockLanguageModelFn })
       mockCreateGroq.mockReturnValue({ languageModel: mockLanguageModelFn })
+      mockCreateCerebras.mockReturnValue({ languageModel: mockLanguageModelFn })
       mockCreateAzure.mockReturnValue({ languageModel: mockLanguageModelFn })
     })
 
@@ -262,7 +275,7 @@ describe('llm utils', () => {
       const generateObjectCall = mockGenerateObject.mock.calls[0][0]
       expect(generateObjectCall.model).toEqual({})
       expect(generateObjectCall.schema).toBeDefined()
-      expect(generateObjectCall.system).toContain('You are a translation API')
+      expect(generateObjectCall.system).toContain('Example input')
       expect(generateObjectCall.system).toContain(`default locale (${mockI18n.defaultLocale})`)
       expect(generateObjectCall.system).toContain(mockConfigBase.context)
       expect(generateObjectCall.prompt).toBe(JSON.stringify(keysToTranslate))
@@ -348,7 +361,7 @@ describe('llm utils', () => {
       expect(mockGenerateObject).toHaveBeenCalledOnce()
     })
 
-    const providers: Provider[] = ['anthropic', 'google', 'xai', 'mistral', 'groq']
+    const providers: Provider[] = ['anthropic', 'google', 'xai', 'mistral', 'groq', 'cerebras']
     const providerMocks = {
       openai: mockCreateOpenAI,
       anthropic: mockCreateAnthropic,
@@ -356,12 +369,13 @@ describe('llm utils', () => {
       xai: mockCreateXai,
       mistral: mockCreateMistral,
       groq: mockCreateGroq,
+      cerebras: mockCreateCerebras,
       azure: mockCreateAzure,
     }
 
     providers.forEach((provider) => {
       it(`should use ${provider} provider when specified`, async () => {
-        const currentProvider = provider as Exclude<Provider, 'azure'>
+        const currentProvider = provider as Exclude<Provider, 'azure' | 'openai'>
         const providerConfig = {
           ...mockConfigBase,
           options: {
@@ -396,6 +410,7 @@ describe('llm utils', () => {
           resourceName: 'my-resource',
           apiVersion: '2024-00-00',
           baseURL: 'https://default.azure.com',
+          mode: 'auto',
         },
       } as DeepRequired<Config>
       await translateKeys(keysToTranslate, azureConfig, mockI18n)
@@ -420,6 +435,7 @@ describe('llm utils', () => {
           resourceName: 'should-be-ignored',
           baseURL: 'https://mycustom.azure.com',
           apiVersion: '2024-05-01',
+          mode: 'auto',
         },
       } as DeepRequired<Config>
       await translateKeys(keysToTranslate, azureConfig, mockI18n)
@@ -449,6 +465,7 @@ describe('llm utils', () => {
           resourceName: '',
           apiVersion: '',
           baseURL: '',
+          mode: 'auto',
         },
       } as DeepRequired<Config>
       await translateKeys(keysToTranslate, azureConfig, mockI18n)
@@ -471,7 +488,7 @@ describe('llm utils', () => {
 
       expect(mockHandleCliError).toHaveBeenCalledWith(
         'Unsupported provider: unsupported',
-        'Supported providers are: openai, anthropic, google, xai, mistral, groq, azure.',
+        'Supported providers are: openai, anthropic, google, xai, mistral, groq, cerebras, azure.',
       )
     })
   })

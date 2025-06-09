@@ -187,7 +187,7 @@ describe('tidy command', () => {
     expect(mockConsoleLogL).toHaveBeenCalledWith('**fr-FR** (`1`) ')
     expect(mockPicocolorsRed).toHaveBeenCalledWith('**de-DE**')
     expect(mockConsoleLogL).toHaveBeenCalledWith('red(**de-DE**)', `(${consoleModule.ICONS.error}) `)
-    expect(mockConsoleLog).toHaveBeenCalledTimes(4)
+    expect(mockConsoleLog).toHaveBeenCalledTimes(7)
   })
 
   it('should not sort or write files if no sort argument is provided', async () => {
@@ -220,8 +220,8 @@ describe('tidy command', () => {
     expect(mockSortKeys).toHaveBeenCalledWith(sortedJson)
 
     expect(mockWriteFileSync).toHaveBeenCalledTimes(2)
-    expect(mockWriteFileSync).toHaveBeenCalledWith(expect.stringContaining('en-US.json'), JSON.stringify(sortedJson, null, 2), { encoding: 'utf8' })
-    expect(mockWriteFileSync).toHaveBeenCalledWith(expect.stringContaining('es-ES.json'), JSON.stringify(sortedJson, null, 2), { encoding: 'utf8' })
+    expect(mockWriteFileSync).toHaveBeenCalledWith(expect.stringContaining('en-US.json'), `${JSON.stringify(sortedJson, null, 2)}\n`, { encoding: 'utf8' })
+    expect(mockWriteFileSync).toHaveBeenCalledWith(expect.stringContaining('es-ES.json'), `${JSON.stringify(sortedJson, null, 2)}\n`, { encoding: 'utf8' })
     expectVirtualFileContent('locales/en-US.json', sortedJson)
     expectVirtualFileContent('locales/es-ES.json', sortedJson)
     expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.success, 'Sorted locales: **en-US**, **es-ES**')
@@ -262,8 +262,8 @@ describe('tidy command', () => {
     expect(mockSortKeys).toHaveBeenCalledWith(otherLocaleUnsorted, defaultOrderJson)
 
     expect(mockWriteFileSync).toHaveBeenCalledTimes(2)
-    expect(mockWriteFileSync).toHaveBeenCalledWith(expect.stringContaining('en-US.json'), JSON.stringify(defaultOrderJson, null, 2), { encoding: 'utf8' })
-    expect(mockWriteFileSync).toHaveBeenCalledWith(expect.stringContaining('es-ES.json'), JSON.stringify(otherLocaleSortedToDef, null, 2), { encoding: 'utf8' })
+    expect(mockWriteFileSync).toHaveBeenCalledWith(expect.stringContaining('en-US.json'), `${JSON.stringify(defaultOrderJson, null, 2)}\n`, { encoding: 'utf8' })
+    expect(mockWriteFileSync).toHaveBeenCalledWith(expect.stringContaining('es-ES.json'), `${JSON.stringify(otherLocaleSortedToDef, null, 2)}\n`, { encoding: 'utf8' })
     expectVirtualFileContent('locales/en-US.json', defaultOrderJson)
     expectVirtualFileContent('locales/es-ES.json', otherLocaleSortedToDef)
     expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.success, 'Sorted locales: **en-US**, **es-ES**')
@@ -288,7 +288,7 @@ describe('tidy command', () => {
     )
     expect(mockFindMissingKeys).toHaveBeenCalled()
     expect(mockWriteFileSync).toHaveBeenCalledTimes(1)
-    expect(mockWriteFileSync).toHaveBeenCalledWith(expect.stringContaining('en-US.json'), expect.any(String), { encoding: 'utf8' })
+    expect(mockWriteFileSync).toHaveBeenCalledWith(expect.stringContaining('en-US.json'), `${JSON.stringify(defaultJson, null, 2)}\n`, { encoding: 'utf8' })
     expect(mockWriteFileSync).not.toHaveBeenCalledWith(expect.stringContaining('es-ES.json'), expect.any(String), expect.any(Object))
     expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.success, 'Sorted locales: **en-US**')
   })
@@ -312,7 +312,7 @@ describe('tidy command', () => {
     )
     expect(mockFindMissingKeys).toHaveBeenCalled()
     expect(mockWriteFileSync).toHaveBeenCalledTimes(1)
-    expect(mockWriteFileSync).toHaveBeenCalledWith(expect.stringContaining('en-US.json'), expect.any(String), { encoding: 'utf8' })
+    expect(mockWriteFileSync).toHaveBeenCalledWith(expect.stringContaining('en-US.json'), `${JSON.stringify(defaultJson, null, 2)}\n`, { encoding: 'utf8' })
     expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.success, 'Sorted locales: **en-US**')
   })
 
@@ -332,7 +332,7 @@ describe('tidy command', () => {
     expect(mockReadFileSync).not.toHaveBeenCalledWith(expect.stringContaining('fr-FR.json'), { encoding: 'utf8' })
 
     expect(mockWriteFileSync).toHaveBeenCalledTimes(1)
-    expect(mockWriteFileSync).toHaveBeenCalledWith(expect.stringContaining('es-ES.json'), expect.any(String), { encoding: 'utf8' })
+    expect(mockWriteFileSync).toHaveBeenCalledWith(expect.stringContaining('es-ES.json'), `${JSON.stringify(defaultEsJson, null, 2)}\n`, { encoding: 'utf8' })
     expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.success, 'Sorted locales: **es-ES**')
   })
 

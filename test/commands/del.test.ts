@@ -96,12 +96,12 @@ describe('del command', () => {
     expect(mockWriteFileSync).toHaveBeenCalledTimes(2)
     expect(mockWriteFileSync).toHaveBeenCalledWith(
       `${mockResolvedConfig.i18n.directory}\\en-US.json`,
-      JSON.stringify({ farewell: 'Goodbye' }, null, 2),
+      `${JSON.stringify({ farewell: 'Goodbye' }, null, 2)}\n`,
       { encoding: 'utf8' },
     )
     expect(mockWriteFileSync).toHaveBeenCalledWith(
       `${mockResolvedConfig.i18n.directory}\\es-ES.json`,
-      JSON.stringify({ farewell: 'Adiós' }, null, 2),
+      `${JSON.stringify({ farewell: 'Adiós' }, null, 2)}\n`,
       { encoding: 'utf8' },
     )
 
@@ -143,12 +143,12 @@ describe('del command', () => {
     expect(mockWriteFileSync).toHaveBeenCalledTimes(2)
     expect(mockWriteFileSync).toHaveBeenCalledWith(
       `${tempI18nConfig.directory}\\es-ES.json`,
-      JSON.stringify({ anotherKey: 'Adiós' }, null, 2),
+      `${JSON.stringify({ anotherKey: 'Adiós' }, null, 2)}\n`,
       { encoding: 'utf8' },
     )
     expect(mockWriteFileSync).toHaveBeenCalledWith(
       `${tempI18nConfig.directory}\\fr-FR.json`,
-      JSON.stringify({ yetAnother: 'Au revoir' }, null, 2),
+      `${JSON.stringify({ yetAnother: 'Au revoir' }, null, 2)}\n`,
       { encoding: 'utf8' },
     )
 
@@ -197,7 +197,7 @@ describe('del command', () => {
     expect(mockWriteFileSync).toHaveBeenCalledTimes(1)
     expect(mockWriteFileSync).toHaveBeenCalledWith(
       `${tempI18nConfig.directory}\\en-US.json`,
-      JSON.stringify({ }, null, 2),
+      `${JSON.stringify({}, null, 2)}\n`,
       { encoding: 'utf8' },
     )
     expectVirtualFileContent('locales/en-US.json', {})
@@ -226,7 +226,7 @@ describe('del command', () => {
     expect(mockWriteFileSync).toHaveBeenCalledTimes(1)
     expect(mockWriteFileSync).toHaveBeenCalledWith(
       `${mockResolvedConfig.i18n.directory}\\en-US.json`,
-      JSON.stringify({ farewell: 'Goodbye' }, null, 2),
+      `${JSON.stringify({ farewell: 'Goodbye' }, null, 2)}\n`,
       { encoding: 'utf8' },
     )
 
