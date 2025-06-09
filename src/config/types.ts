@@ -80,6 +80,12 @@ export interface CommonConfig {
    * @default false
    */
   debug: boolean
+
+  /**
+   * Enable/disable undo history.
+   * @default true
+   */
+  undo: boolean
 }
 
 export interface LLMConfig {

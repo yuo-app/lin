@@ -4,6 +4,7 @@ import { defineCommand } from 'citty'
 import { allArgs, resolveConfig } from '../config'
 import { loadI18nConfig } from '../config/i18n'
 import { console, findNestedKey, ICONS, normalizeLocales, r } from '../utils'
+import { saveUndoState } from '../utils/undo'
 
 export default defineCommand({
   meta: {
@@ -26,6 +27,9 @@ export default defineCommand({
     let locales = typeof args.locale === 'string' ? [args.locale] : args.locale || []
     locales = normalizeLocales(locales, i18n)
     const localesToCheck = locales.length > 0 ? locales : i18n.locales
+
+    const filesToModify = localesToCheck.map(locale => r(`${locale}.json`, i18n))
+    saveUndoState(filesToModify, config as any)
 
     const keys = args._
     const deletedKeysByLocale: Record<string, string[]> = {}

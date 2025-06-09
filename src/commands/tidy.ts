@@ -5,6 +5,7 @@ import c from 'picocolors'
 import { commonArgs, resolveConfig } from '../config'
 import { loadI18nConfig } from '../config/i18n'
 import { catchError, checkArg, console, countKeys, findMissingKeys, ICONS, normalizeLocales, r, shapeMatches, sortKeys } from '../utils'
+import { saveUndoState } from '../utils/undo'
 
 export default defineCommand({
   meta: {
@@ -74,6 +75,10 @@ export default defineCommand({
     }
 
     const successfullySortedLocales: string[] = []
+    const filesToModify = localesToCheck
+      .map(locale => r(`${locale}.json`, i18n))
+      .filter(fp => fs.existsSync(fp))
+    saveUndoState(filesToModify, config as any)
     for (const locale of localesToCheck) {
       const localeFilePath = r(`${locale}.json`, i18n)
       const localeJson = JSON.parse(fs.readFileSync(localeFilePath, { encoding: 'utf8' }))

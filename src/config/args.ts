@@ -30,6 +30,11 @@ export const commonArgs = {
     description: 'debug mode',
     default: false,
   },
+  undo: {
+    type: 'boolean',
+    description: 'Enable/disable undo history. Use --no-undo to disable.',
+    default: true,
+  },
 } as const satisfies CommonArgs
 
 export const llmArgs = {

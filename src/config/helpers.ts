@@ -11,6 +11,8 @@ export function normalizeArgs(inputArgs: Record<string, any>): Partial<Config> {
     outputConfig.cwd = inputArgs.cwd
   if (inputArgs.debug !== undefined)
     outputConfig.debug = inputArgs.debug
+  if (inputArgs.undo !== undefined)
+    outputConfig.undo = inputArgs.undo
   if (inputArgs.context !== undefined)
     outputConfig.context = inputArgs.context
 

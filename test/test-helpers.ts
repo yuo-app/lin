@@ -7,6 +7,7 @@ export const mockResolvedConfig: DeepRequired<ResolvedConfig> = {
   cwd: '/test/project',
   debug: false,
   context: '',
+  undo: false,
   integration: 'i18n',
   i18n: {
     locales: ['en-US', 'es-ES'],
@@ -46,6 +47,7 @@ export const baseArgsToRun = {
   model: mockResolvedConfig.options.model,
   apiKey: mockResolvedConfig.options.apiKey,
   temperature: mockResolvedConfig.options.temperature,
+  undo: mockResolvedConfig.undo,
 }
 
 export function createVfsHelpers() {

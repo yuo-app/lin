@@ -9,4 +9,5 @@ export const commands = {
   tidy: () => import('./tidy').then(_rDefault),
   verify: () => import('./verify').then(_rDefault),
   models: () => import('./models').then(_rDefault),
+  undo: () => import('./undo').then(_rDefault),
 } as const

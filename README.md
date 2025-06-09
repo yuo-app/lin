@@ -128,6 +128,14 @@ lin tidy abc # sort alphabetically
 lin tidy def # sort by default locale
 ```
 
+### undo
+
+`undo` reverts the last changes made by `add`, `del`, `tidy`, or `translate`.
+
+```bash
+lin undo
+```
+
 ### models
 
 To see a list of all available LLM providers and models:
@@ -139,6 +147,11 @@ To see a list of all available LLM providers and models:
 
 > [!TIP]
 > All properties in the config can be used as CLI flags too.
+
+`lin` automatically saves a backup of any files modified by the `add`, `del`, `tidy`, and `translate` commands. You can disable this feature with the `--no-undo` flag, or by setting `undo: false` in your config file.
+
+> [!IMPORTANT]
+> Add the `.lin` directory to your `.gitignore` file.
 
 ### config file
 

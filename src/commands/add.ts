@@ -16,6 +16,7 @@ import {
   r,
   translateKeys,
 } from '@/utils'
+import { saveUndoState } from '@/utils/undo'
 
 export default defineCommand({
   meta: {
@@ -158,6 +159,7 @@ export default defineCommand({
       if (!result)
         return
 
+      saveUndoState(Object.keys(translationsToWrite), config as any)
       for (const localePath of Object.keys(translationsToWrite))
         fs.writeFileSync(localePath, `${JSON.stringify(translationsToWrite[localePath], null, 2)}\n`, { encoding: 'utf8' })
     }

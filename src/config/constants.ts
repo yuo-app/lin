@@ -27,6 +27,7 @@ export const DEFAULT_CONFIG = {
   locale: '',
   cwd: process.cwd(),
   debug: false,
+  undo: true,
 
   context: '',
   integration: 'i18n',
