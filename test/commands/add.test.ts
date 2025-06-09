@@ -1,13 +1,13 @@
 import type { Mock, Mocked } from 'vitest'
 import fs from 'node:fs'
+import { text as clackText } from '@clack/prompts'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import addCommand from '@/commands/add'
 import { resolveConfig } from '@/config'
 import { loadI18nConfig } from '@/config/i18n'
 import * as consoleUtils from '@/utils/console'
 import * as generalUtils from '@/utils/general'
 import * as llmUtils from '@/utils/llm'
-import { text as clackText } from '@clack/prompts'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { baseArgsToRun, createVfsHelpers, mockI18nConfigResult, mockResolvedConfig } from '../test-helpers'
 
 vi.mock('node:fs')

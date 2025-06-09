@@ -1,6 +1,6 @@
-import type { I18nConfig } from '@/config/i18n'
 import type { ArgDef, BooleanArgDef, StringArgDef } from 'citty'
 import type { integrations, providers } from './constants'
+import type { I18nConfig } from '@/config/i18n'
 
 export interface ModelDefinition {
   value: string

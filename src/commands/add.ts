@@ -1,5 +1,7 @@
 import type { LocaleJson } from '@/utils'
 import fs from 'node:fs'
+import { text } from '@clack/prompts'
+import { defineCommand } from 'citty'
 import { allArgs, resolveConfig } from '@/config'
 import {
   catchError,
@@ -14,8 +16,6 @@ import {
   r,
   translateKeys,
 } from '@/utils'
-import { text } from '@clack/prompts'
-import { defineCommand } from 'citty'
 
 export default defineCommand({
   meta: {

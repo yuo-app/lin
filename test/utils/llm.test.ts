@@ -1,11 +1,11 @@
+import type { confirm as confirmFnType } from '@clack/prompts'
+import type { MockedFunction } from 'vitest'
 import type { Config, Provider } from '@/config'
 import type { I18nConfig } from '@/config/i18n'
 import type { DeepRequired } from '@/types'
 import type { LocaleJson } from '@/utils/locale'
-import type { confirm as confirmFnType } from '@clack/prompts'
-import type { MockedFunction } from 'vitest'
-import { deletionGuard, getWithLocales, translateKeys } from '@/utils/llm'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { deletionGuard, getWithLocales, translateKeys } from '@/utils/llm'
 
 const mockLanguageModelFn = vi.fn().mockReturnValue({})
 const mockProviderClient = { languageModel: mockLanguageModelFn }

@@ -1,13 +1,13 @@
 import type { MockedFunction } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
+import c from 'picocolors'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import tidyCommand from '@/commands/tidy'
 import * as configModule from '@/config'
 import * as i18nConfigModule from '@/config/i18n'
 import * as utilsModule from '@/utils'
 import * as consoleModule from '@/utils/console'
-import c from 'picocolors'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { baseArgsToRun, createVfsHelpers, mockI18nConfigResult, mockResolvedConfig } from '../test-helpers'
 
 const actualNodePath = await vi.importActual<typeof path>('node:path')

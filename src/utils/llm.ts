@@ -1,7 +1,7 @@
-import type { DeepRequired } from '@/types'
 import type { AzureLLMProviderOptions, Config, Provider } from '../config'
 import type { I18nConfig } from '../config/i18n'
 import type { LocaleJson } from './locale'
+import type { DeepRequired } from '@/types'
 import { createAnthropic } from '@ai-sdk/anthropic'
 import { createAzure } from '@ai-sdk/azure'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'

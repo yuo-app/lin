@@ -1,6 +1,6 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { console, ICONS } from '@/utils/console'
 import * as generalUtils from '@/utils/general'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const actualHandleCliErrorImplementation = generalUtils.handleCliError
 const spiedHandleCliError = vi.spyOn(generalUtils, 'handleCliError')

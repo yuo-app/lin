@@ -1,8 +1,8 @@
 import { Console } from 'node:console'
 import process from 'node:process'
-import { console, formatLog } from '@/utils/console'
 import c from 'picocolors'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { console, formatLog } from '@/utils/console'
 
 describe('console utilities', () => {
   describe('formatLog', () => {

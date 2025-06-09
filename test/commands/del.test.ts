@@ -1,10 +1,10 @@
 import type { MockedFunction } from 'vitest'
 import fs from 'node:fs'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import delCommand from '@/commands/del'
 import * as configModule from '@/config'
 import * as i18nConfigModule from '@/config/i18n'
 import * as consoleModule from '@/utils/console'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { baseArgsToRun, createVfsHelpers, mockI18nConfigResult, mockResolvedConfig } from '../test-helpers'
 
 vi.mock('node:fs')

@@ -1,5 +1,5 @@
-import { countKeys, findNestedKey, sortKeys } from '@/utils/nested'
 import { describe, expect, it } from 'vitest'
+import { countKeys, findNestedKey, sortKeys } from '@/utils/nested'
 
 describe('nested utils', () => {
   describe('findNestedKey', () => {

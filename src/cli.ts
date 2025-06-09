@@ -1,7 +1,7 @@
+import { defineCommand, runMain, showUsage } from 'citty'
 import { commands } from '@/commands'
 import { availableModels, commonArgs, resolveConfig } from '@/config'
 import { console, ICONS } from '@/utils'
-import { defineCommand, runMain, showUsage } from 'citty'
 import { description, version } from '../package.json'
 import 'dotenv/config'
 

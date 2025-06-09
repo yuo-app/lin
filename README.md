@@ -1,6 +1,6 @@
 <h1 align="center">lin</h1>
 <p align="center">
-  <code>lin</code> is a CLI tool that translates locale JSONs with GPT (currently).
+  <code>lin</code> is a CLI tool that translates locale JSONs using LLMs
 </p>
 
 [![NPM Version](https://img.shields.io/npm/v/%40yuo-app%2Flin?color=red)](https://www.npmjs.com/package/%40yuo-app%2Flin)
@@ -24,26 +24,33 @@ You will need:
 - a default locale JSON file (e.g. `en-US.json`)
 - API keys for your chosen LLM providers in your .env file (e.g., `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`)
 
-`lin` needs to know 3 things to work:
+`lin` is smart and will try to automatically detect your i18n configuration from your existing project setup. It supports:
+
+- Next.js (`next.config.js`)
+- Nuxt.js (`nuxt.config.js`)
+- Vue I18n (`vue.config.js`)
+- React-i18next (`i18next-parser.config.js`)
+- Angular (`angular.json`)
+
+If your setup is not detected automatically, you can create a `lin.config.ts` (or `i18n.config.ts`) file in the root of your project to tell `lin` about your i18n setup:
 
 - **locales**: an array of locales to translate
 - **defaultLocale**: the default from the locales array
 - **directory**: the folder with the locale JSON files
 
-Create an `i18n.config.ts` (or js, json, etc, see [Config](#config)) file in the root of your project:
+Example `lin.config.ts`:
 
 ```ts
 import { defineConfig } from '@yuo-app/lin'
 
 export default defineConfig({
-  locales: ['en-US', 'es-ES'],
-  defaultLocale: 'en-US',
-  directory: 'locales',
+  i18n: {
+    locales: ['en-US', 'es-ES'],
+    defaultLocale: 'en-US',
+    directory: 'locales',
+  }
 })
 ```
-
-> [!IMPORTANT]
-> `lin` will be able to infer all these from your existing i18n setup.
 
 ## usage
 
@@ -52,7 +59,7 @@ export default defineConfig({
 
 ### translate
 
-The **translate** command syncs all locale JSON files with the default locale JSON file. It finds the missing keys in locales, and translates them with one GPT request.
+The **translate** command syncs all locale JSON files with the default locale JSON file. It finds the missing keys in locales, and translates them.
 
 ```bash
 lin translate
@@ -79,36 +86,28 @@ You can also use the `translate` command to **add a new language**.
 
 ### add
 
-`add` can be useful when writing a new part of the UI. You can use it to quickly add a new key to the default locale and translate it to all the locales.
+`add` can be useful when writing a new part of the UI. You can use it to quickly add a new key to the default locale and translate it to all the other locales.
 
 ```bash
 lin add ui.button.save Text of the save button
 ```
 
-`ui.button.save` will be the key inserted to the JSONs, and the rest of the arguments will be the value ie. the translated text.
+`ui.button.save` will be the key, and `Text of the save button` will be the value for the default locale. This will then be translated to all other locales.
 
 > [!NOTE]
 > if the key is nested, it should be in dot notation like `ui.button.save`
 
-To add a key to a specific locale, use the `-l` flag:
+To add a key to only specific locales, use the `-l` flag. You can repeat it for multiple locales.
 
 ```bash
-lin add -l ko ui.button.save Text of the save button
+lin add -l es -l fr ui.button.save Text of the save button
 ```
 
-Listing multiple locales is done by using the `-l` flag multiple times:
-
-```bash
-lin add ui.button.save -l jp Text of the save button -l zh
-```
-
-(flags can be all over the place, but their values stop at the first space)
-
-For adding more keys, it's usually best to just directly edit the default JSON and then use `lin translate` to translate them. But `translate` does not remove keys, so `del` is needed for that.
+This will add the key to `es` and `fr` locales (and the default locale).
 
 ### del
 
-`del` just removes keys from the locale JSON files.
+`del` removes keys from the locale JSON files.
 
 ```bash
 lin del nav.title footer.description
@@ -122,18 +121,19 @@ lin del nav.title footer.description
 lin tidy
 ```
 
-You can also use it to sort the locale JSONs which can happen as `translate` and `add` don't keep the order.
-
-To sort alphabetically:
+You can also use it to sort the locale JSONs alphabetically or with respect to the default locale.
 
 ```bash
-lin tidy abc
+lin tidy abc # sort alphabetically
+lin tidy def # sort by default locale
 ```
 
-To sort with respect to the default locale:
+### models
+
+To see a list of all available LLM providers and models, run:
 
 ```bash
-lin tidy def
+lin --models
 ```
 
 ## config
@@ -143,57 +143,64 @@ lin tidy def
 
 ### config file
 
-Use only one config file.
+`lin` uses `unconfig` to find and load your configuration files. You can use one of the following:
 
-#### lin config
+- `lin.config.ts` (or `.js`, `.mjs`, etc.)
+- `.linrc` (or with extension, or `.json`)
+- `lin` property in `package.json`
 
-- `lin.config.ts`
+If you are not using one of the auto-detected frameworks, you can put your i18n config inside your `lin` config, or create a separate `i18n.config.ts` file.
 
-<details>
-<summary>Show all</summary>
-
-- `lin.config.{ts, mts, cts, js, mjs, cjs, json, ∅}`
-- `.linrc.{ts, mts, cts, js, mjs, cjs, json, ∅}`
-- `lin` in `package.json`
-- `lin` in your vite or nuxt config
-
-</details>
-
-#### i18n config
-
-- `i18n.config.ts` or `i18n` in `lin.config.ts`
-
-<details>
-<summary>Show all</summary>
-
-- `i18n` in lin config
-- `i18n.config.{ts, mts, cts, js, mjs, cjs, json, ∅}`
-- `.i18nrc.{ts, mts, cts, js, mjs, cjs, json, ∅}`
-- `lin.i18n` in `package.json`
-- `lin.i18n` in your vite or nuxt config
-
-</details>
+See [`src/config/i18n.ts`](./src/config/i18n.ts) for a full list of configuration sources.
 
 ### LLM config
 
 *for the `add` and `translate` commands*
 
-`lin` uses the Vercel AI SDK to support multiple LLM providers. You need to specify the model in the format `provider:model_id` (e.g., `openai:gpt-4.1-mini`) in your configuration or via the `--model` CLI flag. Make sure the corresponding API key (e.g., `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`) is set in your environment variables.
+`lin` uses the [Vercel AI SDK](https://sdk.vercel.ai/) to support multiple LLM providers. The currently supported providers are:
 
-The LLM options (ex. temperature) are exposed directly in `options` in the lin config.
+- `openai`
+- `anthropic`
+- `google`
+- `xai`
+- `mistral`
+- `groq`
+- `azure`
+
+You need to specify the model in your configuration or via the `--model` CLI flag. The format is `provider:model_id` (e.g., `openai:gpt-4.1-mini`).
+
+Make sure the corresponding API key is set in your environment variables (e.g., `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`).
+
+Example `lin.config.ts` with LLM options:
+
+```ts
+import { defineConfig } from '@yuo-app/lin'
+
+export default defineConfig({
+  // ... i18n config
+  options: {
+    provider: 'openai',
+    model: 'gpt-4.1-mini',
+    temperature: 0.7,
+  }
+})
+```
+
+All options under `options` are passed to the Vercel AI SDK.
 
 #### `context` in config
 
 This simple string is directly added to the system prompt. Use it to provide extra information to the LLM about your project.
 
 ```ts
-context: 'hello gpt friend, how do you do'
+context: 'My project is a fun and quirky game for learning languages.'
 ```
 
 #### `with` arg
 
-You can use this flag with locales to add them to the context window.
-This will add the entire ja-JP.json file to the LLM.
+You can use this flag with `translate` or `add` to provide other locale files as context to the LLM. This can help improve translation quality by showing the model examples of existing translations.
+
+This will add the entire `ja-JP.json` file to the LLM's context window.
 
 ```bash
 lin translate zh -w jp

@@ -1,5 +1,6 @@
 import type { LocaleJson } from '@/utils'
 import fs from 'node:fs'
+import { defineCommand } from 'citty'
 import { allArgs, resolveConfig } from '@/config'
 import {
   catchError,
@@ -15,7 +16,6 @@ import {
   shapeMatches,
   translateKeys,
 } from '@/utils'
-import { defineCommand } from 'citty'
 
 export default defineCommand({
   meta: {

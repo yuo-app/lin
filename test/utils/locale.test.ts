@@ -1,7 +1,7 @@
 import type { I18nConfig } from '@/config/i18n'
 import type { LocaleJson } from '@/utils/locale'
-import { findMissingKeys, mergeMissingTranslations, normalizeLocales, shapeMatches } from '@/utils/locale'
 import { describe, expect, it, vi } from 'vitest'
+import { findMissingKeys, mergeMissingTranslations, normalizeLocales, shapeMatches } from '@/utils/locale'
 
 vi.mock('@/utils/general', () => ({
   handleCliError: vi.fn((message: string) => {
