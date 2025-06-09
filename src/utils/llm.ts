@@ -18,7 +18,7 @@ import { console, formatLog, ICONS } from './console'
 import { handleCliError } from './general'
 import { normalizeLocales } from './locale'
 
-function sanitizeJsonString(jsonString: string): string {
+export function sanitizeJsonString(jsonString: string): string {
   let processedString = jsonString
   const thinkTagEnd = '</think>'
   const thinkIndex = processedString.lastIndexOf(thinkTagEnd)
@@ -40,12 +40,13 @@ function sanitizeJsonString(jsonString: string): string {
       .replace(/^[^{]*(\{.*\})[^}]*$/, '$1')
       .replace(/\/\/.*$/gm, '')
       .replace(/([^S\\])\\(?!["\\/bfnrtu])/g, '$1')
+      .replace(/,(?=\s*[}\]])/g, '')
 
     return cleaned
   }
 }
 
-const jsonExtractionMiddleware: LanguageModelV1Middleware = {
+export const jsonExtractionMiddleware: LanguageModelV1Middleware = {
   wrapGenerate: async ({ doGenerate }) => {
     const result = await doGenerate()
 

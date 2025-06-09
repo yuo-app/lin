@@ -5,7 +5,7 @@ import type { I18nConfig } from '@/config/i18n'
 import type { DeepRequired } from '@/types'
 import type { LocaleJson } from '@/utils/locale'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { deletionGuard, getWithLocales, translateKeys } from '@/utils/llm'
+import { deletionGuard, getWithLocales, jsonExtractionMiddleware, sanitizeJsonString, translateKeys } from '@/utils/llm'
 
 const mockLanguageModelFn = vi.fn().mockReturnValue({})
 const mockProviderClient = { languageModel: mockLanguageModelFn }
@@ -219,6 +219,7 @@ describe('llm utils', () => {
       locale: 'all',
       cwd: '/mock',
       debug: false,
+      undo: false,
       context: 'Test context about the project.',
       integration: 'i18n',
       i18n: { locales: ['en-US', 'es-ES', 'fr-FR'], defaultLocale: 'en-US', directory: 'locales' },
@@ -490,6 +491,56 @@ describe('llm utils', () => {
         'Unsupported provider: unsupported',
         'Supported providers are: openai, anthropic, google, xai, mistral, groq, cerebras, azure.',
       )
+    })
+  })
+
+  describe('sanitizeJsonString', () => {
+    it('should return a valid JSON string as is', () => {
+      const validJson = '{"key":"value"}'
+      expect(sanitizeJsonString(validJson)).toBe(validJson)
+    })
+
+    it('should extract JSON from markdown code blocks', () => {
+      const markdownJson = '```json\n{"key":"value"}\n```'
+      expect(sanitizeJsonString(markdownJson)).toBe('{"key":"value"}')
+    })
+
+    it('should remove thinking tags', () => {
+      const withThinking = '<think>some thoughts</think>{"key":"value"}'
+      expect(sanitizeJsonString(withThinking)).toBe('{"key":"value"}')
+    })
+
+    it('should extract JSON object from a string with surrounding text', () => {
+      const withText = 'Here is the JSON: {"key":"value"} a-and that is it.'
+      expect(sanitizeJsonString(withText)).toBe('{"key":"value"}')
+    })
+
+    it('should handle nested JSON', () => {
+      const nestedJson = '{"key":{"nested_key":"nested_value"}}'
+      expect(sanitizeJsonString(nestedJson)).toBe(nestedJson)
+    })
+
+    it('should remove trailing commas from objects', () => {
+      const withTrailingComma = '{"key":"value",}'
+      const withoutTrailingComma = '{"key":"value"}'
+      expect(JSON.parse(sanitizeJsonString(withTrailingComma))).toEqual(JSON.parse(withoutTrailingComma))
+    })
+  })
+
+  describe('jsonExtractionMiddleware', () => {
+    it('should sanitize the text in the result', async () => {
+      const dirtyJson = '```json\n{"key":"value"}\n```'
+      const doGenerate = vi.fn().mockResolvedValue({ text: dirtyJson })
+
+      const result = await jsonExtractionMiddleware.wrapGenerate!({ doGenerate } as any)
+
+      expect(result.text).toBe('{"key":"value"}')
+    })
+
+    it('should handle result with no text', async () => {
+      const doGenerate = vi.fn().mockResolvedValue({ text: undefined })
+      const result = await jsonExtractionMiddleware.wrapGenerate!({ doGenerate } as any)
+      expect(result.text).toBeUndefined()
     })
   })
 })
