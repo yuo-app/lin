@@ -1,15 +1,9 @@
+import type { LocaleJson } from '../utils'
 import fs from 'node:fs'
 import { defineCommand } from 'citty'
 import { allArgs, resolveConfig } from '../config'
-import { loadI18nConfig } from '../i18n'
-import {
-  console,
-  findNestedKey,
-  ICONS,
-  type LocaleJson,
-  normalizeLocales,
-  r,
-} from '../utils'
+import { loadI18nConfig } from '../config/i18n'
+import { console, findNestedKey, ICONS, normalizeLocales, r } from '../utils'
 
 export default defineCommand({
   meta: {

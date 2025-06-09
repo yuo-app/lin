@@ -1,8 +1,8 @@
+import { commands } from '@/commands'
+import { availableModels, commonArgs, resolveConfig } from '@/config'
+import { console, ICONS } from '@/utils'
 import { defineCommand, runMain, showUsage } from 'citty'
 import { description, version } from '../package.json'
-import { commands } from './commands'
-import { availableModels, commonArgs, resolveConfig } from './config'
-import { console, ICONS } from './utils'
 import 'dotenv/config'
 
 const main = defineCommand({
@@ -38,7 +38,7 @@ const main = defineCommand({
       }
     }
 
-    if (rawArgs.length === 0 && !args.version && !args.models) // Ensure usage is shown if no other action
+    if (rawArgs.length === 0 && !args.version && !args.models)
       showUsage(cmd)
 
     const { config } = await resolveConfig(args)

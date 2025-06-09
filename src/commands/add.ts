@@ -1,9 +1,6 @@
+import type { LocaleJson } from '@/utils'
 import fs from 'node:fs'
-import process from 'node:process'
-import { text } from '@clack/prompts'
-import { defineCommand } from 'citty'
-import { allArgs, resolveConfig } from '../config'
-import { loadI18nConfig } from '../i18n'
+import { allArgs, resolveConfig } from '@/config'
 import {
   catchError,
   console,
@@ -12,12 +9,13 @@ import {
   findNestedKey,
   getWithLocales,
   ICONS,
-  type LocaleJson,
   mergeMissingTranslations,
   normalizeLocales,
   r,
   translateKeys,
-} from '../utils'
+} from '@/utils'
+import { text } from '@clack/prompts'
+import { defineCommand } from 'citty'
 
 export default defineCommand({
   meta: {
@@ -52,7 +50,7 @@ export default defineCommand({
   },
   async run({ args }) {
     const { config } = await resolveConfig(args)
-    const { i18n } = await loadI18nConfig(config)
+    const i18n = config.i18n
 
     let locales = typeof args.locale === 'string' ? [args.locale] : args.locale || []
     locales = catchError(normalizeLocales)(locales, i18n)

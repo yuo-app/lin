@@ -14,12 +14,15 @@ type Primitive = string | number | boolean | null | undefined
 
 export type NestedKeyOf<T> = T extends Primitive
   ? never
-  : T extends any[]
-    ? never
+  : T extends (infer Elem)[]
+    ? NestedKeyOf<Elem> extends never
+      ? `${number}`
+      : `${number}` | `${number}.${NestedKeyOf<Elem>}`
     : {
-        [K in keyof T & (string | number)]: K extends string | number
-          ? `${K}` | `${K}.${NestedKeyOf<T[K]>}`
-          : never;
+        [K in keyof T & (string | number)]:
+        NestedKeyOf<T[K]> extends never
+          ? `${K}`
+          : `${K}` | `${K}.${NestedKeyOf<T[K]>}`
       }[keyof T & (string | number)]
 
 export type NestedValueOf<T, K extends string> = K extends keyof T

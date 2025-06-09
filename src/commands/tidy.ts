@@ -3,7 +3,7 @@ import path from 'node:path'
 import { defineCommand } from 'citty'
 import c from 'picocolors'
 import { commonArgs, resolveConfig } from '../config'
-import { loadI18nConfig } from '../i18n'
+import { loadI18nConfig } from '../config/i18n'
 import { catchError, checkArg, console, countKeys, findMissingKeys, ICONS, normalizeLocales, r, shapeMatches, sortKeys } from '../utils'
 
 export default defineCommand({
@@ -68,6 +68,7 @@ export default defineCommand({
       return
     }
 
+    const successfullySortedLocales: string[] = []
     for (const locale of localesToCheck) {
       const localeFilePath = r(`${locale}.json`, i18n)
       const localeJson = JSON.parse(fs.readFileSync(localeFilePath, { encoding: 'utf8' }))
@@ -78,8 +79,10 @@ export default defineCommand({
         continue
       }
       fs.writeFileSync(localeFilePath, JSON.stringify(sortFn(localeJson), null, 2), { encoding: 'utf8' })
+      successfullySortedLocales.push(locale)
     }
 
-    console.log(ICONS.success, `Sorted locales: ${localesToCheck.map(l => `**${l}**`).join(', ')}`)
+    if (successfullySortedLocales.length > 0)
+      console.log(ICONS.success, `Sorted locales: ${successfullySortedLocales.map(l => `**${l}**`).join(', ')}`)
   },
 })

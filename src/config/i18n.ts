@@ -1,11 +1,18 @@
-import type { Config } from './config'
+import type { Config } from '@/config'
 import process from 'node:process'
 import { loadConfig } from 'unconfig'
+import { handleCliError } from '../utils'
 
 export interface I18nConfig {
   locales: string[]
   defaultLocale: string
   directory: string
+}
+
+export const DEFAULT_I18N_CONFIG: I18nConfig = {
+  locales: [],
+  defaultLocale: 'en-US',
+  directory: 'locales',
 }
 
 export async function loadI18nConfig(options?: Config): Promise<{ i18n: I18nConfig, sources: string[] }> {
@@ -105,15 +112,11 @@ export async function loadI18nConfig(options?: Config): Promise<{ i18n: I18nConf
     ],
     cwd: options?.cwd || process.cwd(),
     merge: false,
-    defaults: {
-      locales: [],
-      defaultLocale: 'en-US',
-      directory: 'locales',
-    },
+    defaults: DEFAULT_I18N_CONFIG,
 
   })
   if (!config)
-    throw new Error('No i18n configuration found')
+    handleCliError('No i18n configuration found', 'Please ensure you have a valid i18n configuration file (e.g., i18n.config.ts) or define i18n settings in your lin.config.ts or package.json.')
 
   return { i18n: config, sources }
 }

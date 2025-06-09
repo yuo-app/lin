@@ -57,10 +57,15 @@ class ConsoleExtended extends Console {
       this.log(`${ICONS.success} ${message}`)
       return result
     }
-    catch (error) {
-      stopLoading()
+    catch (errorFromCallback) {
+      try {
+        await stopLoading()
+      }
+      catch (errorDuringCleanup) {
+        super.log('Error during loading indicator cleanup:', errorDuringCleanup)
+      }
       this.log(`${ICONS.error} ${message}`)
-      throw error
+      throw errorFromCallback
     }
   }
 }

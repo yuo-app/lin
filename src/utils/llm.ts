@@ -1,8 +1,9 @@
-import type { Config, Provider } from '../config'
-import type { I18nConfig } from '../i18n'
-import type { DeepRequired } from '../types'
-import type { LocaleJson } from './utils'
+import type { DeepRequired } from '@/types'
+import type { AzureLLMProviderOptions, Config, Provider } from '../config'
+import type { I18nConfig } from '../config/i18n'
+import type { LocaleJson } from './locale'
 import { createAnthropic } from '@ai-sdk/anthropic'
+import { createAzure } from '@ai-sdk/azure'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { createGroq } from '@ai-sdk/groq'
 import { createMistral } from '@ai-sdk/mistral'
@@ -11,17 +12,22 @@ import { createXai } from '@ai-sdk/xai'
 import { confirm } from '@clack/prompts'
 import { generateObject } from 'ai'
 import { z } from 'zod'
+import { providers } from '../config'
 import { console, formatLog, ICONS } from './console'
-import { normalizeLocales } from './utils'
+import { handleCliError } from './general'
+import { normalizeLocales } from './locale'
 
-export function getWithLocales(withLocale: string | string[], i18n: I18nConfig) {
-  const withArg = typeof withLocale === 'string' ? [withLocale] : withLocale || []
-  const includeContext = !withArg.includes('')
-  if (withArg.length <= 1)
+export function getWithLocales(withLocale: string | string[] | undefined, i18n: I18nConfig) {
+  const withArgArray = typeof withLocale === 'string' ? [withLocale] : withLocale || []
+
+  const localesToNormalize = withArgArray.filter(locale => locale !== '')
+  const includeContext = localesToNormalize.length > 0
+
+  if (localesToNormalize.length === 0)
     return { withLocales: [], includeContext }
 
-  const withLocales = normalizeLocales(withArg, i18n)
-  return { withLocales, includeContext }
+  const normalizedWithLocales = normalizeLocales(localesToNormalize, i18n)
+  return { withLocales: normalizedWithLocales, includeContext }
 }
 
 export async function deletionGuard(keyCountsBefore: Record<string, number>, keyCountsAfter: Record<string, number>, locales: string[]): Promise<boolean> {
@@ -43,7 +49,7 @@ export async function deletionGuard(keyCountsBefore: Record<string, number>, key
 
   if (Object.keys(negativeDiffs).length > 0) {
     const result = await confirm({
-      message: formatLog(`${ICONS.warning} This will remove ${Object.keys(negativeDiffs).map(l => `\`${-negativeDiffs[l]}\``).join(', ')} keys from ${Object.keys(negativeDiffs).map(l => `**${l}**`).join(', ')}. Continue?`),
+      message: formatLog(`${ICONS.warning} This will remove ${Object.keys(negativeDiffs).map(l => `\`${-negativeDiffs[l]}\` keys from **${l}**`).join(', ')}. Continue?`),
       initialValue: false,
     })
     if (typeof result !== 'boolean' || !result)
@@ -66,8 +72,11 @@ function getInstance(provider: Provider) {
       return createMistral
     case 'groq':
       return createGroq
+    case 'azure':
+      return createAzure
     default:
-      throw new Error(`Unsupported provider: ${provider}`)
+      // handleCliError(`Unsupported provider: ${provider}`, `Supported providers are: openai, anthropic, google, xai, mistral, groq, azure.`)
+      handleCliError(`Unsupported provider: ${provider}`, `Supported providers are: ${providers.join(', ')}.`)
   }
 }
 
@@ -80,16 +89,25 @@ export async function translateKeys(
 ): Promise<Record<string, LocaleJson>> {
   const provider = config.options.provider
   const modelId = config.options.model
-  if (!provider || !modelId) {
-    // This case should ideally be caught by config validation earlier
-    throw new Error(`Provider or modelId missing in config.options. Provider: ${provider}, Model: ${modelId}`)
-  }
+  if (!provider || !modelId)
+    handleCliError(`Provider or modelId missing in config.options.`, [`Provider: ${provider}`, `Model: ${modelId}`])
 
   const providerFactory = getInstance(provider)
 
   const clientOptions: { apiKey?: string, [key: string]: any } = {}
   if (config.options.apiKey)
     clientOptions.apiKey = config.options.apiKey
+
+  if (provider === 'azure') {
+    // Assert config.options to AzureLLMProviderOptions to access Azure-specific props
+    const azureOptions = config.options as AzureLLMProviderOptions
+    if (azureOptions.resourceName)
+      clientOptions.resourceName = azureOptions.resourceName
+    if (azureOptions.apiVersion)
+      clientOptions.apiVersion = azureOptions.apiVersion
+    if (azureOptions.baseURL)
+      clientOptions.baseURL = azureOptions.baseURL
+  }
 
   const providerClient = providerFactory(clientOptions)
   const model = providerClient.languageModel(modelId)

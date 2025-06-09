@@ -1,8 +1,6 @@
+import type { LocaleJson } from '@/utils'
 import fs from 'node:fs'
-import process from 'node:process'
-import { defineCommand } from 'citty'
-import { allArgs, resolveConfig } from '../config'
-import { loadI18nConfig } from '../i18n'
+import { allArgs, resolveConfig } from '@/config'
 import {
   catchError,
   console,
@@ -11,13 +9,13 @@ import {
   findMissingKeys,
   getWithLocales,
   ICONS,
-  type LocaleJson,
   mergeMissingTranslations,
   normalizeLocales,
   r,
   shapeMatches,
   translateKeys,
-} from '../utils'
+} from '@/utils'
+import { defineCommand } from 'citty'
 
 export default defineCommand({
   meta: {
@@ -46,7 +44,7 @@ export default defineCommand({
   },
   async run({ args }) {
     const { config } = await resolveConfig(args)
-    const { i18n } = await loadI18nConfig(config)
+    const i18n = config.i18n
 
     const locales = catchError(normalizeLocales)(args._, i18n)
     const localesToCheck = locales.length > 0 ? locales : i18n.locales.filter(l => l !== i18n.defaultLocale)
