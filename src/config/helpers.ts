@@ -1,6 +1,6 @@
 import type { AzureLLMProviderOptions, Config, Integration, LLMProviderOptions, Provider } from './types'
 import { handleCliError } from '../utils'
-import { availableModels, integrations, providers } from './constants'
+import { integrations, providers } from './constants'
 
 export function normalizeArgs(inputArgs: Record<string, any>): Partial<Config> {
   const outputConfig: Partial<Config> = {}
@@ -85,17 +85,6 @@ export function normalizeArgs(inputArgs: Record<string, any>): Partial<Config> {
 
   if (Object.keys(llmOptsFromInput).length > 0)
     outputConfig.options = llmOptsFromInput as LLMProviderOptions
-
-  if (outputConfig.options?.provider && outputConfig.options?.model) {
-    const { provider, model } = outputConfig.options
-    const modelsForProvider = availableModels[provider as Provider] || []
-    if (provider !== 'azure' && !modelsForProvider.some(m => m.value === model)) {
-      handleCliError(
-        `Model "${model}" not found for provider "${provider}".`,
-        `Available: ${modelsForProvider.map(m => m.value).join(', ')}`,
-      )
-    }
-  }
 
   return outputConfig
 }

@@ -81,6 +81,13 @@ export default defineCommand({
     if (withLocales.length > 0)
       console.log(ICONS.info, `With: ${withLocales.map(l => `**${l}**`).join(', ')}`)
 
+    if (args.debug) {
+      console.log(ICONS.note, `Provider: \`${config.options.provider}\``)
+      console.log(ICONS.note, `Model: \`${config.options.model}\``)
+      if (config.options.temperature !== undefined)
+        console.log(ICONS.note, `Temperature: \`${config.options.temperature}\``)
+    }
+
     const keyCountsBefore: Record<string, number> = {}
     const keyCountsAfter: Record<string, number> = {}
     const keysToTranslate: Record<string, LocaleJson> = {}

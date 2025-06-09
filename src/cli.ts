@@ -30,8 +30,6 @@ const main = defineCommand({
 
     const { config } = await resolveConfig(args)
     if (args.debug) {
-      console.log(ICONS.info, 'Args:')
-      console.log(args)
       console.log(ICONS.info, 'Config:')
       console.log(config)
     }

@@ -96,15 +96,6 @@ describe('normalizeArgs', () => {
     )
   })
 
-  it('should call handleCliError for a model not found for the given provider', () => {
-    const inputArgs = { provider: 'openai', model: 'non-existent-model' }
-    expect(() => normalizeArgs(inputArgs)).toThrow('handleCliError was called')
-    expect(mockedHandleCliError).toHaveBeenCalledWith(
-      'Model "non-existent-model" not found for provider "openai".',
-      expect.stringContaining('Available:'),
-    )
-  })
-
   it('should handle Azure-specific arguments from top level', () => {
     const inputArgs = {
       azureResourceName: 'my-resource',

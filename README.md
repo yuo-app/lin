@@ -200,20 +200,42 @@ export default defineConfig({
 
 All options under `options` are passed to the Vercel AI SDK.
 
+#### `presets` in config
+
+To avoid long CLI commands, you can define and name different model configurations in your `lin.config.ts` file.
+
+```ts
+// lin.config.ts
+export default defineConfig({
+  options: {
+    provider: 'openai',
+    model: 'gpt-4.1-mini',
+  },
+  presets: {
+    'creative-claude': {
+      provider: 'anthropic',
+      model: 'claude-sonnet-4-0',
+      temperature: 0.8,
+      context: 'You are a creative assistant who helps with translating my codebase.'
+    },
+    'fast-deepseek': {
+      provider: 'groq',
+      model: 'deepseek-r1-distill-llama-70b',
+    },
+  }
+})
+```
+
+You can then activate a preset using the `--model` flag. Any other CLI flags will override the preset's values.
+
+```bash
+# Use the 'creative-claude' preset
+lin translate -m creative-claude
+
+# Use the 'fast-deepseek' preset, but override the temperature
+lin add ui.new.feature "A new feature" -m fast-deepseek -t 0.6
+```
+
 #### `context` in config
 
 This simple string is directly added to the system prompt. Use it to provide extra information to the LLM about your project.
-
-```ts
-context: 'My project is a fun and quirky game for learning languages.'
-```
-
-#### `with` arg
-
-You can use this flag with `translate` or `add` to provide other locale files as context to the LLM. This can help improve translation quality by showing the model examples of existing translations.
-
-This will add the entire `ja-JP.json` file to the LLM's context window.
-
-```bash
-lin translate zh -w jp
-```

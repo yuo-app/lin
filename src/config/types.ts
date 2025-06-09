@@ -57,6 +57,8 @@ export type NonAzureLLMProviderOptions = NonAzureProviderOptionsMap[Exclude<Prov
 
 export type LLMProviderOptions = AzureLLMProviderOptions | NonAzureLLMProviderOptions
 
+export type PresetOptions = Partial<LLMProviderOptions> & { context?: string }
+
 export type Integration = (typeof integrations)[number]
 
 export interface CommonConfig {
@@ -110,6 +112,11 @@ export interface LLMConfig {
    * LLM options
    */
   options: LLMProviderOptions
+
+  /**
+   * Saved model configurations that can be activated with the --model flag.
+   */
+  presets?: Record<string, PresetOptions>
 }
 
 export type Config = CommonConfig & LLMConfig

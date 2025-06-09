@@ -235,6 +235,7 @@ describe('llm utils', () => {
         seed: 12345,
         mode: 'auto',
       },
+      presets: {},
     }
 
     const mockI18n: I18nConfig = {

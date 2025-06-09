@@ -7,14 +7,23 @@ export default defineConfig({
     directory: './locales',
   },
   options: {
-    // provider: 'groq',
-    // model: 'deepseek-r1-distill-llama-70b',
-
     provider: 'google',
     model: 'gemini-2.5-flash-preview-05-20',
-
-    // provider: 'azure',
-    // model: 'grok-3-mini',
-    // mode: 'json',
+  },
+  presets: {
+    'grok': {
+      provider: 'azure',
+      model: 'grok-3',
+      mode: 'json',
+    },
+    'ds': {
+      provider: 'azure',
+      model: 'DeepSeek-R1-0528',
+      mode: 'custom',
+    },
+    'fast-ds': {
+      provider: 'groq',
+      model: 'deepseek-r1-distill-llama-70b',
+    },
   },
 })

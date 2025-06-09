@@ -8,3 +8,4 @@
 - [ ] **`convert` command:** convert a project to use i18n by extracting all the strings from the code and adding them to the locale json files.
 - [x] **`undo`**: undo the last command, store prev file in .lin folder
 - [x] support any LLM
+- [x] model presets

@@ -1,9 +1,10 @@
-import type { DeepRequired } from '../types'
+import type { DeepRequired } from './../types'
 import type { I18nConfig } from './i18n'
 import type * as ConfigTypes from './types'
 import process from 'node:process'
 import deepmerge from 'deepmerge'
 import { loadConfig } from 'unconfig'
+import { handleCliError } from './../utils'
 import * as ConfigConstants from './constants'
 import { normalizeArgs } from './helpers'
 import { DEFAULT_I18N_CONFIG, loadI18nConfig } from './i18n'
@@ -75,7 +76,25 @@ export async function resolveConfig(
     defaults: ConfigConstants.DEFAULT_CONFIG,
   })
 
-  const configForI18nResolution = deepmerge(loadedFromFileConfig, cliProvidedArgs) as ConfigTypes.Config
+  const potentialPresetName = cliProvidedArgs.options?.model
+  const presetFromFile = potentialPresetName && loadedFromFileConfig.presets?.[potentialPresetName]
+
+  let presetAsConfig: Partial<ConfigTypes.Config> = {}
+  if (presetFromFile) {
+    const { context: presetContext, ...presetOptions } = presetFromFile
+    presetAsConfig = { options: presetOptions as ConfigTypes.LLMProviderOptions }
+    if (presetContext)
+      presetAsConfig.context = presetContext
+
+    if (cliProvidedArgs.options)
+      delete (cliProvidedArgs.options as any).model
+  }
+
+  const configForI18nResolution = deepmerge.all([
+    loadedFromFileConfig,
+    presetAsConfig,
+    cliProvidedArgs,
+  ]) as ConfigTypes.Config
   const { i18n: loadedI18nObject } = await loadI18nConfig(configForI18nResolution)
 
   const resolvedI18nObject
@@ -87,6 +106,7 @@ export async function resolveConfig(
     [
       ConfigConstants.DEFAULT_CONFIG,
       loadedFromFileConfig,
+      presetAsConfig,
       cliProvidedArgs,
       { i18n: resolvedI18nObject },
     ],
@@ -97,6 +117,15 @@ export async function resolveConfig(
     delete (finalMergedConfig.options as any).resourceName
     delete (finalMergedConfig.options as any).apiVersion
     delete (finalMergedConfig.options as any).baseURL
+  }
+
+  const { provider, model } = finalMergedConfig.options
+  const modelsForProvider = ConfigConstants.availableModels[provider as ConfigTypes.Provider] || []
+  if (provider !== 'azure' && !modelsForProvider.some(m => m.value === model)) {
+    handleCliError(
+      `Model "${model}" not found for provider "${provider}".`,
+      `Available: ${modelsForProvider.map(m => m.value).join(', ')}`,
+    )
   }
 
   return { config: finalMergedConfig, sources, dependencies }

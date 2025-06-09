@@ -26,6 +26,7 @@ export const mockResolvedConfig: DeepRequired<ResolvedConfig> = {
     presencePenalty: 0,
     seed: 42,
   },
+  presets: {},
 }
 
 export const mockI18nConfigResult: { i18n: I18nConfig, sources: string[] } = {
