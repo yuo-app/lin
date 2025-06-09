@@ -18,6 +18,7 @@ const main = defineCommand({
       description: 'show version',
     },
     models: {
+      alias: 'M',
       type: 'boolean',
       description: 'show models',
     },
@@ -31,9 +32,9 @@ const main = defineCommand({
     if (args.models) {
       console.log('`Available Models:`')
       for (const provider in availableModels) {
-        console.log(`  **${provider}**`)
+        console.log(`  \`${provider}\``)
         availableModels[provider as keyof typeof availableModels].forEach((model) => {
-          console.log(`    - ${model.value} (${model.alias})`)
+          console.log(`    - **${model.alias}**: ${model.value}`)
         })
       }
     }

@@ -133,7 +133,7 @@ lin tidy def # sort by default locale
 To see a list of all available LLM providers and models, run:
 
 ```bash
-lin --models
+lin -M
 ```
 
 ## config
