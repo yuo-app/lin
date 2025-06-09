@@ -213,7 +213,7 @@ describe('llm utils', () => {
       i18n: { locales: ['en-US', 'es-ES', 'fr-FR'], defaultLocale: 'en-US', directory: 'locales' },
       options: {
         provider: 'openai',
-        model: 'gpt-4o-mini',
+        model: 'gpt-4.1-mini',
         apiKey: 'test-api-key',
         temperature: 0.7,
         maxTokens: 150,
@@ -257,7 +257,7 @@ describe('llm utils', () => {
 
       expect(result).toEqual(mockTranslatedJson)
       expect(mockCreateOpenAI).toHaveBeenCalledWith({ apiKey: 'test-api-key' })
-      expect(mockLanguageModelFn).toHaveBeenCalledWith('gpt-4o-mini')
+      expect(mockLanguageModelFn).toHaveBeenCalledWith('gpt-4.1-mini')
       expect(mockGenerateObject).toHaveBeenCalledOnce()
       const generateObjectCall = mockGenerateObject.mock.calls[0][0]
       expect(generateObjectCall.model).toEqual({})
@@ -344,7 +344,7 @@ describe('llm utils', () => {
       } as DeepRequired<Config>
       await translateKeys(keysToTranslate, openAIConfig, mockI18n)
       expect(mockCreateOpenAI).toHaveBeenCalledWith({ apiKey: 'test-api-key' })
-      expect(mockLanguageModelFn).toHaveBeenCalledWith('gpt-4o-mini')
+      expect(mockLanguageModelFn).toHaveBeenCalledWith('gpt-4.1-mini')
       expect(mockGenerateObject).toHaveBeenCalledOnce()
     })
 

@@ -32,7 +32,7 @@ export const DEFAULT_CONFIG = {
 
   options: {
     provider: 'openai',
-    model: 'gpt-4o-mini',
+    model: 'gpt-4.1-mini',
     apiKey: undefined,
     temperature: 0,
   },
@@ -50,13 +50,15 @@ export const availableModels = {
     { value: 'gpt-4o-mini', alias: 'GPT 4o mini' },
   ],
   anthropic: [
+    { value: 'claude-opus-4-0', alias: 'Claude 4 Opus' },
+    { value: 'claude-sonnet-4-0', alias: 'Claude 4 Sonnet' },
     { value: 'claude-3-7-sonnet-latest', alias: 'Claude 3.7 Sonnet' },
     { value: 'claude-3-5-sonnet-latest', alias: 'Claude 3.5 Sonnet' },
     { value: 'claude-3-5-haiku-latest', alias: 'Claude 3.5 Haiku' },
   ],
   google: [
-    { value: 'gemini-2.5-pro-exp-05-06', alias: 'Gemini 2.5 Pro' },
-    { value: 'gemini-2.5-flash-preview-04-17', alias: 'Gemini 2.5 Flash' },
+    { value: 'gemini-2.5-pro-preview-06-05', alias: 'Gemini 2.5 Pro' },
+    { value: 'gemini-2.5-flash-preview-05-20', alias: 'Gemini 2.5 Flash' },
     { value: 'gemini-2.0-flash', alias: 'Gemini 2.0 Flash' },
     { value: 'gemini-2.0-flash-lite', alias: 'Gemini 2.0 Flash Lite' },
   ],
@@ -82,7 +84,7 @@ export const availableModels = {
     { value: 'llama-3.1-8b-instant', alias: 'Llama 3.1 8B Instant' },
     { value: 'gemma2-9b-it', alias: 'Gemma2 9B IT' },
   ],
-  azure: [], // Azure models are deployment-specific, user provides deployment name as model
+  azure: [],
 } as const satisfies Models
 
 export type ModelValue = (typeof availableModels)[Provider][number]['value']

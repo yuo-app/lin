@@ -178,7 +178,7 @@ Use only one config file.
 
 *for the `add` and `translate` commands*
 
-`lin` uses the Vercel AI SDK to support multiple LLM providers. You need to specify the model in the format `provider:model_id` (e.g., `openai:gpt-4o-mini`) in your configuration or via the `--model` CLI flag. Make sure the corresponding API key (e.g., `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`) is set in your environment variables.
+`lin` uses the Vercel AI SDK to support multiple LLM providers. You need to specify the model in the format `provider:model_id` (e.g., `openai:gpt-4.1-mini`) in your configuration or via the `--model` CLI flag. Make sure the corresponding API key (e.g., `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`) is set in your environment variables.
 
 The LLM options (ex. temperature) are exposed directly in `options` in the lin config.
 

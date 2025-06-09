@@ -53,7 +53,7 @@ export const llmArgs = {
   model: {
     alias: 'm',
     type: 'string',
-    description: 'the model to use (e.g., gpt-4o-mini)',
+    description: 'the model to use (e.g., gpt-4.1-mini)',
     default: DEFAULT_CONFIG.options.model,
   },
   temperature: {
