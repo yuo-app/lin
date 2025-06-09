@@ -56,9 +56,9 @@ describe('resolveConfig', () => {
         model: 'my-azure-deployment',
         temperature: 0.5,
         apiKey: 'test-azure-key',
-        resourceName: 'my-resource', // Changed from azureResourceName
-        baseURL: 'https://custom.azure.com', // Changed from azureBaseURL
-        apiVersion: '2023-03-15-preview', // Changed from azureApiVersion
+        resourceName: 'my-resource',
+        baseURL: 'https://custom.azure.com',
+        apiVersion: '2023-03-15-preview',
       },
       cwd: '/test/cwd',
     }))

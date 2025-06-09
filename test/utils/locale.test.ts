@@ -252,7 +252,7 @@ describe('locale utils', () => {
       expect(mergeMissingTranslations(existing1, missing1)).toEqual(expected1)
 
       const existing2: LocaleJson = { a: 'string' }
-      const missing2: LocaleJson = { 'a.b': 'nested object' } // This implies 'a' should become an object
+      const missing2: LocaleJson = { 'a.b': 'nested object' }
       const expected2: LocaleJson = { a: { b: 'nested object' } }
       expect(mergeMissingTranslations(existing2, missing2)).toEqual(expected2)
     })

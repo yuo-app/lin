@@ -19,15 +19,13 @@ vi.mock('@/utils', async () => {
   const actual = await vi.importActual('@/utils') as typeof utilsModule
   return {
     ...actual,
-    // Explicitly mock functions used and controlled in these tests
     countKeys: vi.fn(),
     shapeMatches: vi.fn(),
     findMissingKeys: vi.fn(),
     sortKeys: vi.fn(),
-    catchError: vi.fn((fn: any) => fn), // Mock catchError to just return the function
-    checkArg: vi.fn(), // Mock checkArg
+    catchError: vi.fn((fn: any) => fn),
+    checkArg: vi.fn(),
     normalizeLocales: vi.fn((locales, i18n) => actual.normalizeLocales(locales, i18n)),
-    // console is mocked separately
   }
 })
 vi.mock('@/utils/console', async () => {
@@ -39,10 +37,10 @@ vi.mock('@/utils/console', async () => {
       logL: vi.fn(),
       loading: vi.fn((_message: string, callback: () => Promise<any>) => callback()),
     },
-    ICONS: { // Use actual icons for more realistic log checking
-      ...actual.ICONS, // This should now work with the more complete picocolors mock
+    ICONS: {
+      ...actual.ICONS,
     },
-    formatLog: vi.fn(str => str), // Keep formatLog simple for testing command logic
+    formatLog: vi.fn(str => str),
   }
 })
 vi.mock('picocolors', () => {
@@ -95,7 +93,6 @@ describe('tidy command', () => {
     mockPathDirname = vi.spyOn(path, 'dirname').mockReturnValue('mock/dir') as MockedFunction<typeof path.dirname>
     mockPathBasename = vi.spyOn(path, 'basename').mockReturnValue('mockfile.js') as MockedFunction<typeof path.basename>
 
-    // Assuming countKeys, normalizeLocales are from the actual utils import due to selective mocking
     mockCountKeys = utilsModule.countKeys as MockedFunction<typeof utilsModule.countKeys>
     mockNormalizeLocales = utilsModule.normalizeLocales as MockedFunction<typeof utilsModule.normalizeLocales>
     mockCheckArg = utilsModule.checkArg as MockedFunction<typeof utilsModule.checkArg>
@@ -108,7 +105,7 @@ describe('tidy command', () => {
     mockLoadI18nConfig.mockResolvedValue(mockI18nConfigResult)
     mockPathDirname.mockReturnValue('mock/dir')
     mockPathBasename.mockReturnValue('mockfile.js')
-    mockCountKeys.mockImplementation(obj => Object.keys(obj).length) // Simple mock for countKeys
+    mockCountKeys.mockImplementation(obj => Object.keys(obj).length)
 
     mockReadFileSync.mockImplementation((filePath) => {
       const fsMap = getVfs()
@@ -127,7 +124,6 @@ describe('tidy command', () => {
       setupVirtualFile(filePath.toString(), JSON.parse(data as string))
     })
 
-    // Setup default locale files
     setupVirtualFile('locales/en-US.json', defaultEnJson)
     setupVirtualFile('locales/es-ES.json', defaultEsJson)
   })
@@ -144,8 +140,8 @@ describe('tidy command', () => {
   it('should log paths to config files if found', async () => {
     mockResolveConfig.mockResolvedValue({ config: mockResolvedConfig, sources: ['/path/to/lin.config.js'], dependencies: [] })
     mockLoadI18nConfig.mockResolvedValue({ ...mockI18nConfigResult, sources: ['/path/to/i18n.config.ts'] })
-    mockPathDirname.mockImplementation(p => actualNodePath.dirname(p)) // Use actual path.dirname
-    mockPathBasename.mockImplementation(p => actualNodePath.basename(p)) // Use actual path.basename
+    mockPathDirname.mockImplementation(p => actualNodePath.dirname(p))
+    mockPathBasename.mockImplementation(p => actualNodePath.basename(p))
 
     await runTidyCommand()
 
@@ -154,8 +150,8 @@ describe('tidy command', () => {
   })
 
   it('should log errors if config files are not found', async () => {
-    mockResolveConfig.mockResolvedValue({ config: mockResolvedConfig, sources: [], dependencies: [] }) // No lin config
-    mockLoadI18nConfig.mockResolvedValue({ ...mockI18nConfigResult, sources: [] }) // No i18n config
+    mockResolveConfig.mockResolvedValue({ config: mockResolvedConfig, sources: [], dependencies: [] })
+    mockLoadI18nConfig.mockResolvedValue({ ...mockI18nConfigResult, sources: [] })
 
     await runTidyCommand()
 
@@ -164,7 +160,7 @@ describe('tidy command', () => {
   })
 
   it('should log default locale key count', async () => {
-    mockCountKeys.mockReturnValueOnce(5) // For default locale
+    mockCountKeys.mockReturnValueOnce(5)
     await runTidyCommand()
     expect(mockCountKeys).toHaveBeenCalledWith(defaultEnJson)
     expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.note, 'Keys: `5`')
@@ -177,13 +173,11 @@ describe('tidy command', () => {
     const tempI18nConfig = { ...mockI18nConfigResult.i18n, locales: ['en-US', 'es-ES', 'fr-FR', 'de-DE'] }
     mockLoadI18nConfig.mockResolvedValue({ i18n: tempI18nConfig, sources: ['i18n.config.js'] })
 
-    // Mock countKeys return values for each locale read
     mockCountKeys
-      .mockReturnValueOnce(2) // en-US (default, read first for defaultKeyCount)
-      .mockReturnValueOnce(2) // en-US (in loop)
-      .mockReturnValueOnce(2) // es-ES (in loop)
-      .mockReturnValueOnce(1) // fr-FR (in loop)
-      // de-DE will throw in readFileSync, so countKeys won't be called for it in the loop
+      .mockReturnValueOnce(2)
+      .mockReturnValueOnce(2)
+      .mockReturnValueOnce(2)
+      .mockReturnValueOnce(1)
 
     await runTidyCommand()
 
@@ -193,11 +187,11 @@ describe('tidy command', () => {
     expect(mockConsoleLogL).toHaveBeenCalledWith('**fr-FR** (`1`) ')
     expect(mockPicocolorsRed).toHaveBeenCalledWith('**de-DE**')
     expect(mockConsoleLogL).toHaveBeenCalledWith('red(**de-DE**)', `(${consoleModule.ICONS.error}) `)
-    expect(mockConsoleLog).toHaveBeenCalledTimes(4) // 2 for configs, 1 for default keys, 1 for the empty line after locale logs
+    expect(mockConsoleLog).toHaveBeenCalledTimes(4)
   })
 
   it('should not sort or write files if no sort argument is provided', async () => {
-    await runTidyCommand() // sort is undefined by default in helper
+    await runTidyCommand()
 
     expect(mockCheckArg).toHaveBeenCalledWith(undefined, ['abc', 'def'])
     expect(mockWriteFileSync).not.toHaveBeenCalled()
@@ -211,8 +205,8 @@ describe('tidy command', () => {
     setupVirtualFile('locales/en-US.json', unsortedJson)
     setupVirtualFile('locales/es-ES.json', unsortedJson)
 
-    mockShapeMatches.mockReturnValue(true) // Assume shapes match
-    mockSortKeys.mockImplementation((obj, _ref) => { // Simple alphabetical sort mock
+    mockShapeMatches.mockReturnValue(true)
+    mockSortKeys.mockImplementation((obj, _ref) => {
       const sorted: any = {}
       Object.keys(obj).sort().forEach(key => sorted[key] = obj[key])
       return sorted
@@ -222,8 +216,8 @@ describe('tidy command', () => {
 
     expect(mockCheckArg).toHaveBeenCalledWith('abc', ['abc', 'def'])
     expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.info, 'Sorting locales **alphabetically**')
-    expect(mockSortKeys).toHaveBeenCalledTimes(2) // Once for en-US, once for es-ES
-    expect(mockSortKeys).toHaveBeenCalledWith(sortedJson) // Check it was called with the sorted object, as a single argument
+    expect(mockSortKeys).toHaveBeenCalledTimes(2)
+    expect(mockSortKeys).toHaveBeenCalledWith(sortedJson)
 
     expect(mockWriteFileSync).toHaveBeenCalledTimes(2)
     expect(mockWriteFileSync).toHaveBeenCalledWith(expect.stringContaining('en-US.json'), JSON.stringify(sortedJson, null, 2), { encoding: 'utf8' })
@@ -234,17 +228,16 @@ describe('tidy command', () => {
   })
 
   it('should sort by default locale when sort arg is "def"', async () => {
-    const defaultOrderJson = { a: 'Default A', c: 'Default C', b: 'Default B' } // Default order
+    const defaultOrderJson = { a: 'Default A', c: 'Default C', b: 'Default B' }
     const otherLocaleUnsorted = { b: 'Other B', a: 'Other A', c: 'Other C' }
-    const otherLocaleSortedToDef = { a: 'Other A', c: 'Other C', b: 'Other B' } // Expected order based on default
+    const otherLocaleSortedToDef = { a: 'Other A', c: 'Other C', b: 'Other B' }
 
-    setupVirtualFile('locales/en-US.json', defaultOrderJson) // This is the default
+    setupVirtualFile('locales/en-US.json', defaultOrderJson)
     setupVirtualFile('locales/es-ES.json', otherLocaleUnsorted)
 
     mockShapeMatches.mockReturnValue(true)
-    // Mock sortKeys to sort based on refObj keys if provided
     mockSortKeys.mockImplementation((obj, refObj) => {
-      if (!refObj) { // Alphabetical sort if no refObj (should not happen for 'def' sort on non-default locales)
+      if (!refObj) {
         const sorted: any = {}
         Object.keys(obj).sort().forEach(key => sorted[key] = obj[key])
         return sorted
@@ -254,7 +247,6 @@ describe('tidy command', () => {
         if (Object.prototype.hasOwnProperty.call(obj, key))
           sortedWithRef[key] = obj[key]
       })
-      // Add any keys in obj not in refObj (alphabetically at the end)
       Object.keys(obj).sort().forEach((key) => {
         if (!Object.prototype.hasOwnProperty.call(refObj, key))
           sortedWithRef[key] = obj[key]
@@ -265,10 +257,8 @@ describe('tidy command', () => {
     await runTidyCommand({ sort: 'def' })
 
     expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.info, 'Sorting locales according to **default locale**')
-    expect(mockSortKeys).toHaveBeenCalledTimes(2) // en-US and es-ES
-    // en-US (default) will be sorted against itself, effectively re-applying its own order.
+    expect(mockSortKeys).toHaveBeenCalledTimes(2)
     expect(mockSortKeys).toHaveBeenCalledWith(defaultOrderJson, defaultOrderJson)
-    // es-ES will be sorted against en-US (defaultOrderJson)
     expect(mockSortKeys).toHaveBeenCalledWith(otherLocaleUnsorted, defaultOrderJson)
 
     expect(mockWriteFileSync).toHaveBeenCalledTimes(2)
@@ -281,23 +271,23 @@ describe('tidy command', () => {
 
   it('should skip sorting and log warning if shape does not match for "abc" sort', async () => {
     const defaultJson = { a: 'A', b: 'B' }
-    const mismatchJson = { a: 'A', c: 'C' } // b is missing, c is extra
+    const mismatchJson = { a: 'A', c: 'C' }
     setupVirtualFile('locales/en-US.json', defaultJson)
     setupVirtualFile('locales/es-ES.json', mismatchJson)
 
     mockShapeMatches.mockImplementation((objA, objB) => JSON.stringify(Object.keys(objA).sort()) === JSON.stringify(Object.keys(objB).sort()))
-    mockFindMissingKeys.mockReturnValue({ c: 'C' }) // Simulate finding 'c' as extra for the log
+    mockFindMissingKeys.mockReturnValue({ c: 'C' })
 
     await runTidyCommand({ sort: 'abc' })
 
-    expect(mockShapeMatches).toHaveBeenCalledWith(defaultJson, mismatchJson) // en-US vs es-ES
+    expect(mockShapeMatches).toHaveBeenCalledWith(defaultJson, mismatchJson)
     expect(mockConsoleLog).toHaveBeenCalledWith(
       consoleModule.ICONS.warning,
       'Locale **es-ES** is not up to date. Skipping...',
-      expect.stringContaining('dim((found extra: c))'), // Simplified check for the dim part
+      expect.stringContaining('dim((found extra: c))'),
     )
-    expect(mockFindMissingKeys).toHaveBeenCalled() // To generate the message
-    expect(mockWriteFileSync).toHaveBeenCalledTimes(1) // Only en-US (default) should be written as it matches itself
+    expect(mockFindMissingKeys).toHaveBeenCalled()
+    expect(mockWriteFileSync).toHaveBeenCalledTimes(1)
     expect(mockWriteFileSync).toHaveBeenCalledWith(expect.stringContaining('en-US.json'), expect.any(String), { encoding: 'utf8' })
     expect(mockWriteFileSync).not.toHaveBeenCalledWith(expect.stringContaining('es-ES.json'), expect.any(String), expect.any(Object))
     expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.success, 'Sorted locales: **en-US**')
@@ -305,12 +295,12 @@ describe('tidy command', () => {
 
   it('should skip sorting and log warning if shape does not match for "def" sort (missing key)', async () => {
     const defaultJson = { a: 'A', b: 'B', c: 'C' }
-    const mismatchJson = { a: 'A', b: 'B' } // c is missing
+    const mismatchJson = { a: 'A', b: 'B' }
     setupVirtualFile('locales/en-US.json', defaultJson)
     setupVirtualFile('locales/es-ES.json', mismatchJson)
 
     mockShapeMatches.mockImplementation((objA, objB) => JSON.stringify(Object.keys(objA).sort()) === JSON.stringify(Object.keys(objB).sort()))
-    mockFindMissingKeys.mockReturnValue({ c: 'some value' }) // Simulate finding 'c' as missing
+    mockFindMissingKeys.mockReturnValue({ c: 'some value' })
 
     await runTidyCommand({ sort: 'def' })
 
@@ -321,7 +311,7 @@ describe('tidy command', () => {
       expect.stringContaining('dim((found missing: c))'),
     )
     expect(mockFindMissingKeys).toHaveBeenCalled()
-    expect(mockWriteFileSync).toHaveBeenCalledTimes(1) // Only default locale
+    expect(mockWriteFileSync).toHaveBeenCalledTimes(1)
     expect(mockWriteFileSync).toHaveBeenCalledWith(expect.stringContaining('en-US.json'), expect.any(String), { encoding: 'utf8' })
     expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.success, 'Sorted locales: **en-US**')
   })
@@ -332,17 +322,15 @@ describe('tidy command', () => {
     setupVirtualFile('locales/fr-FR.json', { x: 'Ex', y: 'Why' })
 
     mockShapeMatches.mockReturnValue(true)
-    mockSortKeys.mockImplementation((obj, _ref) => obj) // simple passthrough
+    mockSortKeys.mockImplementation((obj, _ref) => obj)
 
-    await runTidyCommand({ sort: 'abc', locale: ['es'] }) // Use shorthand
+    await runTidyCommand({ sort: 'abc', locale: ['es'] })
 
     expect(mockNormalizeLocales).toHaveBeenCalledWith(['es'], tempI18nConfig)
-    // Check that readFileSync was called for default (en-US) and the specified locale (es-ES)
     expect(mockReadFileSync).toHaveBeenCalledWith(expect.stringContaining('en-US.json'), { encoding: 'utf8' })
     expect(mockReadFileSync).toHaveBeenCalledWith(expect.stringContaining('es-ES.json'), { encoding: 'utf8' })
     expect(mockReadFileSync).not.toHaveBeenCalledWith(expect.stringContaining('fr-FR.json'), { encoding: 'utf8' })
 
-    // Write file should only be called for es-ES
     expect(mockWriteFileSync).toHaveBeenCalledTimes(1)
     expect(mockWriteFileSync).toHaveBeenCalledWith(expect.stringContaining('es-ES.json'), expect.any(String), { encoding: 'utf8' })
     expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.success, 'Sorted locales: **es-ES**')
@@ -352,8 +340,6 @@ describe('tidy command', () => {
     await runTidyCommand({ sort: 'invalid-sort' })
 
     expect(mockCheckArg).toHaveBeenCalledWith('invalid-sort', ['abc', 'def'])
-    // Because checkArg is mocked to do nothing, the command continues.
-    // The 'else' block after sort === 'def' should be hit, causing a return.
     expect(mockConsoleLog).not.toHaveBeenCalledWith(consoleModule.ICONS.info, expect.stringContaining('Sorting locales'))
     expect(mockWriteFileSync).not.toHaveBeenCalled()
     expect(mockConsoleLog).not.toHaveBeenCalledWith(consoleModule.ICONS.success, expect.stringContaining('Sorted locales:'))
@@ -365,7 +351,6 @@ describe('tidy command', () => {
     mockResolveConfig.mockResolvedValue({ config: mockResolvedConfig, sources: [linConfigPath], dependencies: [] })
     mockLoadI18nConfig.mockResolvedValue({ ...mockI18nConfigResult, sources: [i18nConfigPath] })
 
-    // Let path.dirname and path.basename use their actual implementations for this test
     mockPathDirname.mockImplementation(actualPath => actualNodePath.dirname(actualPath))
     mockPathBasename.mockImplementation(actualPath => actualNodePath.basename(actualPath))
 
@@ -383,11 +368,11 @@ describe('tidy command', () => {
   it('should handle single locale in localesToCheck', async () => {
     const tempI18nConfig = { ...mockI18nConfigResult.i18n, locales: ['en-US'] }
     mockLoadI18nConfig.mockResolvedValue({ i18n: tempI18nConfig, sources: ['i18n.config.js'] })
-    mockCountKeys.mockReturnValue(2) // For en-US
+    mockCountKeys.mockReturnValue(2)
 
     await runTidyCommand()
 
-    expect(mockConsoleLogL).toHaveBeenCalledWith(consoleModule.ICONS.note, 'Locale (`1`): ') // Singular "Locale"
+    expect(mockConsoleLogL).toHaveBeenCalledWith(consoleModule.ICONS.note, 'Locale (`1`): ')
     expect(mockConsoleLogL).toHaveBeenCalledWith('**en-US** (`2`) ')
   })
 })
