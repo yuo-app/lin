@@ -22,7 +22,7 @@ export default defineCommand({
   },
   async run({ args }) {
     const { config, sources: configSources } = await resolveConfig(args)
-    const { i18n, sources: i18nSources } = await loadI18nConfig(config)
+    const { i18n, sources: i18nSources } = await loadI18nConfig(config as any)
 
     let locales = typeof args.locale === 'string' ? [args.locale] : args.locale || []
     locales = catchError(normalizeLocales)(locales, i18n)
@@ -39,8 +39,13 @@ export default defineCommand({
 
     const defaultLocaleJson = JSON.parse(fs.readFileSync(r(`${i18n.defaultLocale}.json`, i18n), { encoding: 'utf8' }))
     const defaultKeyCount = countKeys(defaultLocaleJson)
-    console.log(ICONS.note, `Keys: \`${defaultKeyCount}\``)
 
+    console.log(ICONS.note, `Provider: \`${config.options.provider}\``)
+    console.log(ICONS.note, `Model: \`${config.options.model}\``)
+    if (config.options.temperature !== undefined)
+      console.log(ICONS.note, `Temperature: \`${config.options.temperature}\``)
+
+    console.log(ICONS.note, `Keys: \`${defaultKeyCount}\``)
     console.logL(ICONS.note, `Locale${localesToCheck.length > 1 ? 's' : ''} (\`${localesToCheck.length}\`): `)
     for (const locale of localesToCheck) {
       try {

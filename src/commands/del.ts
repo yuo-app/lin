@@ -21,7 +21,7 @@ export default defineCommand({
   },
   async run({ args }) {
     const { config } = await resolveConfig(args)
-    const { i18n } = await loadI18nConfig(config)
+    const { i18n } = await loadI18nConfig(config as any)
 
     let locales = typeof args.locale === 'string' ? [args.locale] : args.locale || []
     locales = normalizeLocales(locales, i18n)

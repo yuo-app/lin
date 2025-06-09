@@ -75,7 +75,6 @@ function getInstance(provider: Provider) {
     case 'azure':
       return createAzure
     default:
-      // handleCliError(`Unsupported provider: ${provider}`, `Supported providers are: openai, anthropic, google, xai, mistral, groq, azure.`)
       handleCliError(`Unsupported provider: ${provider}`, `Supported providers are: ${providers.join(', ')}.`)
   }
 }
@@ -99,7 +98,6 @@ export async function translateKeys(
     clientOptions.apiKey = config.options.apiKey
 
   if (provider === 'azure') {
-    // Assert config.options to AzureLLMProviderOptions to access Azure-specific props
     const azureOptions = config.options as AzureLLMProviderOptions
     if (azureOptions.resourceName)
       clientOptions.resourceName = azureOptions.resourceName
@@ -110,7 +108,7 @@ export async function translateKeys(
   }
 
   const providerClient = providerFactory(clientOptions)
-  const model = providerClient.languageModel(modelId)
+  const model = providerClient.languageModel(modelId as string)
 
   const localeJsonSchema: z.ZodType<LocaleJson> = z.lazy(() =>
     z.record(z.string(), z.union([z.string(), localeJsonSchema])),

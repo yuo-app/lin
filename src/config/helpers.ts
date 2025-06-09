@@ -77,7 +77,7 @@ export function normalizeArgs(inputArgs: Record<string, any>): Partial<Config> {
     (llmOptsFromInput as Partial<AzureLLMProviderOptions>).baseURL = inputArgs.azureBaseURL
 
   if (Object.keys(llmOptsFromInput).length > 0)
-    outputConfig.options = deepmerge(DEFAULT_CONFIG.options, llmOptsFromInput) as LLMProviderOptions
+    outputConfig.options = llmOptsFromInput as LLMProviderOptions
 
   if (outputConfig.options?.provider && outputConfig.options?.model) {
     const { provider, model } = outputConfig.options

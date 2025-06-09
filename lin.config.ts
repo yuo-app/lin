@@ -6,4 +6,8 @@ export default defineConfig({
     defaultLocale: 'en-US',
     directory: './locales',
   },
+  options: {
+    provider: 'groq',
+    model: 'meta-llama/llama-4-maverick-17b-128e-instruct',
+  },
 })

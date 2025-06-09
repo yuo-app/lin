@@ -1,5 +1,5 @@
 import type { ArgDef, BooleanArgDef, StringArgDef } from 'citty'
-import type { integrations, providers } from './constants'
+import type { availableModels, integrations, providers } from './constants'
 import type { I18nConfig } from '@/config/i18n'
 
 export interface ModelDefinition {
@@ -11,13 +11,9 @@ export type Provider = (typeof providers)[number]
 
 export type Models = Record<Provider, ModelDefinition[]>
 
-export interface LLMProviderOptionsBase {
-  /**
-   * The model to use for the specified provider.
-   * e.g., "gpt-4.1-mini" for "openai" provider.
-   * For Azure, this is your deployment name.
-   */
-  model: string
+type ModelValue<P extends Provider> = (typeof availableModels)[P][number]['value']
+
+interface LLMOptions {
   /** Optional API key for the provider. If not set, the SDK will try to use the default environment variables. */
   apiKey?: string
   temperature?: number
@@ -28,8 +24,12 @@ export interface LLMProviderOptionsBase {
   seed?: number
 }
 
-export interface AzureLLMProviderOptions extends LLMProviderOptionsBase {
+export interface AzureLLMProviderOptions extends LLMOptions {
   provider: 'azure'
+  /**
+   * For Azure, this is your deployment name.
+   */
+  model: string
   /** Azure resource name. Defaults to AZURE_OPENAI_RESOURCE_NAME env var. */
   resourceName?: string
   /** Custom API version. Defaults to a version like '2024-05-01-preview'. */
@@ -38,9 +38,18 @@ export interface AzureLLMProviderOptions extends LLMProviderOptionsBase {
   baseURL?: string
 }
 
-export interface NonAzureLLMProviderOptions extends LLMProviderOptionsBase {
-  provider: Exclude<Provider, 'azure'>
+type NonAzureProviderOptionsMap = {
+  [P in Exclude<Provider, 'azure'>]: {
+    provider: P
+    /**
+     * The model to use for the specified provider.
+     * e.g., "gpt-4.1-mini" for "openai" provider.
+     */
+    model: ModelValue<P> | (string & {})
+  } & LLMOptions
 }
+
+export type NonAzureLLMProviderOptions = NonAzureProviderOptionsMap[Exclude<Provider, 'azure'>]
 
 export type LLMProviderOptions = AzureLLMProviderOptions | NonAzureLLMProviderOptions
 

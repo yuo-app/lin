@@ -48,19 +48,16 @@ export const llmArgs = {
     alias: 'p',
     type: 'string',
     description: `the LLM provider to use (e.g., ${providers.join(', ')})`,
-    default: DEFAULT_CONFIG.options.provider,
   },
   model: {
     alias: 'm',
     type: 'string',
     description: 'the model to use (e.g., gpt-4.1-mini)',
-    default: DEFAULT_CONFIG.options.model,
   },
   temperature: {
     alias: 't',
     type: 'string',
     description: 'the temperature to use',
-    default: DEFAULT_CONFIG.options.temperature.toString(),
   },
 } as const satisfies LLMArgs
 
