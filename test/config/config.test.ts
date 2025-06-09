@@ -1,8 +1,8 @@
 import process from 'node:process'
 import { loadConfig } from 'unconfig'
 import { beforeEach, describe, expect, it, type MockedFunction, vi } from 'vitest'
-import { DEFAULT_I18N_CONFIG } from '../src/config/i18n'
-import { DEFAULT_CONFIG, defineConfig, resolveConfig } from './../src/config'
+import { DEFAULT_CONFIG, defineConfig, resolveConfig } from '../../src/config'
+import { DEFAULT_I18N_CONFIG } from '../../src/config/i18n'
 
 vi.mock('unconfig')
 const mockedLoadConfig = loadConfig as MockedFunction<typeof loadConfig>

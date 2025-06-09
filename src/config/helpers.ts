@@ -34,7 +34,6 @@ export function normalizeArgs(inputArgs: Record<string, any>): Partial<Config> {
 
   if (typeof inputArgs.options === 'object' && inputArgs.options !== null) {
     llmOptsFromInput = { ...inputArgs.options }
-    // Map old Azure keys from inputArgs.options (e.g., from a config file using old format) to new keys
     if ((llmOptsFromInput as any).azureResourceName !== undefined) {
       (llmOptsFromInput as Partial<AzureLLMProviderOptions>).resourceName = (llmOptsFromInput as any).azureResourceName
       delete (llmOptsFromInput as any).azureResourceName
