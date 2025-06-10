@@ -1,4 +1,6 @@
-import type { Mock } from 'vitest'
+import type { Mock, Mocked } from 'vitest'
+import fs from 'node:fs'
+import path from 'node:path'
 import { loadConfig } from 'unconfig'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { DEFAULT_I18N_CONFIG, loadI18nConfig } from '@/config/i18n'
@@ -6,9 +8,15 @@ import { handleCliError } from '@/utils'
 
 vi.mock('unconfig')
 vi.mock('@/utils')
+vi.mock('node:fs', () => ({
+  default: {
+    readFileSync: vi.fn(),
+  },
+}))
 
 const mockedLoadConfig = loadConfig as unknown as Mock
 const mockedHandleCliError = handleCliError as unknown as Mock
+const mockedFs = fs as unknown as Mocked<typeof fs>
 
 describe('loadI18nConfig', () => {
   beforeEach(() => {
@@ -245,5 +253,270 @@ describe('loadI18nConfig', () => {
     expect(i18n.locales).toEqual(['sv-SE', 'nb-NO'])
     expect(i18n.defaultLocale).toBe('sv-SE')
     expect(i18n.directory).toBe('international')
+  })
+
+  it('should load config from svelte.config.js', async () => {
+    const svelteConfigContent = {
+      i18n: {
+        locales: ['sv', 'en'],
+        defaultLocale: 'sv',
+        directory: 'src/lib/translations',
+      },
+    }
+    mockedLoadConfig.mockImplementation(async (options) => {
+      const source = options.sources.find((s: any) => s.files.includes('svelte.config'))
+      const rewrittenConfig = await source.rewrite(svelteConfigContent)
+      return { config: { ...DEFAULT_I18N_CONFIG, ...rewrittenConfig }, sources: ['svelte.config.js'] }
+    })
+
+    const { i18n } = await loadI18nConfig()
+    expect(i18n.locales).toEqual(['sv', 'en'])
+    expect(i18n.defaultLocale).toBe('sv')
+    expect(i18n.directory).toBe('src/lib/translations')
+  })
+
+  it('should load config from ember-cli-build.js', async () => {
+    const emberConfigContent = {
+      intl: {
+        locales: ['de-DE', 'fr-FR'],
+        defaultLocale: 'de-DE',
+        baseDir: 'ember-translations',
+      },
+    }
+    mockedLoadConfig.mockImplementation(async (options) => {
+      const source = options.sources.find((s: any) => s.files.includes('ember-cli-build'))
+      const rewrittenConfig = await source.rewrite(emberConfigContent)
+      return { config: { ...DEFAULT_I18N_CONFIG, ...rewrittenConfig }, sources: ['ember-cli-build.js'] }
+    })
+
+    const { i18n } = await loadI18nConfig()
+    expect(i18n.locales).toEqual(['de-DE', 'fr-FR'])
+    expect(i18n.defaultLocale).toBe('de-DE')
+    expect(i18n.directory).toBe('ember-translations')
+  })
+
+  it('should load config from gatsby-config.js', async () => {
+    const gatsbyConfigContent = {
+      plugins: [
+        {
+          resolve: `gatsby-theme-i18n`,
+          options: {
+            defaultLang: `en`,
+            configPath: `./i18n/config.json`,
+          },
+        },
+      ],
+    }
+    const i18nConfigFileContent = JSON.stringify([
+      { code: 'en', hrefLang: 'en-US' },
+      { code: 'fr', hrefLang: 'fr-FR' },
+    ])
+
+    mockedFs.readFileSync.mockReturnValue(i18nConfigFileContent)
+
+    mockedLoadConfig.mockImplementation(async (options) => {
+      const source = options.sources.find((s: any) => s.files.includes('gatsby-config'))
+      const rewrittenConfig = await source.rewrite(gatsbyConfigContent)
+      return { config: { ...DEFAULT_I18N_CONFIG, ...rewrittenConfig }, sources: ['gatsby-config.js'] }
+    })
+
+    const { i18n } = await loadI18nConfig({ cwd: '/test-project' } as any)
+    expect(i18n.locales).toEqual(['en', 'fr'])
+    expect(i18n.defaultLocale).toBe('en')
+    expect(i18n.directory).toBe('i18n')
+    expect(fs.readFileSync).toHaveBeenCalledWith(expect.stringContaining(path.join('i18n', 'config.json')), 'utf8')
+  })
+
+  it('should load config from vite.config.js for Solid.js', async () => {
+    const viteConfigContent = {
+      i18n: {
+        locales: ['pl', 'cs'],
+        defaultLocale: 'pl',
+        directory: 'src/i18n',
+      },
+    }
+    mockedLoadConfig.mockImplementation(async (options) => {
+      const source = options.sources.find((s: any) => s.files.includes('vite.config'))
+      const rewrittenConfig = await source.rewrite(viteConfigContent)
+      return { config: { ...DEFAULT_I18N_CONFIG, ...rewrittenConfig }, sources: ['vite.config.js'] }
+    })
+
+    const { i18n } = await loadI18nConfig()
+    expect(i18n.locales).toEqual(['pl', 'cs'])
+    expect(i18n.defaultLocale).toBe('pl')
+    expect(i18n.directory).toBe('src/i18n')
+  })
+
+  it('should load config from package.json for Qwik', async () => {
+    const packageJsonContent = {
+      qwik: {
+        i18n: {
+          locales: ['it', 'pt'],
+          defaultLocale: 'it',
+          directory: 'src/locales/qwik',
+        },
+      },
+    }
+    mockedLoadConfig.mockImplementation(async (options) => {
+      const source = options.sources.find((s: any) => s.files === 'package.json')
+      const rewrittenConfig = await source.rewrite(packageJsonContent)
+      return { config: { ...DEFAULT_I18N_CONFIG, ...rewrittenConfig }, sources: ['package.json'] }
+    })
+
+    const { i18n } = await loadI18nConfig()
+    expect(i18n.locales).toEqual(['it', 'pt'])
+    expect(i18n.defaultLocale).toBe('it')
+    expect(i18n.directory).toBe('src/locales/qwik')
+  })
+
+  it('should load config from astro.config.mjs', async () => {
+    const astroConfigContent = {
+      i18n: {
+        locales: ['en-GB', 'en-AU'],
+        defaultLocale: 'en-GB',
+        directory: 'src/astro-locales',
+      },
+    }
+    mockedLoadConfig.mockImplementation(async (options) => {
+      const source = options.sources.find((s: any) => s.files.includes('astro.config'))
+      const rewrittenConfig = await source.rewrite(astroConfigContent)
+      return { config: { ...DEFAULT_I18N_CONFIG, ...rewrittenConfig }, sources: ['astro.config.mjs'] }
+    })
+
+    const { i18n } = await loadI18nConfig()
+    expect(i18n.locales).toEqual(['en-GB', 'en-AU'])
+    expect(i18n.defaultLocale).toBe('en-GB')
+    expect(i18n.directory).toBe('src/astro-locales')
+  })
+
+  it('should load config from astro-i18next.config.mjs', async () => {
+    const astroI18nextConfigContent = {
+      locales: ['nl', 'be'],
+      defaultLocale: 'nl',
+    }
+    mockedLoadConfig.mockImplementation(async (options) => {
+      const source = options.sources.find((s: any) => s.files.includes('astro-i18next.config'))
+      const rewrittenConfig = await source.rewrite(astroI18nextConfigContent)
+      return { config: { ...DEFAULT_I18N_CONFIG, ...rewrittenConfig }, sources: ['astro-i18next.config.mjs'] }
+    })
+
+    const { i18n } = await loadI18nConfig()
+    expect(i18n.locales).toEqual(['nl', 'be'])
+    expect(i18n.defaultLocale).toBe('nl')
+    expect(i18n.directory).toBe('public/locales')
+  })
+
+  it('should load config from package.json for Remix', async () => {
+    const packageJsonContent = {
+      remix: {
+        i18n: {
+          locales: ['fi', 'no'],
+          defaultLocale: 'fi',
+          directory: 'app/translations',
+        },
+      },
+    }
+    mockedLoadConfig.mockImplementation(async (options) => {
+      const source = options.sources.find((s: any) => s.files === 'package.json')
+      const rewrittenConfig = await source.rewrite(packageJsonContent)
+      return { config: { ...DEFAULT_I18N_CONFIG, ...rewrittenConfig }, sources: ['package.json'] }
+    })
+
+    const { i18n } = await loadI18nConfig()
+    expect(i18n.locales).toEqual(['fi', 'no'])
+    expect(i18n.defaultLocale).toBe('fi')
+    expect(i18n.directory).toBe('app/translations')
+  })
+
+  it('should handle angular config with a different project name', async () => {
+    const angularConfig = {
+      defaultProject: 'another-app',
+      projects: {
+        'my-app': {
+          i18n: {
+            sourceLocale: 'en-US',
+            locales: {
+              fr: 'src/locale/messages.fr.xlf',
+            },
+          },
+        },
+        'another-app': {
+          i18n: {
+            sourceLocale: 'de-DE',
+            locales: {
+              it: 'src/locale/messages.it.xlf',
+            },
+          },
+        },
+      },
+    }
+    mockedLoadConfig.mockImplementation(async (options) => {
+      const source = options.sources.find((s: any) => s.files === 'angular.json')
+      const rewrittenConfig = await source.rewrite(angularConfig)
+      return { config: { ...DEFAULT_I18N_CONFIG, ...rewrittenConfig }, sources: ['angular.json'] }
+    })
+
+    const { i18n } = await loadI18nConfig()
+    expect(i18n.locales).toEqual(['it'])
+    expect(i18n.defaultLocale).toBe('de-DE')
+    expect(i18n.directory).toBe('src/locale')
+  })
+})
+
+describe('loadI18nConfig with integration flag', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockedLoadConfig.mockResolvedValue({
+      config: DEFAULT_I18N_CONFIG,
+      sources: [],
+    })
+  })
+
+  it('should only search for nextjs config when integration is nextjs', async () => {
+    const nextConfig = { i18n: { locales: ['en'], defaultLocale: 'en' } }
+    mockedLoadConfig.mockImplementation(async (options) => {
+      const hasNextJsSource = options.sources.some((s: any) => s.files?.includes('next.config'))
+      const hasNuxtJsSource = options.sources.some((s: any) => s.files?.includes('nuxt.config'))
+      expect(hasNextJsSource).toBe(true)
+      expect(hasNuxtJsSource).toBe(false)
+
+      const source = options.sources.find((s: any) => s.files.includes('next.config'))
+      if (source) {
+        const rewrittenConfig = await source.rewrite(nextConfig)
+        return { config: { ...DEFAULT_I18N_CONFIG, ...rewrittenConfig }, sources: ['next.config.js'] }
+      }
+      return { config: null, sources: [] }
+    })
+
+    await loadI18nConfig({ integration: 'nextjs' } as any)
+    expect(mockedLoadConfig).toHaveBeenCalled()
+  })
+
+  it('should search all sources when no integration is provided', async () => {
+    mockedLoadConfig.mockImplementation(async (options) => {
+      const hasNextJsSource = options.sources.some((s: any) => s.files?.includes('next.config'))
+      const hasNuxtJsSource = options.sources.some((s: any) => s.files?.includes('nuxt.config'))
+      expect(hasNextJsSource).toBe(true)
+      expect(hasNuxtJsSource).toBe(true)
+      return { config: DEFAULT_I18N_CONFIG, sources: [] }
+    })
+
+    await loadI18nConfig({} as any)
+    expect(mockedLoadConfig).toHaveBeenCalled()
+  })
+
+  it('should filter for a framework that shares a config file (solid)', async () => {
+    mockedLoadConfig.mockImplementation(async (options) => {
+      const viteSource = options.sources.find((s: any) => s.files?.includes('vite.config'))
+      expect(viteSource).toBeDefined()
+
+      const packageJsonSource = options.sources.find((s: any) => s.files === 'package.json')
+      expect(packageJsonSource).toBeUndefined()
+
+      return { config: DEFAULT_I18N_CONFIG, sources: [] }
+    })
+
+    await loadI18nConfig({ integration: 'solid' } as any)
+    expect(mockedLoadConfig).toHaveBeenCalled()
   })
 })

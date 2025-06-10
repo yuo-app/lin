@@ -1,10 +1,10 @@
 import type { StringArgDef } from 'citty'
-import type { CommonConfig, ConfigToArgDef, LLMConfig } from './types'
+import type { CommonConfig, ConfigToArgDef, LinConfig } from './types'
 import process from 'node:process'
 import { DEFAULT_CONFIG, providers } from './constants'
 
 type CommonArgs = ConfigToArgDef<CommonConfig>
-type LLMArgs = Omit<ConfigToArgDef<LLMConfig>, 'options' | 'i18n'> & {
+type LLMArgs = Omit<ConfigToArgDef<LinConfig>, 'options' | 'i18n'> & {
   provider: StringArgDef
   model: StringArgDef
   mode: StringArgDef
@@ -62,7 +62,7 @@ export const llmArgs = {
   },
   mode: {
     type: 'string',
-    description: 'the mode to use for the LLM',
+    description: 'the output mode to use for the LLM',
     valueHint: 'auto | json | custom',
   },
   temperature: {

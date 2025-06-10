@@ -13,14 +13,19 @@ export const providers = [
 ] as const
 
 export const integrations = [
-  'i18n',
   'i18next',
-  'astro',
-  'astro-routing',
   'nextjs',
+  'nuxt',
   'vue-i18n',
-  '@nuxtjs/i18n',
-  'sveltekit-i18n',
+  'angular',
+  'svelte',
+  'ember-intl',
+  'gatsby',
+  'solid',
+  'qwik',
+  'astro',
+  'astro-i18next',
+  'remix',
 ] as const
 
 export const DEFAULT_CONFIG = {
@@ -30,7 +35,7 @@ export const DEFAULT_CONFIG = {
   undo: true,
 
   context: '',
-  integration: 'i18n',
+  integration: '',
 
   options: {
     provider: 'openai',

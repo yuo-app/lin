@@ -35,7 +35,7 @@ export type {
   CommonConfig,
   Config,
   Integration,
-  LLMConfig,
+  LinConfig as LLMConfig,
   LLMProviderOptions,
   ModelDefinition,
   Models,

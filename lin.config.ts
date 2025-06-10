@@ -9,6 +9,7 @@ export default defineConfig({
   options: {
     provider: 'google',
     model: 'gemini-2.5-flash-preview-05-20',
+    mode: 'json',
   },
   presets: {
     'grok': {

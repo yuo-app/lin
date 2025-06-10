@@ -24,15 +24,26 @@ You will need:
 - a default locale JSON file (e.g. `en-US.json`)
 - API keys for your chosen LLM providers in your .env file (e.g., `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`)
 
+See [LLM Config](#llm-config).
+
 `lin` will try to automatically detect your i18n configuration from your existing project setup. It supports:
 
+- i18next (`i18next-parser.config.js`)
 - Next.js (`next.config.js`)
 - Nuxt.js (`nuxt.config.js`)
 - Vue I18n (`vue.config.js`)
-- React-i18next (`i18next-parser.config.js`)
 - Angular (`angular.json`)
+- Svelte (`svelte.config.js`)
+- Ember.js (`ember-cli-build.js`)
+- Gatsby (`gatsby-config.js`)
+- Solid.js (`vite.config.js`)
+- Qwik (`vite.config.js` or `package.json`)
+- Astro (`astro.config.mjs` or `astro-i18next.config.mjs`)
+- Remix (`package.json`)
 
-If your setup is not detected automatically, you can create a `lin.config.ts` (or `i18n.config.ts`) file in the root of your project to tell `lin` about your i18n setup:
+If your setup is not detected automatically, you can specify the integration with using the `integration` config, and `lin` will only load the specified framework.
+
+Or you can create a `lin.config.ts` (or `i18n.config.ts` root) to tell `lin` about your i18n setup:
 
 - **locales**: an array of locales to translate
 - **defaultLocale**: the default from the locales array

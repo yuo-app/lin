@@ -17,7 +17,7 @@ export function normalizeArgs(inputArgs: Record<string, any>): Partial<Config> {
     outputConfig.context = inputArgs.context
 
   if (inputArgs.integration !== undefined) {
-    if (!integrations.includes(inputArgs.integration)) {
+    if (inputArgs.integration && !integrations.includes(inputArgs.integration as any)) {
       handleCliError(
         `Invalid integration "${inputArgs.integration}"`,
         `Available integrations: ${integrations.join(', ')}`,

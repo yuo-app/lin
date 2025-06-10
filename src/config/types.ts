@@ -25,6 +25,13 @@ interface LLMOptions {
   frequencyPenalty?: number
   presencePenalty?: number
   seed?: number
+  /**
+   * The output mode to use for the LLM.
+   * @value auto: AI SDK will use the best mode for the provider
+   * @value json: use native JSON mode or JSON schema in prompt
+   * @value custom: use Lin's custom json output parser
+   * @default 'auto'
+   */
   mode?: 'auto' | 'json' | 'custom'
 }
 
@@ -90,17 +97,18 @@ export interface CommonConfig {
   undo: boolean
 }
 
-export interface LLMConfig {
+export interface LinConfig {
   /**
    * extra information to include in the LLM system prompt
    */
   context: string
 
   /**
-   * the i18n integration used
-   * @default i18n
+   * The i18n integration used.
+   * If empty, `lin` will try to auto-detect the framework.
+   * @default ''
    */
-  integration: Integration
+  integration: Integration | ''
 
   /**
    * The i18n configuration object.
@@ -119,7 +127,7 @@ export interface LLMConfig {
   presets?: Record<string, PresetOptions>
 }
 
-export type Config = CommonConfig & LLMConfig
+export type Config = CommonConfig & LinConfig
 
 /**
  * Represents the configuration object after all sources (files, CLI, defaults)

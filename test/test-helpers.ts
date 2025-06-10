@@ -8,7 +8,7 @@ export const mockResolvedConfig: DeepRequired<ResolvedConfig> = {
   debug: false,
   context: '',
   undo: false,
-  integration: 'i18n',
+  integration: '',
   i18n: {
     locales: ['en-US', 'es-ES'],
     defaultLocale: 'en-US',
