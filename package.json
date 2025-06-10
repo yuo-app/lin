@@ -1,7 +1,7 @@
 {
   "name": "@yuo-app/lin",
   "type": "module",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "packageManager": "bun@1.2.15",
   "description": "auto-i18n",
   "license": "MIT",
