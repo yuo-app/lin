@@ -71,9 +71,9 @@ export const availableModels = {
   ],
   xai: [
     { value: 'grok-3', alias: 'Grok 3', iq: 4, speed: 4 },
-    { value: 'grok-3-mini', alias: 'Grok 3 mini', iq: 4, speed: 4 },
+    { value: 'grok-3-mini', alias: 'Grok 3 mini', iq: 3, speed: 4 },
     { value: 'grok-3-fast', alias: 'Grok 3 fast', iq: 4, speed: 4 },
-    { value: 'grok-3-mini-fast', alias: 'Grok 3 mini fast', iq: 4, speed: 4 },
+    { value: 'grok-3-mini-fast', alias: 'Grok 3 mini fast', iq: 3, speed: 4 },
   ],
   mistral: [
     { value: 'mistral-large-latest', alias: 'Mistral Large', iq: 2, speed: 3 },
