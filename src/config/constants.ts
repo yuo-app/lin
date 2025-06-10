@@ -45,7 +45,7 @@ export const DEFAULT_CONFIG = {
   },
 } satisfies Config
 
-export const availableModels: Models = {
+export const availableModels = {
   openai: [
     { value: 'gpt-4.1', alias: 'GPT 4.1' },
     { value: 'gpt-4.1-mini', alias: 'GPT 4.1 mini' },
@@ -111,7 +111,7 @@ export const availableModels: Models = {
     { value: 'gpt-4o-mini', alias: 'GPT 4o mini', mode: 'json', iq: 2, speed: 4 },
     { value: 'Phi-4', alias: 'Phi 4', mode: 'json', iq: 3, speed: 2 },
   ],
-} as const
+} as const satisfies Models
 
 export type ModelValue = (typeof availableModels)[Provider][number]['value']
 export type ModelAlias = (typeof availableModels)[Provider][number]['alias']
