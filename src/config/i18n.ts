@@ -1,4 +1,5 @@
 import type { Config } from '@/config'
+import path from 'node:path'
 import process from 'node:process'
 import { loadConfig } from 'unconfig'
 import { handleCliError } from '../utils'
@@ -49,7 +50,7 @@ export async function loadI18nConfig(options?: Config): Promise<{ i18n: I18nConf
           return {
             locales: Object.keys(config.pluginOptions?.i18n?.locales || {}),
             defaultLocale: config.pluginOptions?.i18n?.locale,
-            directory: 'src/locales',
+            directory: config.pluginOptions?.i18n?.localeDir || 'src/locales',
           }
         },
       },
@@ -57,10 +58,15 @@ export async function loadI18nConfig(options?: Config): Promise<{ i18n: I18nConf
       {
         files: ['i18next-parser.config'],
         rewrite(config: any) {
+          let directory = 'public/locales'
+          if (config.output) {
+            const parts = config.output.split('/$LOCALE')
+            directory = parts[0]
+          }
           return {
             locales: config.locales,
             defaultLocale: config.defaultLocale,
-            directory: config.output,
+            directory,
           }
         },
       },
@@ -69,11 +75,24 @@ export async function loadI18nConfig(options?: Config): Promise<{ i18n: I18nConf
         files: 'angular.json',
         extensions: [],
         rewrite(config: any) {
-          const project = Object.values(config.projects)[0] as any
+          const projectName = config.defaultProject || (config.projects ? Object.keys(config.projects)[0] : undefined)
+          if (!projectName || !config.projects?.[projectName])
+            return {}
+          const project = config.projects[projectName]
+
+          if (!project.i18n)
+            return {}
+
+          const localeFilePaths = project.i18n.locales ? Object.values(project.i18n.locales) : []
+          let directory = 'src/assets/i18n'
+
+          if (localeFilePaths.length > 0 && typeof localeFilePaths[0] === 'string')
+            directory = path.dirname(localeFilePaths[0])
+
           return {
             locales: project.i18n?.locales ? Object.keys(project.i18n.locales) : [],
             defaultLocale: project.i18n?.sourceLocale,
-            directory: 'src/assets/i18n',
+            directory,
           }
         },
       },

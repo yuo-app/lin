@@ -24,7 +24,7 @@ You will need:
 - a default locale JSON file (e.g. `en-US.json`)
 - API keys for your chosen LLM providers in your .env file (e.g., `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`)
 
-`lin` is smart and will try to automatically detect your i18n configuration from your existing project setup. It supports:
+`lin` will try to automatically detect your i18n configuration from your existing project setup. It supports:
 
 - Next.js (`next.config.js`)
 - Nuxt.js (`nuxt.config.js`)
@@ -160,7 +160,6 @@ To see a list of all available LLM providers and models:
 - `lin.config.ts` (or `.js`, `.mjs`, etc.)
 - `.linrc` (or with extension, or `.json`)
 - `lin` property in `package.json`
-
 If you are not using one of the auto-detected frameworks, you can put your i18n config inside your `lin` config, or create a separate `i18n.config.ts` file.
 
 See [`src/config/i18n.ts`](./src/config/i18n.ts) for a full list of configuration sources.
