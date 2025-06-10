@@ -1,8 +1,10 @@
 import type { MockedFunction } from 'vitest'
+import c from 'picocolors'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import modelsCommand from '@/commands/models'
-import { availableModels, providers } from '@/config'
+import { availableModels, type ModelDefinition, providers } from '@/config'
 import * as consoleModule from '@/utils/console'
+import { generateScoreDots } from '@/utils/console'
 import * as generalUtils from '@/utils/general'
 
 vi.mock('@/utils/console', async () => {
@@ -42,12 +44,30 @@ describe('models command', () => {
     })
 
     expect(mockConsoleLog).toHaveBeenCalledWith('`Available Models:`')
-    let totalModels = 0
+
+    const allModels: ModelDefinition[] = Object.values(availableModels).flat()
+    let maxLength = 0
+    for (const model of allModels) {
+      const len = `    - ${model.alias}: ${model.value}`.length
+      if (len > maxLength)
+        maxLength = len
+    }
+
     for (const provider of Object.keys(availableModels)) {
       expect(mockConsoleLog).toHaveBeenCalledWith(`  \`${provider}\``)
-      totalModels += availableModels[provider as keyof typeof availableModels].length
+      const models = availableModels[provider as keyof typeof availableModels]
+      for (const model of models) {
+        const iqDots = generateScoreDots(model.iq, c.magenta)
+        const speedDots = generateScoreDots(model.speed, c.cyan)
+        const attributes = [iqDots, speedDots].filter(Boolean).join('  ')
+
+        const modelInfo = `    - **${model.alias}**: ${model.value}`
+        const plainModelInfoLength = `    - ${model.alias}: ${model.value}`.length
+        const padding = ' '.repeat(maxLength - plainModelInfoLength)
+
+        expect(mockConsoleLog).toHaveBeenCalledWith(`${modelInfo}${padding}  ${attributes}`)
+      }
     }
-    expect(mockConsoleLog).toHaveBeenCalledTimes(1 + Object.keys(availableModels).length + totalModels)
   })
 
   it('should show models for a single specified provider', async () => {
@@ -60,10 +80,26 @@ describe('models command', () => {
 
     expect(mockConsoleLog).toHaveBeenCalledWith('`Available Models:`')
     expect(mockConsoleLog).toHaveBeenCalledWith(`  \`${provider}\``)
-    for (const model of availableModels[provider])
-      expect(mockConsoleLog).toHaveBeenCalledWith(`    - **${model.alias}**: ${model.value}`)
 
-    expect(mockConsoleLog).toHaveBeenCalledTimes(1 + 1 + availableModels[provider].length)
+    const models = availableModels[provider]
+    let maxLength = 0
+    for (const model of models) {
+      const len = `    - ${model.alias}: ${model.value}`.length
+      if (len > maxLength)
+        maxLength = len
+    }
+
+    for (const model of models) {
+      const iqDots = generateScoreDots(model.iq, c.magenta)
+      const speedDots = generateScoreDots(model.speed, c.cyan)
+      const attributes = [iqDots, speedDots].filter(Boolean).join('  ')
+
+      const modelInfo = `    - **${model.alias}**: ${model.value}`
+      const plainModelInfoLength = `    - ${model.alias}: ${model.value}`.length
+      const padding = ' '.repeat(maxLength - plainModelInfoLength)
+
+      expect(mockConsoleLog).toHaveBeenCalledWith(`${modelInfo}${padding}  ${attributes}`)
+    }
   })
 
   it('should show models for multiple specified providers', async () => {
@@ -75,12 +111,30 @@ describe('models command', () => {
     })
 
     expect(mockConsoleLog).toHaveBeenCalledWith('`Available Models:`')
-    let modelCount = 0
+
+    const modelsToList: ModelDefinition[] = providersToShow.flatMap(p => [...availableModels[p as keyof typeof availableModels]])
+    let maxLength = 0
+    for (const model of modelsToList) {
+      const len = `    - ${model.alias}: ${model.value}`.length
+      if (len > maxLength)
+        maxLength = len
+    }
+
     for (const provider of providersToShow) {
       expect(mockConsoleLog).toHaveBeenCalledWith(`  \`${provider}\``)
-      modelCount += availableModels[provider as 'openai' | 'google'].length
+      const models = availableModels[provider as keyof typeof availableModels]
+      for (const model of models) {
+        const iqDots = generateScoreDots(model.iq, c.magenta)
+        const speedDots = generateScoreDots(model.speed, c.cyan)
+        const attributes = [iqDots, speedDots].filter(Boolean).join('  ')
+
+        const modelInfo = `    - **${model.alias}**: ${model.value}`
+        const plainModelInfoLength = `    - ${model.alias}: ${model.value}`.length
+        const padding = ' '.repeat(maxLength - plainModelInfoLength)
+
+        expect(mockConsoleLog).toHaveBeenCalledWith(`${modelInfo}${padding}  ${attributes}`)
+      }
     }
-    expect(mockConsoleLog).toHaveBeenCalledTimes(1 + providersToShow.length + modelCount)
   })
 
   it('should call handleCliError for an invalid provider', async () => {

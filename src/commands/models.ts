@@ -1,6 +1,7 @@
 import { defineCommand } from 'citty'
+import c from 'picocolors'
 import { availableModels, commonArgs, providers } from '@/config'
-import { console } from '@/utils'
+import { console, generateScoreDots } from '@/utils/console'
 import { handleCliError } from '@/utils/general'
 
 export default defineCommand({
@@ -28,13 +29,32 @@ export default defineCommand({
     console.log('`Available Models:`')
     const providersToList = providersToShow.length > 0 ? providersToShow : Object.keys(availableModels)
 
+    let maxLength = 0
+    for (const provider of providersToList) {
+      if (availableModels[provider as keyof typeof availableModels]) {
+        availableModels[provider as keyof typeof availableModels].forEach((model) => {
+          const modelInfoLength = `    - ${model.alias}: ${model.value}`.length
+          if (modelInfoLength > maxLength)
+            maxLength = modelInfoLength
+        })
+      }
+    }
+
     for (const provider of providersToList) {
       if (!availableModels[provider as keyof typeof availableModels])
         continue
 
       console.log(`  \`${provider}\``)
       availableModels[provider as keyof typeof availableModels].forEach((model) => {
-        console.log(`    - **${model.alias}**: ${model.value}`)
+        const iqDots = generateScoreDots(model.iq, c.magenta)
+        const speedDots = generateScoreDots(model.speed, c.cyan)
+
+        const attributesString = [iqDots, speedDots].filter(Boolean).join('  ')
+        const modelInfo = `    - **${model.alias}**: ${model.value}`
+        const modelInfoLength = `    - ${model.alias}: ${model.value}`.length
+        const padding = ' '.repeat(maxLength - modelInfoLength)
+
+        console.log(`${modelInfo}${padding}  ${attributesString}`)
       })
     }
   },

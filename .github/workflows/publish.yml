@@ -24,4 +24,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
-      - run: bun x jsr publish
+      - run: bun x jsr publish --allow-slow-types

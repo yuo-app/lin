@@ -22,6 +22,18 @@ export function formatLog(message: any): string {
     .replace(/__([^_]+)__/g, (_, p1) => `${c.underline(p1)}`)
 }
 
+export function generateScoreDots(score: number | undefined, color: (str: string) => string): string {
+  if (score === undefined)
+    return ''
+  const filled = '●'
+  const empty = '○'
+  let dots = ''
+  for (let i = 0; i < 5; i++)
+    dots += i < score ? filled : empty
+
+  return `${color(dots)} ${color(String(score))}`
+}
+
 function createLoadingIndicator(message: string) {
   const frames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
   let i = 0
