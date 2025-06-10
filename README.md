@@ -116,6 +116,20 @@ lin add -l es -l fr ui.button.save Text of the save button
 
 This will add the key to `es` and `fr` locales (and the default locale).
 
+### edit
+
+`edit` can be used to quickly edit an existing key in the default locale and all the other locales.
+
+```bash
+lin edit ui.button.save Text of the save button
+```
+
+To edit a key in only specific locales, use the `-l` flag. You can repeat it for multiple locales.
+
+```bash
+lin edit -l es -l fr ui.button.save Text of the save button
+```
+
 ### del
 
 `del` removes keys from the locale JSON files.
