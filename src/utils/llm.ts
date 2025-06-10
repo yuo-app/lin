@@ -220,10 +220,10 @@ Example output:
     mode: generateObjectMode,
   })
 
-  if (config.debug)
-    console.log('\n', ICONS.info, `System Prompt: ${system}`)
-  if (config.debug)
-    console.log('\n', ICONS.info, `Prompt: ${prompt}`)
+  // if (config.debug)
+  //   console.log('\n', ICONS.info, `System Prompt: ${system}`)
+  // if (config.debug)
+  //   console.log('\n', ICONS.info, `Prompt: ${prompt}`)
 
   return translatedJson as Record<string, LocaleJson>
 }
