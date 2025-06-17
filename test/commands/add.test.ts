@@ -463,7 +463,7 @@ describe('add command', () => {
     await expect(addCommand.run!({ args } as any)).rejects.toThrow('File system error')
   })
 
-  it('should handle empty translation input', async () => {
+  it('should handle empty translation input without calling LLM', async () => {
     const args = {
       ...baseArgsToRun,
       key: 'empty.translation',
@@ -473,16 +473,14 @@ describe('add command', () => {
 
     await addCommand.run!({ args } as any)
 
-    expect(mockTranslateKeys).toHaveBeenCalledWith(
-      { 'es-ES': { 'empty.translation': '' } },
-      mockResolvedConfig,
-      mockResolvedConfig.i18n,
-      {},
-      false,
-    )
+    expect(mockTranslateKeys).not.toHaveBeenCalled()
 
     expectVirtualFileContent('locales/en-US.json', {
       existing: { key: 'Hello' },
+      empty: { translation: '' },
+    })
+    expectVirtualFileContent('locales/es-ES.json', {
+      existing: { key: 'Hola' },
       empty: { translation: '' },
     })
     expect(mockConsoleLoading).toHaveBeenCalled()

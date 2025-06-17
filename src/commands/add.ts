@@ -148,12 +148,23 @@ export default defineCommand({
       console.log(ICONS.info, `To translate: ${JSON.stringify(keysToTranslate)}`)
 
     if (Object.keys(keysToTranslateAndDefault).length > 0) {
-      await console.loading(`Adding \`${args.key}\` to ${Object.keys(keysToTranslateAndDefault).map(l => `**${l}**`).join(', ')}`, async () => {
-        const translations = Object.keys(keysToTranslate).length > 0
-          ? await translateKeys(keysToTranslate, config, i18n, withLocaleJsons, includeContext)
-          : {}
+      await console.loading(`Adding \`${key}\` to ${Object.keys(keysToTranslateAndDefault).map(l => `**${l}**`).join(', ')}`, async () => {
+        let translations: Record<string, LocaleJson>
+        if (translation === '') {
+          if (args.debug)
+            console.log(ICONS.info, 'Empty translation provided, skipping LLM call.')
+          translations = {}
+          for (const locale of Object.keys(keysToTranslateAndDefault))
+            translations[locale] = { [key]: translation }
+        }
+        else {
+          translations = Object.keys(keysToTranslate).length > 0
+            ? await translateKeys(keysToTranslate, config, i18n, withLocaleJsons, includeContext)
+            : {}
 
-        translations[i18n.defaultLocale] = keysToTranslateAndDefault[i18n.defaultLocale]
+          if (keysToTranslateAndDefault[i18n.defaultLocale])
+            translations[i18n.defaultLocale] = keysToTranslateAndDefault[i18n.defaultLocale]
+        }
 
         if (args.debug)
           console.log(ICONS.info, `Translations: ${JSON.stringify(translations)}`)

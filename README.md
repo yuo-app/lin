@@ -121,6 +121,8 @@ This will add the key to `es` and `fr` locales (and the default locale).
 >
 > - End your key with a dot to see all available sub-keys (e.g., `lin del ui.button.`).
 > - Type the beginning of a key to get suggestions for matching keys (e.g., `lin edit ui.but`).
+>
+> `lin add ui.b` will show suggestions, but if you really want to add an empty key, use an empty string: `lin add ui.b ""`
 
 ### edit
 
