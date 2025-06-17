@@ -70,6 +70,12 @@ export const llmArgs = {
     type: 'string',
     description: 'the temperature to use',
   },
+  with: {
+    alias: 'w',
+    type: 'string',
+    description: 'the context profile to use. (def, tgt, both, all, or locales like en)',
+    default: DEFAULT_CONFIG.with,
+  },
 } as const satisfies LLMArgs
 
 export const allArgs = { ...commonArgs, ...llmArgs }

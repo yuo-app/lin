@@ -16,7 +16,6 @@ import { z } from 'zod'
 import { availableModels, providers } from '../config'
 import { console, formatLog, ICONS } from './console'
 import { handleCliError } from './general'
-import { normalizeLocales } from './locale'
 
 export function sanitizeJsonString(jsonString: string): string {
   let processedString = jsonString

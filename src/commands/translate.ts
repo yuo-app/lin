@@ -37,11 +37,6 @@ export default defineCommand({
       description: 'ignore checks and translate the whole locale json',
       default: false,
     },
-    with: {
-      alias: 'w',
-      type: 'string',
-      description: 'The context profile to use. (def, tgt, both, all, or locales)',
-    },
   },
   async run({ args }) {
     const { config } = await resolveConfig(args)

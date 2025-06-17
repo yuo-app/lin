@@ -146,24 +146,39 @@ lin edit -l es -l fr ui.button.save Text of the save button
 lin del nav.title footer.description
 ```
 
-### tidy
+### check
 
-`tidy` provides a quick way to check everything is set up correctly; it prints info about the locales.
+The `check` command is a versatile tool for validating and maintaining locale files.
+It's ideal for running in pre-commit hooks or in CI.
+
+To find missing keys in your locales compared to the default locale:
 
 ```bash
-lin tidy
+lin check
 ```
 
-You can also use it to sort the locale JSONs alphabetically or with respect to the default locale.
+This will report any discrepancies. If you want to automatically add the missing keys with empty strings, use the `--fix` flag:
 
 ```bash
-lin tidy abc # sort alphabetically
-lin tidy def # sort by default locale
+lin check -f
+```
+
+You can also use `check` to sort your locale JSON files, either alphabetically or based on the key order in your default locale file.
+
+```bash
+lin check abc # sort alphabetically
+lin check def # sort by default locale
+```
+
+To display detailed info about your config and locales, use the `--info` flag:
+
+```bash
+lin check -i
 ```
 
 ### undo
 
-`undo` reverts the last changes made by `add`, `del`, `tidy`, or `translate`.
+`undo` reverts the last changes made by `add`, `del`, `check`, or `translate`.
 
 ```bash
 lin undo
@@ -181,7 +196,7 @@ To see a list of all available LLM providers and models:
 > [!TIP]
 > All properties in the config can be used as CLI flags too.
 
-`lin` automatically saves a backup of any files modified by the `add`, `del`, `tidy`, and `translate` commands. You can disable this feature with the `--no-undo` flag, or by setting `undo: false` in your config file.
+`lin` automatically saves a backup of any files modified by the `add`, `del`, `check`, and `translate` commands. You can disable this feature with the `--no-undo` flag, or by setting `undo: false` in your config file.
 
 > [!IMPORTANT]
 > Add the `.lin` directory to your `.gitignore` file.

@@ -44,11 +44,6 @@ export default defineCommand({
       description: 'force add key overriding existing ones',
       default: false,
     },
-    with: {
-      alias: 'w',
-      type: 'string',
-      description: 'The context profile to use. (def, tgt, both, all, or locales like en)',
-    },
   },
   async run({ args }) {
     const { config } = await resolveConfig(args)
