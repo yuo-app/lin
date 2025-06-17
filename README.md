@@ -67,11 +67,6 @@ export default defineConfig({
 
 > [!TIP]
 > Run `lin -h` and `lin <command> -h` to see all the options.
-> [!TIP]
-> The `add`, `edit`, and `del` commands support key suggestions. If you're not sure about a key, try one of these:
->
-> - End your key with a dot to see all available sub-keys (e.g., `lin del ui.button.`).
-> - Type the beginning of a key to get suggestions for matching keys (e.g., `lin edit ui.but`).
 
 ### translate
 
@@ -120,6 +115,12 @@ lin add -l es -l fr ui.button.save Text of the save button
 ```
 
 This will add the key to `es` and `fr` locales (and the default locale).
+
+> [!TIP]
+> The `add`, `edit`, and `del` commands support key suggestions. If you're not sure about a key, try one of these:
+>
+> - End your key with a dot to see all available sub-keys (e.g., `lin del ui.button.`).
+> - Type the beginning of a key to get suggestions for matching keys (e.g., `lin edit ui.but`).
 
 ### edit
 
