@@ -84,8 +84,8 @@ describe('provideSuggestions', () => {
     const result = generalUtils.provideSuggestions(mockJson, 'ui.button.')
     expect(result).toBe(true)
     expect(consoleLogSpy).toHaveBeenCalledWith(ICONS.info, 'Available keys under `ui.button`:')
-    expect(consoleLogSpy).toHaveBeenCalledWith('  - ui.button.save')
-    expect(consoleLogSpy).toHaveBeenCalledWith('  - ui.button.cancel')
+    expect(consoleLogSpy).toHaveBeenCalledWith('  - `ui.button.`save')
+    expect(consoleLogSpy).toHaveBeenCalledWith('  - `ui.button.`cancel')
   })
 
   it('should return false if path for dot-ended key does not exist', () => {
@@ -98,9 +98,8 @@ describe('provideSuggestions', () => {
     const result = generalUtils.provideSuggestions(mockJson, 'ui.but')
     expect(result).toBe(true)
     expect(consoleLogSpy).toHaveBeenCalledWith(ICONS.info, 'Key `ui.but` not found. Did you mean:')
-    expect(consoleLogSpy).toHaveBeenCalledWith('  - ui.button')
-    expect(consoleLogSpy).toHaveBeenCalledWith('  - ui.button.save')
-    expect(consoleLogSpy).toHaveBeenCalledWith('  - ui.button.cancel')
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('`ui.but`ton'))
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('(2 sub-keys)'))
   })
 
   it('should return false if no suggestions are found for a non-existent key', () => {

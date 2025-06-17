@@ -4,7 +4,7 @@ import c from 'picocolors'
 import { console, ICONS } from './console'
 import { countKeys, findNestedValue } from './nested'
 
-function printSuggestionLine(highlightedKey: string, value: any) {
+export function printSuggestionLine(highlightedKey: string, value: any) {
   if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
     const subKeyCount = countKeys(value)
     if (subKeyCount > 0)
@@ -26,9 +26,11 @@ export function handleCliError(message: string, details?: string | string[]): ne
   process.exit(1)
 }
 
-export function provideSuggestions(json: LocaleJson, key: string): boolean {
+export function provideSuggestions(json: LocaleJson, key: string, options?: { suggestOnExact?: boolean }): boolean {
   if (!key)
     return false
+
+  const suggestOnExact = options?.suggestOnExact ?? false
 
   if (key.endsWith('.')) {
     const path = key.slice(0, -1)
@@ -45,7 +47,7 @@ export function provideSuggestions(json: LocaleJson, key: string): boolean {
   }
 
   const exactMatch = findNestedValue(json, key)
-  if (exactMatch !== undefined)
+  if (exactMatch !== undefined && !suggestOnExact)
     return false
 
   const keyParts = key.split('.')
@@ -58,7 +60,13 @@ export function provideSuggestions(json: LocaleJson, key: string): boolean {
 
     if (suggestions.length > 0) {
       console.log(ICONS.info, `Key \`${key}\` not found. Did you mean:`)
-      suggestions.slice(0, 15).forEach((s) => {
+      suggestions.sort((a, b) => {
+        if (a === prefix)
+          return -1
+        if (b === prefix)
+          return 1
+        return a.localeCompare(b)
+      }).slice(0, 15).forEach((s) => {
         const highlightedKey = `\`${parentPath ? `${parentPath}.${prefix}` : prefix}\`${s.substring(prefix.length)}`
         printSuggestionLine(highlightedKey, parentObject[s])
       })

@@ -1,5 +1,6 @@
 import type { LocaleJson } from '@/utils'
 import fs from 'node:fs'
+import { text } from '@clack/prompts'
 import { defineCommand } from 'citty'
 import { allArgs, resolveConfig } from '@/config'
 import {
@@ -8,7 +9,6 @@ import {
   countKeys,
   deletionGuard,
   findNestedKey,
-  findNestedValue,
   getWithLocales,
   ICONS,
   mergeMissingTranslations,
@@ -57,7 +57,8 @@ export default defineCommand({
     const key = args.key as string
     const positionalArgs = [...(args._ as string[])]
     positionalArgs.shift()
-    const translation = positionalArgs.join(' ')
+    let translation = positionalArgs.join(' ')
+    const translationProvided = positionalArgs.length > 0
 
     const defaultLocaleJson = JSON.parse(fs.readFileSync(r(`${i18n.defaultLocale}.json`, i18n), { encoding: 'utf8' }))
 
@@ -66,15 +67,22 @@ export default defineCommand({
       return
     }
 
-    if (!translation) {
-      if (!provideSuggestions(defaultLocaleJson, key)) {
-        const keyExists = findNestedValue(defaultLocaleJson, key) !== undefined
-        if (keyExists)
-          console.log(ICONS.info, `Key \`${key}\` already exists. Use \`lin edit\` to change it or \`lin add ${key} "..." --force\` to overwrite it.`)
-        else
-          console.log(ICONS.info, `Key \`${key}\` not found. To add it, please provide a translation.`)
+    if (!translationProvided) {
+      const suggested = provideSuggestions(defaultLocaleJson, key, { suggestOnExact: true })
+      if (suggested) {
+        return
       }
-      return
+      else {
+        const promptValue = await text({
+          message: `Enter ${i18n.defaultLocale} translation for key \`${key}\``,
+          placeholder: 'Press [ENTER] to skip',
+        })
+
+        if (typeof promptValue === 'symbol' || promptValue === undefined || promptValue === '')
+          return
+
+        translation = promptValue
+      }
     }
 
     let locales = typeof args.locale === 'string' ? [args.locale] : args.locale || []

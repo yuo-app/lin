@@ -33,6 +33,7 @@ vi.mock('@clack/prompts', async () => {
   }
 })
 
+const mockProvideSuggestions = vi.spyOn(generalUtils, 'provideSuggestions')
 const mockTranslateKeys = vi.spyOn(llmUtils, 'translateKeys')
 const mockDeletionGuard = vi.spyOn(llmUtils, 'deletionGuard')
 vi.spyOn(llmUtils, 'getWithLocales').mockImplementation((withLocale, i18n) => {
@@ -61,6 +62,7 @@ describe('add command', () => {
     ;(resolveConfig as Mock).mockResolvedValue({ config: mockResolvedConfig })
     ;(loadI18nConfig as Mock).mockResolvedValue(mockI18nConfigResult)
     ;(clackText as Mock).mockResolvedValue('Test Translation from Prompt')
+    mockProvideSuggestions.mockReturnValue(false)
 
     mockTranslateKeys.mockImplementation(async (keysToTranslate, _config, _i18n, _withLocaleJsons, _includeContext) => {
       const translated: Record<string, any> = {}
@@ -97,7 +99,8 @@ describe('add command', () => {
     resetVfs()
   })
 
-  it('should add a new key with translation from prompt', async () => {
+  it('should call provideSuggestions when no translation is given', async () => {
+    mockProvideSuggestions.mockReturnValue(true)
     const args = {
       ...baseArgsToRun,
       key: 'new.key',
@@ -107,31 +110,8 @@ describe('add command', () => {
 
     await addCommand.run!({ args } as any)
 
-    expect(clackText).toHaveBeenCalledWith({
-      message: `Enter ${mockResolvedConfig.i18n.defaultLocale} translation for key new.key`,
-      placeholder: 'Press [ENTER] to skip',
-    })
-
-    expect(mockTranslateKeys).toHaveBeenCalledWith(
-      { 'es-ES': { 'new.key': 'Test Translation from Prompt' } },
-      mockResolvedConfig,
-      mockResolvedConfig.i18n,
-      {},
-      false,
-    )
-
-    expectVirtualFileContent('locales/en-US.json', {
-      existing: { key: 'Hello' },
-      new: { key: 'Test Translation from Prompt' },
-    })
-    expectVirtualFileContent('locales/es-ES.json', {
-      existing: { key: 'Hola' },
-      new: { key: 'Test Translation from Prompt (es-ES)' },
-    })
-
-    expect(mockDeletionGuard).toHaveBeenCalled()
-    expect(mockConsoleLoading).toHaveBeenCalled()
-    expect(mockConsoleLog).toHaveBeenCalledWith(consoleUtils.ICONS.note, expect.stringContaining('Keys:'))
+    expect(mockProvideSuggestions).toHaveBeenCalledWith(expect.anything(), 'new.key', { suggestOnExact: true })
+    expect(mockTranslateKeys).not.toHaveBeenCalled()
   })
 
   it('should add a new key with translation from CLI arguments', async () => {
@@ -146,6 +126,7 @@ describe('add command', () => {
     await addCommand.run!({ args } as any)
 
     expect(clackText).not.toHaveBeenCalled()
+    expect(mockProvideSuggestions).not.toHaveBeenCalled()
 
     expect(mockTranslateKeys).toHaveBeenCalledWith(
       { 'es-ES': { 'another.key': cliTranslation } },
@@ -164,6 +145,7 @@ describe('add command', () => {
       another: { key: `${cliTranslation} (es-ES)` },
     })
     expect(mockDeletionGuard).toHaveBeenCalled()
+    expect(mockConsoleLoading).toHaveBeenCalled()
   })
 
   it('should create a new locale file if it does not exist and add the key', async () => {
@@ -190,6 +172,7 @@ describe('add command', () => {
       new: { key: { for: { new: { file: `${translation} (es-ES)` } } } },
     })
     expect(mockDeletionGuard).toHaveBeenCalled()
+    expect(mockConsoleLoading).toHaveBeenCalled()
   })
 
   it('should handle multi-word translations from CLI', async () => {
@@ -214,38 +197,68 @@ describe('add command', () => {
       existing: { key: 'Hello' },
       multi: { word: 'This is a multi word translation' },
     })
+    expect(mockConsoleLoading).toHaveBeenCalled()
   })
 
-  it('should exit early when user cancels text prompt', async () => {
+  it('should show suggestions even if key exists when no translation is provided', async () => {
+    setupVirtualFile('locales/en-US.json', { existing: { key: 'Hello' } })
+    mockProvideSuggestions.mockReturnValue(true)
     const args = {
       ...baseArgsToRun,
-      key: 'cancelled.key',
-      _: ['cancelled.key'],
-      locale: 'all',
+      key: 'existing.key',
+      _: ['existing.key'],
     }
 
+    await addCommand.run!({ args } as any)
+
+    expect(mockProvideSuggestions).toHaveBeenCalledWith(expect.anything(), 'existing.key', { suggestOnExact: true })
+    expect(mockConsoleLog).not.toHaveBeenCalledWith(consoleUtils.ICONS.info, expect.stringContaining('already exists'))
+    expect(mockTranslateKeys).not.toHaveBeenCalled()
+  })
+
+  it('should prompt for translation if key is new and no suggestions are found', async () => {
+    const args = {
+      ...baseArgsToRun,
+      key: 'new.from.prompt',
+      _: ['new.from.prompt'],
+    }
+    ;(clackText as Mock).mockResolvedValue('Prompted Translation')
+    mockProvideSuggestions.mockReturnValue(false)
+
+    await addCommand.run!({ args } as any)
+
+    expect(mockProvideSuggestions).toHaveBeenCalledWith(expect.anything(), 'new.from.prompt', { suggestOnExact: true })
+    expect(clackText).toHaveBeenCalledWith({
+      message: `Enter ${mockResolvedConfig.i18n.defaultLocale} translation for key \`new.from.prompt\``,
+      placeholder: 'Press [ENTER] to skip',
+    })
+    expect(mockTranslateKeys).toHaveBeenCalledWith(
+      { 'es-ES': { 'new.from.prompt': 'Prompted Translation' } },
+      mockResolvedConfig,
+      mockResolvedConfig.i18n,
+      {},
+      false,
+    )
+    expectVirtualFileContent('locales/en-US.json', {
+      existing: { key: 'Hello' },
+      new: { from: { prompt: 'Prompted Translation' } },
+    })
+  })
+
+  it('should exit if prompt is cancelled', async () => {
+    const args = {
+      ...baseArgsToRun,
+      key: 'new.from.prompt',
+      _: ['new.from.prompt'],
+    }
     ;(clackText as Mock).mockResolvedValue(Symbol('cancelled'))
+    mockProvideSuggestions.mockReturnValue(false)
 
     await addCommand.run!({ args } as any)
 
+    expect(mockProvideSuggestions).toHaveBeenCalledWith(expect.anything(), 'new.from.prompt', { suggestOnExact: true })
+    expect(clackText).toHaveBeenCalled()
     expect(mockTranslateKeys).not.toHaveBeenCalled()
-    expect(mockFs.writeFileSync).not.toHaveBeenCalled()
-  })
-
-  it('should exit early when user provides undefined in text prompt', async () => {
-    const args = {
-      ...baseArgsToRun,
-      key: 'undefined.key',
-      _: ['undefined.key'],
-      locale: 'all',
-    }
-
-    ;(clackText as Mock).mockResolvedValue(undefined)
-
-    await addCommand.run!({ args } as any)
-
-    expect(mockTranslateKeys).not.toHaveBeenCalled()
-    expect(mockFs.writeFileSync).not.toHaveBeenCalled()
   })
 
   it('should skip existing keys without --force flag', async () => {
@@ -265,6 +278,7 @@ describe('add command', () => {
     expect(mockConsoleLog).toHaveBeenCalledWith(consoleUtils.ICONS.info, 'Skipped: **en-US**')
     expect(mockConsoleLog).toHaveBeenCalledWith(consoleUtils.ICONS.info, 'Skipped: **es-ES**')
     expect(mockConsoleLog).toHaveBeenCalledWith(consoleUtils.ICONS.success, 'All locales are up to date.')
+    expect(mockConsoleLog).toHaveBeenCalledWith(consoleUtils.ICONS.note, 'Keys: 2')
     expect(mockTranslateKeys).not.toHaveBeenCalled()
   })
 
@@ -297,6 +311,7 @@ describe('add command', () => {
     expectVirtualFileContent('locales/es-ES.json', {
       existing: { key: 'Overwritten translation (es-ES)' },
     })
+    expect(mockConsoleLoading).toHaveBeenCalled()
   })
 
   it('should handle specific locale targeting', async () => {
@@ -322,6 +337,7 @@ describe('add command', () => {
       existing: { key: 'Hola' },
       specific: { locale: 'Specific translation (es-ES)' },
     })
+    expect(mockConsoleLoading).toHaveBeenCalled()
   })
 
   it('should handle default locale only', async () => {
@@ -341,6 +357,7 @@ describe('add command', () => {
       default: { only: 'Default only translation' },
     })
     expectVirtualFileContent('locales/es-ES.json', { existing: { key: 'Hola' } })
+    expect(mockConsoleLoading).toHaveBeenCalled()
   })
 
   it('should use --with flag to provide context', async () => {
@@ -364,6 +381,7 @@ describe('add command', () => {
       { 'ja-JP': { context: { example: 'コンテキスト例' } } },
       true,
     )
+    expect(mockConsoleLoading).toHaveBeenCalled()
   })
 
   it('should handle debug mode', async () => {
@@ -382,6 +400,7 @@ describe('add command', () => {
 
     expect(mockConsoleLog).toHaveBeenCalledWith(consoleUtils.ICONS.info, expect.stringContaining('To translate:'))
     expect(mockConsoleLog).toHaveBeenCalledWith(consoleUtils.ICONS.info, expect.stringContaining('Translations:'))
+    expect(mockConsoleLoading).toHaveBeenCalled()
   })
 
   it('should handle nested key structures', async () => {
@@ -402,6 +421,7 @@ describe('add command', () => {
       existing: { key: 'Hola' },
       deeply: { nested: { key: { structure: 'Deeply nested value (es-ES)' } } },
     })
+    expect(mockConsoleLoading).toHaveBeenCalled()
   })
 
   it('should handle deletion guard rejection', async () => {
@@ -418,6 +438,7 @@ describe('add command', () => {
 
     expect(mockDeletionGuard).toHaveBeenCalled()
     expect(mockFs.writeFileSync).not.toHaveBeenCalled()
+    expect(mockConsoleLoading).toHaveBeenCalled()
   })
 
   it('should handle file system errors during read', async () => {
@@ -464,6 +485,7 @@ describe('add command', () => {
       existing: { key: 'Hello' },
       empty: { translation: '' },
     })
+    expect(mockConsoleLoading).toHaveBeenCalled()
   })
 
   it('should handle multiple locales with --with flag', async () => {
@@ -499,6 +521,7 @@ describe('add command', () => {
       },
       true,
     )
+    expect(mockConsoleLoading).toHaveBeenCalled()
   })
 
   it('should handle partial overwrites with --force', async () => {
@@ -532,6 +555,7 @@ describe('add command', () => {
       other: { key: 'Otro' },
       existing: { key: 'Force overwrite (es-ES)' },
     })
+    expect(mockConsoleLoading).toHaveBeenCalled()
   })
 
   it('should handle translation failures gracefully', async () => {
@@ -546,6 +570,7 @@ describe('add command', () => {
     }
 
     await expect(addCommand.run!({ args } as any)).rejects.toThrow('Translation API failed')
+    expect(mockConsoleLoading).toHaveBeenCalled()
   })
 
   it('should handle complex existing structures when adding nested keys', async () => {
@@ -575,6 +600,7 @@ describe('add command', () => {
       existing: { key: 'Hola' },
       deeply: { different: { structure: 'estructura' }, nested: { new: { key: 'New nested value (es-ES)' } } },
     })
+    expect(mockConsoleLoading).toHaveBeenCalled()
   })
 
   it('should handle single locale string (not array)', async () => {
@@ -600,6 +626,7 @@ describe('add command', () => {
       existing: { key: 'Hola' },
       single: { string: { locale: 'Single string locale (es-ES)' } },
     })
+    expect(mockConsoleLoading).toHaveBeenCalled()
   })
 
   it('should show current key count when no keys need translation', async () => {
@@ -611,12 +638,12 @@ describe('add command', () => {
       key: 'existing.key',
       _: ['existing.key', 'Already exists'],
       locale: 'all',
-      force: false,
     }
 
     await addCommand.run!({ args } as any)
 
     expect(mockConsoleLog).toHaveBeenCalledWith(consoleUtils.ICONS.success, 'All locales are up to date.')
     expect(mockConsoleLog).toHaveBeenCalledWith(consoleUtils.ICONS.note, 'Keys: 2')
+    expect(mockTranslateKeys).not.toHaveBeenCalled()
   })
 })
