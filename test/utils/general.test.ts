@@ -1,3 +1,4 @@
+import type { LocaleJson } from '@/utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { console, ICONS } from '@/utils/console'
 import * as generalUtils from '@/utils/general'
@@ -58,5 +59,65 @@ describe('handleCliError', () => {
     expect(consoleLogSpy).toHaveBeenCalledWith(ICONS.info, details[1])
     expect(processExitMock).toHaveBeenCalledWith(1)
     expect(spiedHandleCliError).toHaveBeenCalledWith(errorMessage, details)
+  })
+})
+
+describe('provideSuggestions', () => {
+  const mockJson: LocaleJson = {
+    ui: {
+      button: {
+        save: 'Save',
+        cancel: 'Cancel',
+      },
+      title: 'My App',
+    },
+    user: {
+      profile: 'Profile',
+    },
+  }
+
+  beforeEach(() => {
+    consoleLogSpy.mockClear()
+  })
+
+  it('should suggest sub-keys when key ends with a dot', () => {
+    const result = generalUtils.provideSuggestions(mockJson, 'ui.button.')
+    expect(result).toBe(true)
+    expect(consoleLogSpy).toHaveBeenCalledWith(ICONS.info, 'Available keys under `ui.button`:')
+    expect(consoleLogSpy).toHaveBeenCalledWith('  - ui.button.save')
+    expect(consoleLogSpy).toHaveBeenCalledWith('  - ui.button.cancel')
+  })
+
+  it('should return false if path for dot-ended key does not exist', () => {
+    const result = generalUtils.provideSuggestions(mockJson, 'ui.form.')
+    expect(result).toBe(false)
+    expect(consoleLogSpy).not.toHaveBeenCalled()
+  })
+
+  it('should suggest similar keys if the provided key is not found', () => {
+    const result = generalUtils.provideSuggestions(mockJson, 'ui.but')
+    expect(result).toBe(true)
+    expect(consoleLogSpy).toHaveBeenCalledWith(ICONS.info, 'Key `ui.but` not found. Did you mean:')
+    expect(consoleLogSpy).toHaveBeenCalledWith('  - ui.button')
+    expect(consoleLogSpy).toHaveBeenCalledWith('  - ui.button.save')
+    expect(consoleLogSpy).toHaveBeenCalledWith('  - ui.button.cancel')
+  })
+
+  it('should return false if no suggestions are found for a non-existent key', () => {
+    const result = generalUtils.provideSuggestions(mockJson, 'xyz')
+    expect(result).toBe(false)
+    expect(consoleLogSpy).not.toHaveBeenCalled()
+  })
+
+  it('should return false if the key exists exactly', () => {
+    const result = generalUtils.provideSuggestions(mockJson, 'ui.title')
+    expect(result).toBe(false)
+    expect(consoleLogSpy).not.toHaveBeenCalled()
+  })
+
+  it('should return false for an empty key', () => {
+    const result = generalUtils.provideSuggestions(mockJson, '')
+    expect(result).toBe(false)
+    expect(consoleLogSpy).not.toHaveBeenCalled()
   })
 })

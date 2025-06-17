@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { countKeys, findNestedKey, sortKeys } from '@/utils/nested'
+import { countKeys, findNestedKey, getAllKeys, sortKeys } from '@/utils/nested'
 
 describe('nested utils', () => {
   describe('findNestedKey', () => {
@@ -199,6 +199,46 @@ describe('nested utils', () => {
       expect(sortKeys(undefined as any)).toBeUndefined()
       expect(sortKeys(123 as any)).toBe(123)
       expect(sortKeys('string' as any)).toBe('string')
+    })
+  })
+
+  describe('getAllKeys', () => {
+    it('should return all keys from a nested object including intermediate paths', () => {
+      const obj = {
+        a: '1',
+        b: {
+          c: '2',
+          d: {
+            e: '3',
+          },
+        },
+      }
+      const keys = getAllKeys(obj)
+      expect(keys).toEqual(['a', 'b', 'b.c', 'b.d', 'b.d.e'])
+    })
+
+    it('should not traverse arrays', () => {
+      const obj = {
+        a: '1',
+        f: [
+          { g: '4' },
+          { h: '5' },
+        ],
+      }
+      const keys = getAllKeys(obj)
+      expect(keys).toEqual(['a', 'f'])
+    })
+
+    it('should return an empty array for an empty object', () => {
+      const obj = {}
+      const keys = getAllKeys(obj)
+      expect(keys).toEqual([])
+    })
+
+    it('should handle flat objects', () => {
+      const obj = { a: 1, b: 2, c: 3 }
+      const keys = getAllKeys(obj)
+      expect(keys).toEqual(['a', 'b', 'c'])
     })
   })
 })
