@@ -30,6 +30,20 @@ export function findNestedKey<T extends NestedObject, K extends NestedKeyOf<T>>(
   }
 }
 
+export function findNestedValue(obj: any, path: string): any {
+  if (!path)
+    return obj
+
+  let current = obj
+  for (const part of path.split('.')) {
+    if (typeof current === 'object' && current !== null && Object.prototype.hasOwnProperty.call(current, part))
+      current = current[part]
+    else
+      return undefined
+  }
+  return current
+}
+
 export function countKeys(obj: NestedObject): number {
   let count = 0
 
