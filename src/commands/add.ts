@@ -1,6 +1,5 @@
 import type { LocaleJson } from '@/utils'
 import fs from 'node:fs'
-import { text } from '@clack/prompts'
 import { defineCommand } from 'citty'
 import { allArgs, resolveConfig } from '@/config'
 import {
@@ -9,6 +8,7 @@ import {
   countKeys,
   deletionGuard,
   findNestedKey,
+  findNestedValue,
   getWithLocales,
   ICONS,
   mergeMissingTranslations,
@@ -54,29 +54,32 @@ export default defineCommand({
     const { config } = await resolveConfig(args)
     const i18n = config.i18n
 
+    const key = args.key as string
+    const positionalArgs = [...(args._ as string[])]
+    positionalArgs.shift()
+    const translation = positionalArgs.join(' ')
+
     const defaultLocaleJson = JSON.parse(fs.readFileSync(r(`${i18n.defaultLocale}.json`, i18n), { encoding: 'utf8' }))
-    if (provideSuggestions(defaultLocaleJson, args.key as string))
+
+    if (key.endsWith('.')) {
+      provideSuggestions(defaultLocaleJson, key)
       return
+    }
+
+    if (!translation) {
+      if (!provideSuggestions(defaultLocaleJson, key)) {
+        const keyExists = findNestedValue(defaultLocaleJson, key) !== undefined
+        if (keyExists)
+          console.log(ICONS.info, `Key \`${key}\` already exists. Use \`lin edit\` to change it or \`lin add ${key} "..." --force\` to overwrite it.`)
+        else
+          console.log(ICONS.info, `Key \`${key}\` not found. To add it, please provide a translation.`)
+      }
+      return
+    }
 
     let locales = typeof args.locale === 'string' ? [args.locale] : args.locale || []
     locales = catchError(normalizeLocales)(locales, i18n)
     const localesToCheck = locales.length > 0 ? locales : i18n.locales
-
-    args._.shift() // remove the key
-    let prompt: string | symbol
-
-    if (args._.length === 0) {
-      prompt = await text({
-        message: `Enter ${i18n.defaultLocale} translation for key ${args.key}`,
-        placeholder: 'Press [ENTER] to skip',
-      })
-
-      if (typeof prompt === 'symbol' || prompt === undefined)
-        return
-    }
-    else {
-      prompt = args._.join(' ')
-    }
 
     const { withLocales, includeContext } = getWithLocales(args.with, i18n)
     const withLocaleJsons: Record<string, LocaleJson> = {}
@@ -125,8 +128,8 @@ export default defineCommand({
       }
 
       if (locale !== i18n.defaultLocale)
-        keysToTranslate[locale] = { [args.key]: prompt }
-      keysToTranslateAndDefault[locale] = { [args.key]: prompt }
+        keysToTranslate[locale] = { [args.key]: translation }
+      keysToTranslateAndDefault[locale] = { [args.key]: translation }
       keyCountsBefore[locale] = countKeys(localeJson)
     }
 
