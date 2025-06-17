@@ -15,6 +15,8 @@ export function normalizeArgs(inputArgs: Record<string, any>): Partial<Config> {
     outputConfig.undo = inputArgs.undo
   if (inputArgs.context !== undefined)
     outputConfig.context = inputArgs.context
+  if (inputArgs.with !== undefined)
+    outputConfig.with = inputArgs.with
 
   if (inputArgs.integration !== undefined) {
     if (inputArgs.integration && !integrations.includes(inputArgs.integration as any)) {

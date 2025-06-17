@@ -7,6 +7,7 @@ export const mockResolvedConfig: DeepRequired<ResolvedConfig> = {
   cwd: '/test/project',
   debug: false,
   context: '',
+  with: 'none',
   undo: false,
   integration: '',
   i18n: {

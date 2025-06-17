@@ -30,7 +30,7 @@ export function shapeMatches(obj1: any, obj2: any): boolean {
   return true
 }
 
-export function normalizeLocales(locales: string[], i18n: I18nConfig): string[] {
+export function normalizeLocales(locales: string[], i18n: I18nConfig, argName = 'locale'): string[] {
   const normalized: string[] = []
 
   for (const locale of locales) {
@@ -41,21 +41,72 @@ export function normalizeLocales(locales: string[], i18n: I18nConfig): string[] 
       normalized.push(i18n.defaultLocale)
     }
     else if (locale.includes('-')) {
-      if (!i18n.locales.includes(locale))
-        handleCliError(`Invalid locale: ${locale}`, `Available locales: ${i18n.locales.join(', ')}`)
+      if (!i18n.locales.includes(locale)) {
+        const details = [`Available locales: ${i18n.locales.join(', ')}`]
+        if (argName === 'with option')
+          details.push('Available keywords: none, def, tgt, both, all')
+        else if (argName === 'locale')
+          details.push('Available keywords: all, def')
+        handleCliError(`Invalid ${argName}: ${locale}`, details)
+      }
 
       normalized.push(locale)
     }
     else {
       const matchingLocales = i18n.locales.filter(l => l.split('-')[0] === locale)
-      if (matchingLocales.length === 0)
-        handleCliError(`Invalid locale: ${locale}`, `Available locales: ${i18n.locales.join(', ')}`)
+      if (matchingLocales.length === 0) {
+        const details = [`Available locales: ${i18n.locales.join(', ')}`]
+        if (argName === 'with option')
+          details.push('Available keywords: none, def, tgt, both, all')
+        else if (argName === 'locale')
+          details.push('Available keywords: all, def')
+        handleCliError(`Invalid ${argName}: ${locale}`, details)
+      }
 
       normalized.push(...matchingLocales)
     }
   }
 
   return normalized
+}
+
+export function resolveContextLocales(
+  withConfig: 'none' | 'def' | 'tgt' | 'both' | 'all' | string | string[],
+  i18n: I18nConfig,
+  targetLocales: string[],
+): string[] {
+  if (withConfig === 'none' || !withConfig)
+    return []
+
+  const withArray = Array.isArray(withConfig) ? withConfig : [withConfig]
+  const resolvedLocales = new Set<string>()
+
+  const keywords = ['def', 'tgt', 'both', 'all']
+  const hasKeywords = withArray.some(item => keywords.includes(item))
+
+  if (hasKeywords) {
+    if (withArray.includes('all')) {
+      i18n.locales.forEach(l => resolvedLocales.add(l))
+    }
+    else {
+      if (withArray.includes('def') || withArray.includes('both'))
+        resolvedLocales.add(i18n.defaultLocale)
+
+      if (withArray.includes('tgt') || withArray.includes('both'))
+        targetLocales.forEach(l => resolvedLocales.add(l))
+    }
+    const otherLocales = withArray.filter(item => !keywords.includes(item))
+    if (otherLocales.length > 0) {
+      const normalized = normalizeLocales(otherLocales, i18n, 'with option')
+      normalized.forEach(l => resolvedLocales.add(l))
+    }
+  }
+  else {
+    const normalized = normalizeLocales(withArray, i18n, 'with option')
+    normalized.forEach(l => resolvedLocales.add(l))
+  }
+
+  return [...resolvedLocales]
 }
 
 export interface LocaleJson {
@@ -93,7 +144,7 @@ export function mergeMissingTranslations(existingTranslations: LocaleJson | unde
   if (missingTranslations === undefined)
     return existingTranslations || {}
 
-  const result = existingTranslations === undefined ? {} : { ...existingTranslations }
+  const result = JSON.parse(JSON.stringify(existingTranslations || {}))
 
   for (const [key, value] of Object.entries(missingTranslations)) {
     const keys = key.split('.')

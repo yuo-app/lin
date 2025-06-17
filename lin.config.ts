@@ -6,6 +6,7 @@ export default defineConfig({
     defaultLocale: 'en-US',
     directory: './locales',
   },
+  with: 'both',
   options: {
     provider: 'google',
     model: 'gemini-2.5-flash-preview-05-20',

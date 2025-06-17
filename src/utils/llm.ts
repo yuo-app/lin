@@ -82,19 +82,6 @@ export const jsonExtractionMiddleware: LanguageModelV1Middleware = {
   },
 }
 
-export function getWithLocales(withLocale: string | string[] | undefined, i18n: I18nConfig) {
-  const withArgArray = typeof withLocale === 'string' ? [withLocale] : withLocale || []
-
-  const localesToNormalize = withArgArray.filter(locale => locale !== '')
-  const includeContext = localesToNormalize.length > 0
-
-  if (localesToNormalize.length === 0)
-    return { withLocales: [], includeContext }
-
-  const normalizedWithLocales = normalizeLocales(localesToNormalize, i18n)
-  return { withLocales: normalizedWithLocales, includeContext }
-}
-
 export async function deletionGuard(keyCountsBefore: Record<string, number>, keyCountsAfter: Record<string, number>, locales: string[]): Promise<boolean> {
   console.logL(ICONS.result)
   const negativeDiffs: Record<string, number> = {}
@@ -157,7 +144,6 @@ export async function translateKeys(
   config: DeepRequired<Config>,
   i18n: I18nConfig,
   withLocaleJsons?: Record<string, LocaleJson>,
-  includeContext?: boolean,
 ): Promise<Record<string, LocaleJson>> {
   const provider = config.options.provider
   const modelId = config.options.model
@@ -185,7 +171,7 @@ export async function translateKeys(
 
   const system = `For each locale, translate the values from the default locale (${i18n.defaultLocale}) language to the corresponding languages (denoted by the locale keys).
 Return a JSON object where each top key is a locale, and the value is an object containing the translations for that locale.
-${includeContext && config.context ? `Additional information from user: ${config.context}` : ''}
+${config.context ? `Additional information from user: ${config.context}` : ''}
 ${withLocaleJsons && Object.keys(withLocaleJsons).length > 0 ? `Other locale JSONs from the user's codebase for context: ${JSON.stringify(withLocaleJsons)}\nAlways use dot notation when dealing with nested keys: ui.about.title` : ''}
 Example input:
 {"fr-FR": {"ui.home.title": "Home"}}
@@ -220,10 +206,10 @@ Example output:
     mode: generateObjectMode,
   })
 
-  // if (config.debug)
-  //   console.log('\n', ICONS.info, `System Prompt: ${system}`)
-  // if (config.debug)
-  //   console.log('\n', ICONS.info, `Prompt: ${prompt}`)
+  if (config.debug)
+    console.log('\n', ICONS.info, `System Prompt: ${system}`)
+  if (config.debug)
+    console.log('\n', ICONS.info, `Prompt: ${prompt}`)
 
   return translatedJson as Record<string, LocaleJson>
 }

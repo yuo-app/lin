@@ -36,13 +36,6 @@ vi.mock('@clack/prompts', async () => {
 const mockProvideSuggestions = vi.spyOn(generalUtils, 'provideSuggestions')
 const mockTranslateKeys = vi.spyOn(llmUtils, 'translateKeys')
 const mockDeletionGuard = vi.spyOn(llmUtils, 'deletionGuard')
-vi.spyOn(llmUtils, 'getWithLocales').mockImplementation((withLocale, i18n) => {
-  if (!withLocale || (Array.isArray(withLocale) && withLocale.length === 0))
-    return { withLocales: [], includeContext: false }
-  const locales = Array.isArray(withLocale) ? withLocale : [withLocale]
-  const normalized = locales.filter(l => l).map(l => i18n.locales.find(il => il.startsWith(l)) || l)
-  return { withLocales: normalized, includeContext: normalized.length > 0 }
-})
 
 const mockConsoleLog = vi.spyOn(consoleUtils.console, 'log')
 vi.spyOn(consoleUtils.console, 'logL')
@@ -64,7 +57,7 @@ describe('add command', () => {
     ;(clackText as Mock).mockResolvedValue('Test Translation from Prompt')
     mockProvideSuggestions.mockReturnValue(false)
 
-    mockTranslateKeys.mockImplementation(async (keysToTranslate, _config, _i18n, _withLocaleJsons, _includeContext) => {
+    mockTranslateKeys.mockImplementation(async (keysToTranslate, _config, _i18n, _withLocaleJsons) => {
       const translated: Record<string, any> = {}
       for (const locale in keysToTranslate) {
         translated[locale] = {}
@@ -133,7 +126,6 @@ describe('add command', () => {
       mockResolvedConfig,
       mockResolvedConfig.i18n,
       {},
-      false,
     )
 
     expectVirtualFileContent('locales/en-US.json', {
@@ -190,7 +182,6 @@ describe('add command', () => {
       mockResolvedConfig,
       mockResolvedConfig.i18n,
       {},
-      false,
     )
 
     expectVirtualFileContent('locales/en-US.json', {
@@ -237,7 +228,6 @@ describe('add command', () => {
       mockResolvedConfig,
       mockResolvedConfig.i18n,
       {},
-      false,
     )
     expectVirtualFileContent('locales/en-US.json', {
       existing: { key: 'Hello' },
@@ -302,7 +292,6 @@ describe('add command', () => {
       mockResolvedConfig,
       mockResolvedConfig.i18n,
       {},
-      false,
     )
 
     expectVirtualFileContent('locales/en-US.json', {
@@ -329,7 +318,6 @@ describe('add command', () => {
       mockResolvedConfig,
       mockResolvedConfig.i18n,
       {},
-      false,
     )
 
     expectVirtualFileContent('locales/en-US.json', { existing: { key: 'Hello' } })
@@ -363,6 +351,10 @@ describe('add command', () => {
   it('should use --with flag to provide context', async () => {
     setupVirtualFile('locales/ja-JP.json', { context: { example: 'コンテキスト例' } })
 
+    const tempI18nConfig = { ...mockResolvedConfig.i18n, locales: ['en-US', 'es-ES', 'ja-JP'] }
+    const tempConfig = { ...mockResolvedConfig, i18n: tempI18nConfig }
+    ;(resolveConfig as Mock).mockResolvedValue({ config: tempConfig })
+
     const args = {
       ...baseArgsToRun,
       key: 'with.context',
@@ -375,11 +367,13 @@ describe('add command', () => {
 
     expect(mockConsoleLog).toHaveBeenCalledWith(consoleUtils.ICONS.info, 'With: **ja-JP**')
     expect(mockTranslateKeys).toHaveBeenCalledWith(
-      { 'es-ES': { 'with.context': 'Context translation' } },
-      mockResolvedConfig,
-      mockResolvedConfig.i18n,
+      {
+        'es-ES': { 'with.context': 'Context translation' },
+        'ja-JP': { 'with.context': 'Context translation' },
+      },
+      tempConfig,
+      tempI18nConfig,
       { 'ja-JP': { context: { example: 'コンテキスト例' } } },
-      true,
     )
     expect(mockConsoleLoading).toHaveBeenCalled()
   })
@@ -517,7 +511,6 @@ describe('add command', () => {
         'fr-FR': { common: { greeting: 'Bonjour' } },
         'de-DE': { common: { greeting: 'Hallo' } },
       },
-      true,
     )
     expect(mockConsoleLoading).toHaveBeenCalled()
   })
@@ -542,7 +535,6 @@ describe('add command', () => {
       mockResolvedConfig,
       mockResolvedConfig.i18n,
       {},
-      false,
     )
 
     expectVirtualFileContent('locales/en-US.json', {
@@ -616,7 +608,6 @@ describe('add command', () => {
       mockResolvedConfig,
       mockResolvedConfig.i18n,
       {},
-      false,
     )
 
     expectVirtualFileContent('locales/en-US.json', { existing: { key: 'Hello' } })
@@ -643,5 +634,34 @@ describe('add command', () => {
     expect(mockConsoleLog).toHaveBeenCalledWith(consoleUtils.ICONS.success, 'All locales are up to date.')
     expect(mockConsoleLog).toHaveBeenCalledWith(consoleUtils.ICONS.note, 'Keys: 2')
     expect(mockTranslateKeys).not.toHaveBeenCalled()
+  })
+
+  it('should have --with CLI flag override config value', async () => {
+    setupVirtualFile('locales/ja-JP.json', { context: { example: 'コンテキスト例' } })
+
+    const tempI18nConfig = { ...mockResolvedConfig.i18n, locales: ['en-US', 'es-ES', 'ja-JP'] }
+    const tempConfig = { ...mockResolvedConfig, i18n: tempI18nConfig, with: 'def' }
+    ;(resolveConfig as Mock).mockResolvedValue({ config: tempConfig })
+
+    const args = {
+      ...baseArgsToRun,
+      key: 'with.override',
+      _: ['with.override', 'Override translation'],
+      locale: 'all',
+      with: ['ja-JP'],
+    }
+
+    await addCommand.run!({ args } as any)
+
+    expect(mockConsoleLog).toHaveBeenCalledWith(consoleUtils.ICONS.info, 'With: **ja-JP**')
+    expect(mockTranslateKeys).toHaveBeenCalledWith(
+      expect.objectContaining({
+        'es-ES': { 'with.override': 'Override translation' },
+        'ja-JP': { 'with.override': 'Override translation' },
+      }),
+      tempConfig,
+      tempI18nConfig,
+      { 'ja-JP': { context: { example: 'コンテキスト例' } } },
+    )
   })
 })

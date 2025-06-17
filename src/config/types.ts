@@ -117,6 +117,13 @@ export interface LinConfig {
   i18n?: I18nConfig
 
   /**
+   * Defines which locale files to include in the LLM's context window.
+   * @see "Context profiles" in README.md for more details.
+   * @default 'none'
+   */
+  with: 'none' | 'def' | 'tgt' | 'both' | 'all' | (string & {}) | string[]
+
+  /**
    * LLM options
    */
   options: LLMProviderOptions

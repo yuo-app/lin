@@ -8,6 +8,13 @@
 - [x] support any LLM
 - [x] model presets
 
+## v1.1.0
+
+- [x] key suggestions
+- [x] better context management
+- [ ] **`check` command:** lint codebase for missing keys (compare to default locale json), `--fix` to add empty keys
+- [ ] `estimateTokens: boolean` config to enable/disable token estimation, show estimated tokens and ask before the llm call
+
 ## later
 
 - [ ] **`verify` command:** reflect on the quality of the translations, check if the translations are accurate

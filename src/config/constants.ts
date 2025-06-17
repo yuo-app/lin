@@ -36,6 +36,7 @@ export const DEFAULT_CONFIG = {
 
   context: '',
   integration: '',
+  with: 'none',
 
   options: {
     provider: 'openai',

@@ -1,142 +1,142 @@
 {
   "about": {
-    "description": "Learn more about me and my work.",
-    "title": "About"
+    "description": "Tudjon meg többet rólam és a munkámról.",
+    "title": "Rólam"
   },
   "blog": {
-    "description": "Read my latest blog posts.",
+    "description": "Olvassa el legújabb blogbejegyzéseimet.",
     "title": "Blog"
   },
   "contact": {
-    "description": "Get in touch with me and my team.",
-    "title": "Contact"
+    "description": "Lépjen kapcsolatba velem és a csapatommal.",
+    "title": "Kapcsolat"
   },
   "error": {
     "200": {
-      "description": "Ok",
+      "description": "Rendben",
       "title": "200"
     },
     "404": {
-      "description": "Page not found.",
+      "description": "Az oldal nem található.",
       "title": "404"
     },
     "500": {
-      "description": "Internal server error.",
+      "description": "Belső szerverhiba.",
       "title": "500"
     }
   },
   "home": {
-    "description": "Welcome to my website!",
-    "title": "Home"
+    "description": "Üdvözöljük a weboldalamon!",
+    "title": "Kezdőlap"
   },
   "projects": {
-    "description": "Check out my latest projects.",
-    "title": "Projects"
+    "description": "Tekintse meg legújabb projektjeimet.",
+    "title": "Projektek"
   },
   "ui": {
     "button": {
-      "back": "Back",
-      "cancel": "Cancel",
-      "close": "Close",
-      "copy": "Copy",
-      "create": "Create",
-      "delete": "Delete",
-      "next": "Next",
-      "paste": "Paste",
-      "reset": "Reset",
-      "search": "Search",
-      "submit": "Submit",
-      "update": "Update"
+      "back": "Vissza",
+      "cancel": "Mégse",
+      "close": "Bezárás",
+      "copy": "Másolás",
+      "create": "Létrehozás",
+      "delete": "Törlés",
+      "next": "Tovább",
+      "paste": "Beillesztés",
+      "reset": "Visszaállítás",
+      "search": "Keresés",
+      "submit": "Küldés",
+      "update": "Frissítés"
     },
     "footer": {
-      "copyright": "Copyright © 2023 John Doe. All rights reserved.",
-      "title": "Footer"
+      "copyright": "Szerzői jog © 2023 John Doe. Minden jog fenntartva.",
+      "title": "Lábléc"
     },
     "module": {
       "finance": {
-        "balance": "Balance",
-        "budget": "Budget",
-        "description": "Finance module",
-        "expenses": "Expenses",
-        "income": "Income",
-        "title": "Finance",
-        "transactions": "Transactions"
+        "balance": "Egyenleg",
+        "budget": "Költségvetés",
+        "description": "Pénzügyi modul",
+        "expenses": "Kiadások",
+        "income": "Bevétel",
+        "title": "Pénzügyek",
+        "transactions": "Tranzakciók"
       },
       "school": {
-        "announcements": "Announcements",
-        "assignments": "Assignments",
-        "attendance": "Attendance",
-        "books": "Books",
-        "calendar": "Calendar",
-        "courses": "Courses",
-        "description": "School module",
-        "events": "Events",
-        "exams": "Exams",
-        "grades": "Grades",
-        "library": "Library",
-        "news": "News",
-        "presentations": "Presentations",
-        "projects": "Projects",
-        "publications": "Publications",
-        "quizzes": "Quizzes",
-        "reports": "Reports",
-        "research": "Research",
-        "resources": "Resources",
-        "schedule": "Schedule",
-        "tests": "Tests",
-        "title": "School",
-        "videos": "Videos"
+        "announcements": "Hirdetmények",
+        "assignments": "Feladatok",
+        "attendance": "Jelenlét",
+        "books": "Könyvek",
+        "calendar": "Naptár",
+        "courses": "Kurzusok",
+        "description": "Iskolai modul",
+        "events": "Események",
+        "exams": "Vizsgák",
+        "grades": "Jegyek",
+        "library": "Könyvtár",
+        "news": "Hírek",
+        "presentations": "Előadások",
+        "projects": "Projektek",
+        "publications": "Publikációk",
+        "quizzes": "Kvízek",
+        "reports": "Jelentések",
+        "research": "Kutatás",
+        "resources": "Források",
+        "schedule": "Órarend",
+        "tests": "Teszt",
+        "title": "Iskola",
+        "videos": "Videók"
       },
       "todo": {
-        "description": "Todo module",
-        "notes": "Notes",
-        "reminders": "Reminders",
-        "tasks": "Tasks",
-        "title": "Todo"
+        "description": "Teendő modul",
+        "notes": "Jegyzetek",
+        "reminders": "Emlékeztetők",
+        "tasks": "Feladatok",
+        "title": "Teendők"
       },
       "work": {
-        "awards": "Awards",
-        "certifications": "Certifications",
-        "description": "Work module",
-        "education": "Education",
-        "portfolio": "Portfolio",
-        "projects": "Projects",
-        "publications": "Publications",
-        "resume": "Resume",
-        "skills": "Skills",
-        "title": "Work"
+        "awards": "Díjak",
+        "certifications": "Tanúsítványok",
+        "description": "Munka modul",
+        "education": "Oktatás",
+        "portfolio": "Portfólió",
+        "projects": "Projektek",
+        "publications": "Publikációk",
+        "resume": "Önéletrajz",
+        "skills": "Készségek",
+        "title": "Munka"
       }
     },
     "nav": {
-      "home": "Home",
-      "modules": "Modules",
-      "profile": "Profile",
-      "settings": "Settings"
+      "home": "Kezdőlap",
+      "modules": "Modulok",
+      "profile": "Profil",
+      "settings": "Beállítások"
     },
     "security": {
-      "accessibility": "Accessibility",
-      "cookies": "Cookies",
-      "description": "Security module",
-      "help": "Help",
-      "legal": "Legal",
-      "privacy": "Privacy",
-      "profile": "Profile",
-      "sign-in": "Sign in",
-      "sign-out": "Sign out",
-      "support": "Support",
-      "title": "Security",
-      "two-factor-authentication": "Two-factor authentication"
+      "accessibility": "Akadálymentesség",
+      "cookies": "Sütik",
+      "description": "Biztonsági modul",
+      "help": "Súgó",
+      "legal": "Jogi",
+      "privacy": "Adatvédelem",
+      "profile": "Profil",
+      "sign-in": "Bejelentkezés",
+      "sign-out": "Kijelentkezés",
+      "support": "Támogatás",
+      "title": "Biztonság",
+      "two-factor-authentication": "Kétlépcsős azonosítás"
     },
     "settings": {
-      "about": "About",
-      "account": "Account",
-      "description": "Settings module",
-      "language": "Language",
-      "notifications": "Notifications",
-      "profile": "Profile",
-      "region": "Region",
-      "timezone": "Timezone",
-      "title": "Settings"
+      "about": "Rólam",
+      "account": "Fiók",
+      "description": "Beállítások modul",
+      "language": "Nyelv",
+      "notifications": "Értesítések",
+      "profile": "Profil",
+      "region": "Régió",
+      "timezone": "Időzóna",
+      "title": "Beállítások"
     }
   }
 }

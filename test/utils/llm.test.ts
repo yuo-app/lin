@@ -5,7 +5,7 @@ import type { I18nConfig } from '@/config/i18n'
 import type { DeepRequired } from '@/types'
 import type { LocaleJson } from '@/utils/locale'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { deletionGuard, getWithLocales, jsonExtractionMiddleware, sanitizeJsonString, translateKeys } from '@/utils/llm'
+import { deletionGuard, jsonExtractionMiddleware, sanitizeJsonString, translateKeys } from '@/utils/llm'
 
 const mockLanguageModelFn = vi.fn().mockReturnValue({})
 const mockProviderClient = { languageModel: mockLanguageModelFn }
@@ -79,68 +79,6 @@ describe('llm utils', () => {
     mockCreateGroq.mockReturnValue({ languageModel: mockLanguageModelFn })
     mockCreateCerebras.mockReturnValue({ languageModel: mockLanguageModelFn })
     mockCreateAzure.mockReturnValue({ languageModel: mockLanguageModelFn })
-  })
-
-  describe('getWithLocales', () => {
-    const i18nConfig: I18nConfig = {
-      locales: ['en-US', 'es-ES', 'fr-FR', 'ja-JP'],
-      defaultLocale: 'en-US',
-      directory: 'locales',
-    }
-
-    it('should return empty withLocales and includeContext false if withLocale is a single empty string', () => {
-      const result = getWithLocales('', i18nConfig)
-      expect(result.withLocales).toEqual([])
-      expect(result.includeContext).toBe(false)
-    })
-
-    it('should return the normalized locale in withLocales and includeContext true if withLocale array has only one valid item', () => {
-      const result = getWithLocales(['en'], i18nConfig)
-      expect(result.withLocales).toEqual(['en-US'])
-      expect(result.includeContext).toBe(true)
-    })
-
-    it('should return empty withLocales and includeContext false if withLocale array has one item which is empty string', () => {
-      const result = getWithLocales([''], i18nConfig)
-      expect(result.withLocales).toEqual([])
-      expect(result.includeContext).toBe(false)
-    })
-
-    it('should process a single valid locale string (excluding empty string)', () => {
-      const result = getWithLocales('es', i18nConfig)
-      expect(result.withLocales).toEqual(['es-ES'])
-      expect(result.includeContext).toBe(true)
-    })
-
-    it('should process a single specific locale string like "ja-JP"', () => {
-      const result = getWithLocales('ja-JP', i18nConfig)
-      expect(result.withLocales).toEqual(['ja-JP'])
-      expect(result.includeContext).toBe(true)
-    })
-
-    it('should process an array of locale strings', () => {
-      const result = getWithLocales(['es', 'fr'], i18nConfig)
-      expect(result.withLocales).toEqual(['es-ES', 'fr-FR'])
-      expect(result.includeContext).toBe(true)
-    })
-
-    it('should set includeContext to false if "" is in withLocale array but other valid locales are present', () => {
-      const result = getWithLocales(['es', 'fr', ''], i18nConfig)
-      expect(result.withLocales).toEqual(['es-ES', 'fr-FR'])
-      expect(result.includeContext).toBe(true)
-    })
-
-    it('should handle empty array for withLocale', () => {
-      const result = getWithLocales([], i18nConfig)
-      expect(result.withLocales).toEqual([])
-      expect(result.includeContext).toBe(false)
-    })
-
-    it('should handle undefined for withLocale', () => {
-      const result = getWithLocales(undefined, i18nConfig)
-      expect(result.withLocales).toEqual([])
-      expect(result.includeContext).toBe(false)
-    })
   })
 
   describe('deletionGuard', () => {
@@ -221,7 +159,8 @@ describe('llm utils', () => {
       debug: false,
       undo: false,
       context: 'Test context about the project.',
-      integration: 'i18n',
+      with: 'none',
+      integration: '',
       i18n: { locales: ['en-US', 'es-ES', 'fr-FR'], defaultLocale: 'en-US', directory: 'locales' },
       options: {
         provider: 'openai',
@@ -268,7 +207,7 @@ describe('llm utils', () => {
     })
 
     it('should correctly call generateObject and return translations for OpenAI', async () => {
-      const result = await translateKeys(keysToTranslate, mockConfigBase, mockI18n, undefined, true)
+      const result = await translateKeys(keysToTranslate, mockConfigBase, mockI18n, undefined)
 
       expect(result).toEqual(mockTranslatedJson)
       expect(mockCreateOpenAI).toHaveBeenCalledWith({ apiKey: 'test-api-key' })
@@ -292,7 +231,7 @@ describe('llm utils', () => {
 
     it('should include withLocaleJsons in system prompt if provided', async () => {
       const withLocaleJsons = { 'ja-JP': { common: { yes: 'はい' } } }
-      await translateKeys(keysToTranslate, mockConfigBase, mockI18n, withLocaleJsons, true)
+      await translateKeys(keysToTranslate, mockConfigBase, mockI18n, withLocaleJsons)
 
       expect(mockGenerateObject).toHaveBeenCalledOnce()
       const generateObjectCall = mockGenerateObject.mock.calls[0][0]
@@ -300,11 +239,11 @@ describe('llm utils', () => {
     })
 
     it('should exclude user context from system prompt if includeContext is false', async () => {
-      await translateKeys(keysToTranslate, mockConfigBase, mockI18n, undefined, false)
+      await translateKeys(keysToTranslate, mockConfigBase, mockI18n, undefined)
 
       expect(mockGenerateObject).toHaveBeenCalledOnce()
       const generateObjectCall = mockGenerateObject.mock.calls[0][0]
-      expect(generateObjectCall.system).not.toContain(mockConfigBase.context)
+      expect(generateObjectCall.system).toContain(mockConfigBase.context)
     })
 
     it('should handle missing provider in config', async () => {

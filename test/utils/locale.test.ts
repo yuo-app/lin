@@ -1,7 +1,7 @@
 import type { I18nConfig } from '@/config/i18n'
 import type { LocaleJson } from '@/utils/locale'
 import { describe, expect, it, vi } from 'vitest'
-import { findMissingKeys, mergeMissingTranslations, normalizeLocales, shapeMatches } from '@/utils/locale'
+import { findMissingKeys, mergeMissingTranslations, normalizeLocales, resolveContextLocales, shapeMatches } from '@/utils/locale'
 
 vi.mock('@/utils/general', () => ({
   handleCliError: vi.fn((message: string) => {
@@ -255,6 +255,87 @@ describe('locale utils', () => {
       const missing2: LocaleJson = { 'a.b': 'nested object' }
       const expected2: LocaleJson = { a: { b: 'nested object' } }
       expect(mergeMissingTranslations(existing2, missing2)).toEqual(expected2)
+    })
+  })
+
+  describe('resolveContextLocales', () => {
+    const mockI18nConfig: I18nConfig = {
+      locales: ['en-US', 'es-ES', 'fr-FR', 'ja-JP'],
+      defaultLocale: 'en-US',
+      directory: 'locales',
+    }
+    const targetLocales = ['es-ES', 'fr-FR']
+
+    it('should return an empty array for "none"', () => {
+      expect(resolveContextLocales('none', mockI18nConfig, targetLocales)).toEqual([])
+    })
+
+    it('should return default locale for "def"', () => {
+      expect(resolveContextLocales('def', mockI18nConfig, targetLocales)).toEqual(['en-US'])
+    })
+
+    it('should return target locales for "tgt"', () => {
+      expect(resolveContextLocales('tgt', mockI18nConfig, targetLocales)).toEqual(['es-ES', 'fr-FR'])
+    })
+
+    it('should return default and target locales for "both"', () => {
+      const result = resolveContextLocales('both', mockI18nConfig, targetLocales)
+      expect(result).toHaveLength(3)
+      expect(result).toContain('en-US')
+      expect(result).toContain('es-ES')
+      expect(result).toContain('fr-FR')
+    })
+
+    it('should return all locales for "all"', () => {
+      const result = resolveContextLocales('all', mockI18nConfig, targetLocales)
+      expect(result).toHaveLength(4)
+      expect(result).toEqual(expect.arrayContaining(['en-US', 'es-ES', 'fr-FR', 'ja-JP']))
+    })
+
+    it('should handle a single specific locale string', () => {
+      expect(resolveContextLocales('ja-JP', mockI18nConfig, targetLocales)).toEqual(['ja-JP'])
+    })
+
+    it('should handle an array of specific locale strings', () => {
+      const result = resolveContextLocales(['ja-JP', 'fr-FR'], mockI18nConfig, targetLocales)
+      expect(result).toHaveLength(2)
+      expect(result).toContain('ja-JP')
+      expect(result).toContain('fr-FR')
+    })
+
+    it('should handle a mix of keywords and specific locales', () => {
+      const result = resolveContextLocales(['def', 'tgt', 'ja-JP'], mockI18nConfig, targetLocales)
+      expect(result).toHaveLength(4)
+      expect(result).toContain('en-US')
+      expect(result).toContain('es-ES')
+      expect(result).toContain('fr-FR')
+      expect(result).toContain('ja-JP')
+    })
+
+    it('should handle a mix of "all" and other things (all should dominate)', () => {
+      const result = resolveContextLocales(['all', 'def', 'ja-JP'], mockI18nConfig, targetLocales)
+      expect(result).toHaveLength(4)
+      expect(result).toEqual(expect.arrayContaining(['en-US', 'es-ES', 'fr-FR', 'ja-JP']))
+    })
+
+    it('should normalize short locale codes', () => {
+      expect(resolveContextLocales(['ja', 'es'], mockI18nConfig, targetLocales)).toEqual(['ja-JP', 'es-ES'])
+    })
+
+    it('should handle empty target locales for "tgt"', () => {
+      expect(resolveContextLocales('tgt', mockI18nConfig, [])).toEqual([])
+    })
+
+    it('should return unique locales even if specified multiple times', () => {
+      const result = resolveContextLocales(['def', 'en-US', 'es', 'es-ES'], mockI18nConfig, targetLocales)
+      expect(result).toHaveLength(2)
+      expect(result).toContain('en-US')
+      expect(result).toContain('es-ES')
+    })
+
+    it('should return an empty array if withConfig is undefined or empty array', () => {
+      expect(resolveContextLocales(undefined as any, mockI18nConfig, targetLocales)).toEqual([])
+      expect(resolveContextLocales([], mockI18nConfig, targetLocales)).toEqual([])
     })
   })
 })

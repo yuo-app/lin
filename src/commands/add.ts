@@ -9,12 +9,12 @@ import {
   countKeys,
   deletionGuard,
   findNestedKey,
-  getWithLocales,
   ICONS,
   mergeMissingTranslations,
   normalizeLocales,
   provideSuggestions,
   r,
+  resolveContextLocales,
   translateKeys,
 } from '@/utils'
 import { saveUndoState } from '@/utils/undo'
@@ -47,7 +47,7 @@ export default defineCommand({
     with: {
       alias: 'w',
       type: 'string',
-      description: 'add a locale json to the context window',
+      description: 'The context profile to use. (def, tgt, both, all, or locales like en)',
     },
   },
   async run({ args }) {
@@ -85,17 +85,30 @@ export default defineCommand({
       }
     }
 
-    let locales = typeof args.locale === 'string' ? [args.locale] : args.locale || []
-    locales = catchError(normalizeLocales)(locales, i18n)
-    const localesToCheck = locales.length > 0 ? locales : i18n.locales
+    const locales = typeof args.locale === 'string' ? [args.locale] : args.locale || []
+    const localesToCheckRaw = locales.length > 0 ? locales : i18n.locales
+    const localesToCheck = catchError(normalizeLocales)(localesToCheckRaw, i18n)
 
-    const { withLocales, includeContext } = getWithLocales(args.with, i18n)
+    const withOption = args.with !== undefined ? args.with : config.with
+    const withLocales = resolveContextLocales(withOption as any, i18n, localesToCheck)
     const withLocaleJsons: Record<string, LocaleJson> = {}
-    for (const locale of withLocales)
-      withLocaleJsons[locale] = JSON.parse(fs.readFileSync(r(`${locale}.json`, i18n), { encoding: 'utf8' }))
+    for (const locale of withLocales) {
+      try {
+        withLocaleJsons[locale] = JSON.parse(fs.readFileSync(r(`${locale}.json`, i18n), { encoding: 'utf8' }))
+      }
+      catch (error: any) {
+        if (config.debug) {
+          if (error.code === 'ENOENT')
+            console.log(ICONS.info, `Skipping context for **${locale}** *(file not found)*`)
+          else
+            console.log(ICONS.warning, `Could not read or parse context file for locale **${locale}**. Skipping.`)
+        }
+      }
+    }
 
-    if (withLocales.length > 0)
-      console.log(ICONS.info, `With: ${withLocales.map(l => `**${l}**`).join(', ')}`)
+    const loadedContextLocales = Object.keys(withLocaleJsons)
+    if (loadedContextLocales.length > 0)
+      console.log(ICONS.info, `With: ${loadedContextLocales.map(l => `**${l}**`).join(', ')}`)
 
     if (args.debug) {
       console.log(ICONS.note, `Provider: \`${config.options.provider}\``)
@@ -159,7 +172,7 @@ export default defineCommand({
         }
         else {
           translations = Object.keys(keysToTranslate).length > 0
-            ? await translateKeys(keysToTranslate, config, i18n, withLocaleJsons, includeContext)
+            ? await translateKeys(keysToTranslate, config, i18n, withLocaleJsons)
             : {}
 
           if (keysToTranslateAndDefault[i18n.defaultLocale])
