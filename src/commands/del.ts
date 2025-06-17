@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import { defineCommand } from 'citty'
 import { allArgs, resolveConfig } from '../config'
 import { loadI18nConfig } from '../config/i18n'
-import { console, findNestedKey, ICONS, normalizeLocales, r } from '../utils'
+import { console, findNestedKey, ICONS, normalizeLocales, provideSuggestions, r } from '../utils'
 import { saveUndoState } from '../utils/undo'
 
 export default defineCommand({
@@ -24,6 +24,13 @@ export default defineCommand({
     const { config } = await resolveConfig(args)
     const { i18n } = await loadI18nConfig(config as any)
 
+    const keys = args._ as string[]
+    if (keys.length === 1) {
+      const defaultLocaleJson = JSON.parse(fs.readFileSync(r(`${i18n.defaultLocale}.json`, i18n), { encoding: 'utf8' })) as LocaleJson
+      if (provideSuggestions(defaultLocaleJson, keys[0]))
+        return
+    }
+
     let locales = typeof args.locale === 'string' ? [args.locale] : args.locale || []
     locales = normalizeLocales(locales, i18n)
     const localesToCheck = locales.length > 0 ? locales : i18n.locales
@@ -31,7 +38,6 @@ export default defineCommand({
     const filesToModify = localesToCheck.map(locale => r(`${locale}.json`, i18n))
     saveUndoState(filesToModify, config as any)
 
-    const keys = args._
     const deletedKeysByLocale: Record<string, string[]> = {}
 
     for (const locale of localesToCheck) {

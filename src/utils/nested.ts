@@ -98,3 +98,13 @@ export function sortKeys(obj: NestedObject, refObj?: NestedObject): NestedObject
 
   return sortedObj
 }
+
+export function getAllKeys(obj: Record<string, any>, prefix = ''): string[] {
+  return Object.keys(obj).flatMap((key) => {
+    const newKey = prefix ? `${prefix}.${key}` : key
+    if (typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key]))
+      return [newKey, ...getAllKeys(obj[key], newKey)]
+
+    return [newKey]
+  })
+}

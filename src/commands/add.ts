@@ -13,6 +13,7 @@ import {
   ICONS,
   mergeMissingTranslations,
   normalizeLocales,
+  provideSuggestions,
   r,
   translateKeys,
 } from '@/utils'
@@ -52,6 +53,10 @@ export default defineCommand({
   async run({ args }) {
     const { config } = await resolveConfig(args)
     const i18n = config.i18n
+
+    const defaultLocaleJson = JSON.parse(fs.readFileSync(r(`${i18n.defaultLocale}.json`, i18n), { encoding: 'utf8' }))
+    if (provideSuggestions(defaultLocaleJson, args.key as string))
+      return
 
     let locales = typeof args.locale === 'string' ? [args.locale] : args.locale || []
     locales = catchError(normalizeLocales)(locales, i18n)

@@ -2,7 +2,7 @@ import type { LocaleJson } from '../utils'
 import fs from 'node:fs'
 import { defineCommand } from 'citty'
 import { allArgs, resolveConfig } from '../config'
-import { console, ICONS, normalizeLocales, r } from '../utils'
+import { console, ICONS, normalizeLocales, provideSuggestions, r } from '../utils'
 import { saveUndoState } from '../utils/undo'
 
 export default defineCommand({
@@ -28,6 +28,10 @@ export default defineCommand({
   async run({ args }) {
     const { config } = await resolveConfig(args)
     const i18n = config.i18n
+
+    const defaultLocaleJson = JSON.parse(fs.readFileSync(r(`${i18n.defaultLocale}.json`, i18n), { encoding: 'utf8' }))
+    if (provideSuggestions(defaultLocaleJson, args.key as string))
+      return
 
     let locales = typeof args.locale === 'string' ? [args.locale] : args.locale || []
     locales = normalizeLocales(locales, i18n)
