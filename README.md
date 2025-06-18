@@ -226,6 +226,8 @@ npm i -D lint-staged simple-git-hooks
 npx simple-git-hooks
 ```
 
+You can also run `lin check -S -f` or `lin check -S -r` to automatically fix issues.
+
 ### undo
 
 `undo` reverts the last changes made by `add`, `del`, `check`, or `translate`.

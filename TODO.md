@@ -12,10 +12,10 @@
 
 - [x] key suggestions
 - [x] better context management
-- [ ] **`check` command:** lint codebase for missing keys (compare to default locale json), `--fix` to add empty keys
-- [ ] `estimateTokens: boolean` config to enable/disable token estimation, show estimated tokens and ask before the llm call
+- [x] **`check` command:** lint codebase for missing keys (compare to default locale json), `--fix` to add empty keys, `--remove-unused` to remove unused keys
 
 ## later
 
+- [ ] `estimateTokens: boolean` config to enable/disable token estimation, show estimated tokens and ask before the llm call
 - [ ] **`verify` command:** reflect on the quality of the translations, check if the translations are accurate
 - [ ] **`convert` command:** convert a project to use i18n by extracting all the strings from the code and adding them to the locale json files.
