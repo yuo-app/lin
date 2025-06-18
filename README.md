@@ -68,6 +68,14 @@ export default defineConfig({
 > [!TIP]
 > Run `lin -h` and `lin <command> -h` to see all the options.
 
+- **`translate`**: Translate missing keys in your locale files with LLMs
+- **`add`**: Add a new key and its translations with LLMs
+- **`edit`**: Edit an existing key and its translations
+- **`del`**: Remove one or more keys
+- **`check`**: Validate locale files, check for missing/unused keys, or sort them, verify config
+- **`models`**: List available LLM models
+- **`undo`**: Revert the last change made by `translate`, `add`, `del`, `edit`, or `check`
+
 ### translate
 
 The **translate** command syncs all locale JSON files with the default locale JSON file. It finds the missing keys in locales, and translates them.
@@ -230,7 +238,7 @@ You can also run `lin check -S -f` or `lin check -S -r` to automatically fix iss
 
 ### undo
 
-`undo` reverts the last changes made by `add`, `del`, `check`, or `translate`.
+`undo` reverts the last changes made by `translate`, `add`, `del`, `edit`, or `check`.
 
 ```bash
 lin undo
