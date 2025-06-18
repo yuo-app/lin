@@ -45,26 +45,7 @@ export function findNestedValue(obj: any, path: string): any {
 }
 
 export function countKeys(obj: NestedObject): number {
-  let count = 0
-
-  for (const key of Object.keys(obj)) {
-    count++
-
-    const value = obj[key]
-    if (typeof value === 'object' && value !== null) {
-      if (Array.isArray(value)) {
-        for (const item of value) {
-          if (typeof item === 'object' && item !== null && !Array.isArray(item))
-            count += countKeys(item)
-        }
-      }
-      else {
-        count += countKeys(value)
-      }
-    }
-  }
-
-  return count
+  return getAllKeys(obj).length
 }
 
 export function sortKeys(obj: NestedObject, refObj?: NestedObject): NestedObject {
@@ -116,9 +97,32 @@ export function sortKeys(obj: NestedObject, refObj?: NestedObject): NestedObject
 export function getAllKeys(obj: Record<string, any>, prefix = ''): string[] {
   return Object.keys(obj).flatMap((key) => {
     const newKey = prefix ? `${prefix}.${key}` : key
-    if (typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key]))
-      return [newKey, ...getAllKeys(obj[key], newKey)]
+    const value = obj[key]
+    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      if (Object.keys(value).length === 0)
+        return [newKey]
 
+      return getAllKeys(value, newKey)
+    }
     return [newKey]
   })
+}
+
+export function cleanupEmptyObjects(obj: any) {
+  if (Object.prototype.toString.call(obj) === '[object Array]') {
+    for (let i = 0; i < obj.length; i++)
+      cleanupEmptyObjects(obj[i])
+  }
+  else if (Object.prototype.toString.call(obj) === '[object Object]') {
+    for (const key in obj) {
+      if (Object.prototype.toString.call(obj[key]) === '[object Object]') {
+        cleanupEmptyObjects(obj[key])
+        if (Object.keys(obj[key]).length === 0)
+          delete obj[key]
+      }
+      else if (Object.prototype.toString.call(obj[key]) === '[object Array]') {
+        cleanupEmptyObjects(obj[key])
+      }
+    }
+  }
 }

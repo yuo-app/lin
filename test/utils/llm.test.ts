@@ -161,7 +161,14 @@ describe('llm utils', () => {
       context: 'Test context about the project.',
       with: 'none',
       integration: '',
-      i18n: { locales: ['en-US', 'es-ES', 'fr-FR'], defaultLocale: 'en-US', directory: 'locales' },
+      parser: {
+        input: ['src/**/*.{js,jsx,ts,tsx,vue,svelte}'],
+      },
+      i18n: {
+        locales: ['en-US', 'es-ES', 'fr-FR'],
+        defaultLocale: 'en-US',
+        directory: 'locales',
+      },
       options: {
         provider: 'openai',
         model: 'gpt-4.1-mini',

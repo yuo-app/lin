@@ -10,6 +10,9 @@ export const mockResolvedConfig: DeepRequired<ResolvedConfig> = {
   with: 'none',
   undo: false,
   integration: '',
+  parser: {
+    input: ['src/**/*.{js,jsx,ts,tsx,vue,svelte}'],
+  },
   i18n: {
     locales: ['en-US', 'es-ES'],
     defaultLocale: 'en-US',
@@ -55,14 +58,22 @@ export const baseArgsToRun = {
 export function createVfsHelpers() {
   let virtualFileSystem: Record<string, string> = {}
 
-  const setupVirtualFile = (filePath: string, content: object) => {
-    virtualFileSystem[filePath.replace(/\\/g, '/')] = JSON.stringify(content, null, 2)
+  const setupVirtualFile = (filePath: string, content: object | string) => {
+    virtualFileSystem[filePath.replace(/\\/g, '/')] = typeof content === 'string'
+      ? content
+      : JSON.stringify(content, null, 2)
   }
 
-  const getVirtualFileContent = (filePath: string): object | undefined => {
+  const getVirtualFileContent = (filePath: string): object | string | undefined => {
     const fileContent = virtualFileSystem[filePath.replace(/\\/g, '/')]
-    if (fileContent)
-      return JSON.parse(fileContent)
+    if (fileContent) {
+      try {
+        return JSON.parse(fileContent)
+      }
+      catch {
+        return fileContent
+      }
+    }
     return undefined
   }
 

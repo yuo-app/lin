@@ -2,8 +2,9 @@ import type { MockedFunction } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
-import c from 'picocolors'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { confirm } from '@clack/prompts'
+import { glob } from 'glob'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import checkCommand from '@/commands/check'
 import * as configModule from '@/config'
 import * as i18nConfigModule from '@/config/i18n'
@@ -13,6 +14,21 @@ import { baseArgsToRun, createVfsHelpers, mockI18nConfigResult, mockResolvedConf
 
 const actualNodePath = await vi.importActual<typeof path>('node:path')
 const actualUtils = await vi.importActual<typeof utilsModule>('@/utils')
+
+const mockParse = vi.fn()
+vi.mock('i18next-parser', () => {
+  const MockParserClass = vi.fn().mockImplementation(() => ({
+    parse: mockParse,
+  }))
+  return {
+    default: MockParserClass,
+    parser: MockParserClass,
+  }
+})
+vi.mock('glob', () => ({
+  glob: vi.fn(() => Promise.resolve([])),
+}))
+vi.mock('@clack/prompts')
 
 vi.mock('node:fs')
 vi.mock('node:process', async (importOriginal) => {
@@ -38,6 +54,7 @@ vi.mock('@/utils', async () => {
     catchError: vi.fn((fn: any) => fn),
     checkArg: vi.fn(),
     normalizeLocales: vi.fn((locales, i18n) => actual.normalizeLocales(locales, i18n)),
+    cleanupEmptyObjects: vi.fn(actual.cleanupEmptyObjects),
   }
 })
 vi.mock('@/utils/console', async () => {
@@ -73,6 +90,7 @@ describe('check command', () => {
   let mockResolveConfig: MockedFunction<typeof configModule.resolveConfig>
   let mockLoadI18nConfig: MockedFunction<typeof i18nConfigModule.loadI18nConfig>
   let mockConsoleLog: MockedFunction<any>
+  let mockConsoleLogL: MockedFunction<any>
   let mockPathDirname: MockedFunction<typeof path.dirname>
   let mockPathBasename: MockedFunction<typeof path.basename>
   let mockCountKeys: MockedFunction<typeof utilsModule.countKeys>
@@ -80,6 +98,8 @@ describe('check command', () => {
   let mockFindMissingKeys: MockedFunction<typeof utilsModule.findMissingKeys>
   let mockSortKeys: MockedFunction<typeof utilsModule.sortKeys>
   let mockMergeMissingTranslations: MockedFunction<typeof utilsModule.mergeMissingTranslations>
+  let mockConfirm: MockedFunction<typeof confirm>
+  let mockGlob: MockedFunction<typeof glob>
 
   const { setupVirtualFile, resetVfs, getVfs } = createVfsHelpers()
 
@@ -98,9 +118,11 @@ describe('check command', () => {
     mockResolveConfig = configModule.resolveConfig as MockedFunction<typeof configModule.resolveConfig>
     mockLoadI18nConfig = i18nConfigModule.loadI18nConfig as MockedFunction<typeof i18nConfigModule.loadI18nConfig>
     mockConsoleLog = vi.spyOn(consoleModule.console, 'log') as MockedFunction<any>
-    vi.spyOn(consoleModule.console, 'logL')
+    mockConsoleLogL = vi.spyOn(consoleModule.console, 'logL') as MockedFunction<any>
     mockPathDirname = vi.spyOn(path, 'dirname') as MockedFunction<typeof path.dirname>
     mockPathBasename = vi.spyOn(path, 'basename') as MockedFunction<typeof path.basename>
+    mockConfirm = confirm as MockedFunction<typeof confirm>
+    mockGlob = glob as MockedFunction<typeof glob>
 
     mockCountKeys = utilsModule.countKeys as MockedFunction<typeof utilsModule.countKeys>
     mockShapeMatches = utilsModule.shapeMatches as MockedFunction<typeof utilsModule.shapeMatches>
@@ -110,6 +132,7 @@ describe('check command', () => {
 
     mockShapeMatches.mockReturnValue(true)
     mockFindMissingKeys.mockReturnValue({})
+    mockMergeMissingTranslations.mockImplementation(actualUtils.mergeMissingTranslations)
 
     mockResolveConfig.mockResolvedValue({ config: mockResolvedConfig, sources: ['lin.config.js'], dependencies: [] })
     mockLoadI18nConfig.mockResolvedValue(mockI18nConfigResult)
@@ -138,8 +161,12 @@ describe('check command', () => {
     setupVirtualFile('locales/es-ES.json', completeEsJson)
   })
 
+  afterEach(() => {
+    vi.clearAllMocks()
+  })
+
   const runCheckCommand = (args: Record<string, any> = {}) => {
-    const fullArgs = { ...baseArgsToRun, sort: undefined, locale: undefined, fix: false, info: false, ...args }
+    const fullArgs = { ...baseArgsToRun, 'sort': undefined, 'locale': undefined, 'fix': false, 'info': false, 'keys': false, 'remove-unused': false, 'silent': false, ...args }
     return checkCommand.run?.({
       args: fullArgs as any,
       rawArgs: [],
@@ -156,9 +183,14 @@ describe('check command', () => {
 
       await runCheckCommand({ info: true })
 
-      expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.note, expect.stringContaining('Lin config path: /path/to\\`lin.config.js`'))
-      expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.note, expect.stringContaining('I18n config path: /path/to\\`i18n.config.ts`'))
-      expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.note, expect.stringContaining('Keys: `4`'))
+      expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.note, `Lin config path: /path/to\\\`lin.config.js\``)
+      expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.note, `I18n config path: /path/to\\\`i18n.config.ts\``)
+      expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.note, `Provider: \`openai\``)
+      expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.note, `Model: \`gpt-4.1-mini\``)
+      expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.note, `Temperature: \`0.7\``)
+      expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.note, 'Keys: `3`')
+      expect(mockConsoleLogL.mock.calls[0][1]).toContain('Locales (`2`): ')
+      expect(mockConsoleLogL.mock.calls[1][0]).toContain('**en-US** (`3`)')
     })
 
     it('should not show info by default', async () => {
@@ -168,10 +200,79 @@ describe('check command', () => {
     })
   })
 
-  describe('validation', () => {
+  describe('[Mode: Code Analysis (default)]', () => {
+    beforeEach(() => {
+      mockGlob.mockResolvedValue(['src/test.ts'])
+      setupVirtualFile('src/test.ts', 'const t = (key) => key;')
+    })
+
+    it('should report that all keys are in sync', async () => {
+      mockParse.mockReturnValue([{ key: 'a' }, { key: 'b' }, { key: 'c.d' }])
+      setupVirtualFile('locales/en-US.json', defaultEnJson)
+
+      await runCheckCommand()
+
+      expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.info, 'Checking for missing and unused keys in the codebase...')
+      expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.success, 'All keys are in sync.')
+    })
+
+    it('should report missing keys', async () => {
+      mockParse.mockReturnValue([{ key: 'a' }, { key: 'new.key' }])
+      setupVirtualFile('locales/en-US.json', { a: '1' })
+
+      await runCheckCommand()
+
+      expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.warning, 'Found `1` missing keys in default locale')
+      expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.note, 'Samples: `new.key`')
+    })
+
+    it('should fix missing keys with --fix', async () => {
+      mockParse.mockReturnValue([{ key: 'a' }, { key: 'new.key' }])
+      setupVirtualFile('locales/en-US.json', { a: '1' })
+
+      await runCheckCommand({ fix: true })
+
+      expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.info, 'Adding missing keys with empty values to default locale...')
+      const updatedJson = JSON.parse(getVfs()['locales/en-US.json'])
+      expect(updatedJson).toEqual({ a: '1', new: { key: '' } })
+      expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.success, 'Missing keys added successfully.')
+    })
+
+    it('should report unused keys', async () => {
+      mockParse.mockReturnValue([{ key: 'a' }])
+      setupVirtualFile('locales/en-US.json', { a: '1', b: '2' })
+
+      await runCheckCommand()
+
+      expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.warning, 'Found `1` unused keys in default locale')
+      expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.note, 'Samples: `b`')
+    })
+
+    it('should remove unused keys with --remove-unused', async () => {
+      mockConfirm.mockResolvedValue(true)
+      mockParse.mockReturnValue([{ key: 'a' }])
+      setupVirtualFile('locales/en-US.json', { a: '1', b: '2' })
+      setupVirtualFile('locales/es-ES.json', { a: 'uno', b: 'dos' })
+
+      await runCheckCommand({ 'remove-unused': true })
+
+      expect(mockConfirm).toHaveBeenCalled()
+      expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.info, 'Removing unused keys from all locales...')
+
+      const enJson = JSON.parse(getVfs()['locales/en-US.json'])
+      expect(enJson).toEqual({ a: '1' })
+
+      const esJson = JSON.parse(getVfs()['locales/es-ES.json'])
+      expect(esJson).toEqual({ a: 'uno' })
+
+      expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.success, 'Unused keys removed successfully.')
+    })
+  })
+
+  describe('[Mode: Key Comparison (`--keys`)]', () => {
     it('should log success if all locales are up to date', async () => {
       mockFindMissingKeys.mockReturnValue({})
-      await runCheckCommand()
+      await runCheckCommand({ keys: true })
       expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.success, 'All locales are up to date.')
     })
 
@@ -179,7 +280,7 @@ describe('check command', () => {
       setupVirtualFile('locales/es-ES.json', incompleteEsJson)
       mockFindMissingKeys.mockReturnValue({ 'b': 'World', 'c.d': 'Nested' })
 
-      await runCheckCommand()
+      await runCheckCommand({ keys: true })
 
       expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.warning, 'Locale **es-ES** is missing `2` keys')
       expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.note, 'Samples: `b`, `c.d`')
@@ -189,13 +290,12 @@ describe('check command', () => {
     })
   })
 
-  describe('fix flag', () => {
+  describe('fix flag (with --keys flag)', () => {
     it('should add missing keys with empty strings when --fix is used', async () => {
       setupVirtualFile('locales/es-ES.json', incompleteEsJson)
       mockFindMissingKeys.mockReturnValue({ 'b': 'World', 'c.d': 'Nested' })
-      mockMergeMissingTranslations.mockImplementation(actualUtils.mergeMissingTranslations)
 
-      await runCheckCommand({ fix: true })
+      await runCheckCommand({ keys: true, fix: true })
 
       expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.info, 'Adding missing keys with empty values...')
       const expectedJson = { a: 'Hola', b: '', c: { d: '' } }
@@ -245,6 +345,56 @@ describe('check command', () => {
       )
       expect(mockWriteFileSync).toHaveBeenCalledTimes(1) // only en-US
       expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.success, 'Sorted locales: **en-US**')
+    })
+  })
+
+  describe('--silent flag', () => {
+    beforeEach(() => {
+      mockGlob.mockResolvedValue(['src/test.ts'])
+      setupVirtualFile('src/test.ts', 'const t = (key) => key;')
+    })
+
+    it('should produce minimal output for missing keys', async () => {
+      mockParse.mockReturnValue([{ key: 'a' }, { key: 'new.key' }])
+      setupVirtualFile('locales/en-US.json', { a: '1' })
+
+      await runCheckCommand({ silent: true })
+
+      expect(mockConsoleLog).toHaveBeenCalledWith('Missing keys: 1')
+      expect(mockConsoleLog).not.toHaveBeenCalledWith(consoleModule.ICONS.warning, expect.any(String))
+    })
+
+    it('should produce minimal output for unused keys', async () => {
+      mockParse.mockReturnValue([{ key: 'a' }])
+      setupVirtualFile('locales/en-US.json', { a: '1', b: '2' })
+
+      await runCheckCommand({ silent: true })
+
+      expect(mockConsoleLog).toHaveBeenCalledWith('Unused keys: 1')
+      expect(mockConsoleLog).not.toHaveBeenCalledWith(consoleModule.ICONS.warning, expect.any(String))
+    })
+
+    it('should not show a confirmation prompt when removing unused keys', async () => {
+      mockConfirm.mockResolvedValue(false) // Should be ignored
+      mockParse.mockReturnValue([{ key: 'a' }])
+      setupVirtualFile('locales/en-US.json', { a: '1', b: '2' })
+      setupVirtualFile('locales/es-ES.json', { a: 'uno', b: 'dos' })
+
+      await runCheckCommand({ 'remove-unused': true, 'silent': true })
+
+      expect(mockConfirm).not.toHaveBeenCalled()
+      const enJson = JSON.parse(getVfs()['locales/en-US.json'])
+      expect(enJson).toEqual({ a: '1' })
+    })
+
+    it('should not use the loading spinner', async () => {
+      const mockConsoleLoading = vi.spyOn(consoleModule.console, 'loading')
+      mockParse.mockReturnValue([{ key: 'a' }, { key: 'b' }, { key: 'c.d' }])
+      setupVirtualFile('locales/en-US.json', defaultEnJson)
+
+      await runCheckCommand({ silent: true })
+
+      expect(mockConsoleLoading).not.toHaveBeenCalled()
     })
   })
 })

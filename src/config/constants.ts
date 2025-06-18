@@ -44,6 +44,10 @@ export const DEFAULT_CONFIG = {
     apiKey: undefined,
     temperature: 0,
   },
+
+  parser: {
+    input: ['src/**/*.{js,jsx,ts,tsx,vue,svelte}'],
+  },
 } satisfies Config
 
 export const availableModels = {

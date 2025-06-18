@@ -151,29 +151,79 @@ lin del nav.title footer.description
 The `check` command is a versatile tool for validating and maintaining locale files.
 It's ideal for running in pre-commit hooks or in CI.
 
-To find missing keys in your locales compared to the default locale:
+By default, it lints your codebase for missing and unused translation keys by comparing your source files against the default locale.
 
 ```bash
 lin check
 ```
 
-This will report any discrepancies. If you want to automatically add the missing keys with empty strings, use the `--fix` flag:
+To get a minimal output, use the `--silent` or `-S` flag. This is recommended for CI and git hooks. See [check with git hooks](#check-with-git-hooks).
+
+```bash
+lin check -S
+```
+
+This will report any discrepancies. To add the missing keys to your default locale file with empty strings instead of throwing an error, use the `--fix` flag:
 
 ```bash
 lin check -f
 ```
 
+To remove unused keys from all locale files, use the `--remove-unused` flag.
+
+```bash
+lin check -r
+```
+
+You can also use `check` to find missing keys in your locales compared to the default locale file with the `--keys` flag (this skips the parsing):
+
+```bash
+lin check -k
+```
+
+This will report any discrepancies. If you want to automatically add the missing keys with empty strings, use the `--fix` flag:
+
+```bash
+lin check -k -f
+```
+
 You can also use `check` to sort your locale JSON files, either alphabetically or based on the key order in your default locale file.
 
 ```bash
-lin check abc # sort alphabetically
-lin check def # sort by default locale
+lin check -s abc # sort alphabetically
+lin check -s def # sort by default locale
 ```
 
 To display detailed info about your config and locales, use the `--info` flag:
 
 ```bash
 lin check -i
+```
+
+### check with git hooks
+
+A great way to enforce i18n key consistency is to run `lin check` automatically before each commit. You can use `simple-git-hooks` with `lint-staged` to set this up easily.
+
+Add this to your `package.json`:
+
+```json
+{
+  "simple-git-hooks": {
+    "pre-commit": "npx lint-staged"
+  },
+  "lint-staged": {
+    "{src/**/*.{js,jsx,ts,tsx,vue,svelte},locales/**/*.json}": "lin check -S"
+  }
+}
+```
+
+Then run:
+
+```bash
+npm i -D lint-staged simple-git-hooks
+
+# activate hooks
+npx simple-git-hooks
 ```
 
 ### undo
@@ -289,35 +339,4 @@ This simple string is directly added to the system prompt. Use it to provide ext
 
 #### `with` in config and CLI
 
-The `with` option allows you to control which locale files are included in the LLM's context window. This can significantly improve translation quality by providing the model with more context about your project's tone and style.
-
-You can set this in your `lin.config.ts` using `with` or use the `--with` (or `-w`) flag in the CLI. The CLI flag will always override the config file setting.
-
-**Context Profiles:**
-
-- `none` (default): Only the keys to be translated are sent to the LLM. This is the most cost-effective option.
-- `def`: Includes the entire default locale JSON file (e.g., `en-US.json`) in the context.
-- `tgt`: Includes the full JSON of each locale currently being translated.
-- `both`: Includes both the default locale file and the target locale files.
-- `all`: Includes every locale JSON file in the context. This may be expensive.
-- `<locale-code>`: You can also provide one or more specific locale codes (e.g., `es-ES`, `fr`).
-
-**Examples:**
-
-```ts
-// lin.config.ts
-export default defineConfig({
-  with: 'tgt', // use target locale as context for all translations
-})
-```
-
-```bash
-# Override config and use 'both' profile for this command
-lin translate --with both
-
-# Provide specific locales for context
-lin add ui.new.key "New Key" -w es-ES -w fr-FR
-
-# Force no additional context, overriding any config
-lin translate --no-with
-```
+The `with`

@@ -61,6 +61,19 @@ class ConsoleExtended extends Console {
   }
 
   async loading<T>(message: string, callback: () => Promise<T>): Promise<T> {
+    if (!process.stdout.isTTY) {
+      this.log(`${ICONS.note} ${message}`)
+      try {
+        const result = await callback()
+        this.log(`${ICONS.success} ${message}`)
+        return result
+      }
+      catch (error) {
+        this.log(`${ICONS.error} ${message}`)
+        throw error
+      }
+    }
+
     const stopLoading = createLoadingIndicator(message)
 
     try {

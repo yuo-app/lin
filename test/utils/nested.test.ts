@@ -84,14 +84,12 @@ describe('nested utils', () => {
 
     it('should count keys in a nested object', () => {
       const obj = { a: 1, b: { c: 2, d: { e: 3 } } }
-      // a, b, c, d, e = 5 keys
-      expect(countKeys(obj)).toBe(5)
+      expect(countKeys(obj)).toBe(3)
     })
 
-    it('should count keys in an object with arrays (arrays themselves are not counted as keys, their object elements are)', () => {
+    it('should count keys in an object with arrays', () => {
       const obj = { a: [1, 2], b: { c: [{ d: 1 }, { e: 2 }] } }
-      // a, b, c, d, e = 5 keys
-      expect(countKeys(obj)).toBe(5)
+      expect(countKeys(obj)).toBe(2)
     })
 
     it('should return 0 for an empty object', () => {
@@ -101,26 +99,23 @@ describe('nested utils', () => {
 
     it('should handle null and undefined values correctly', () => {
       const obj = { a: null, b: undefined, c: { d: null } }
-      // a, b, c, d = 4 keys
-      expect(countKeys(obj)).toBe(4)
+      expect(countKeys(obj)).toBe(3)
     })
 
     it('should not count keys in array elements that are not plain objects', () => {
       const obj = { a: [1, 'string', true, null, undefined, [5, 6]] }
-      // a = 1 key
       expect(countKeys(obj)).toBe(1)
     })
 
     it('should count keys deeply within nested arrays of objects', () => {
       const obj = {
         a: [
-          { b: 1, c: { d: 2 } }, // b, c, d = 3 keys
-          { e: 3 }, // e = 1 key
+          { b: 1, c: { d: 2 } },
+          { e: 3 },
         ],
-        f: 4, // f = 1 key
+        f: 4,
       }
-      // a, b, c, d, e, f = 6 keys
-      expect(countKeys(obj)).toBe(6)
+      expect(countKeys(obj)).toBe(2)
     })
   })
 
@@ -203,7 +198,7 @@ describe('nested utils', () => {
   })
 
   describe('getAllKeys', () => {
-    it('should return all keys from a nested object including intermediate paths', () => {
+    it('should return all leaf keys from a nested object', () => {
       const obj = {
         a: '1',
         b: {
@@ -214,10 +209,10 @@ describe('nested utils', () => {
         },
       }
       const keys = getAllKeys(obj)
-      expect(keys).toEqual(['a', 'b', 'b.c', 'b.d', 'b.d.e'])
+      expect(keys).toEqual(['a', 'b.c', 'b.d.e'])
     })
 
-    it('should not traverse arrays', () => {
+    it('should not traverse arrays, treating them as a leaf', () => {
       const obj = {
         a: '1',
         f: [

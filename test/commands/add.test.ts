@@ -268,7 +268,7 @@ describe('add command', () => {
     expect(mockConsoleLog).toHaveBeenCalledWith(consoleUtils.ICONS.info, 'Skipped: **en-US**')
     expect(mockConsoleLog).toHaveBeenCalledWith(consoleUtils.ICONS.info, 'Skipped: **es-ES**')
     expect(mockConsoleLog).toHaveBeenCalledWith(consoleUtils.ICONS.success, 'All locales are up to date.')
-    expect(mockConsoleLog).toHaveBeenCalledWith(consoleUtils.ICONS.note, 'Keys: 2')
+    expect(mockConsoleLog).toHaveBeenCalledWith(consoleUtils.ICONS.note, 'Keys: 1')
     expect(mockTranslateKeys).not.toHaveBeenCalled()
   })
 
@@ -632,7 +632,7 @@ describe('add command', () => {
     await addCommand.run!({ args } as any)
 
     expect(mockConsoleLog).toHaveBeenCalledWith(consoleUtils.ICONS.success, 'All locales are up to date.')
-    expect(mockConsoleLog).toHaveBeenCalledWith(consoleUtils.ICONS.note, 'Keys: 2')
+    expect(mockConsoleLog).toHaveBeenCalledWith(consoleUtils.ICONS.note, 'Keys: 1')
     expect(mockTranslateKeys).not.toHaveBeenCalled()
   })
 

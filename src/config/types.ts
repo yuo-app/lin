@@ -68,6 +68,15 @@ export type PresetOptions = Partial<LLMProviderOptions> & { context?: string }
 
 export type Integration = (typeof integrations)[number]
 
+export interface ParserConfig {
+  /**
+   * An array of globs to search for translation keys.
+   * @default ['src/**\/*.{js,jsx,ts,tsx,vue,svelte}']
+   */
+  input: string[]
+  [key: string]: any
+}
+
 export interface CommonConfig {
   /**
    * the locale to use
@@ -132,6 +141,11 @@ export interface LinConfig {
    * Saved model configurations that can be activated with the --model flag.
    */
   presets?: Record<string, PresetOptions>
+
+  /**
+   * Configuration for the key parser.
+   */
+  parser?: ParserConfig
 }
 
 export type Config = CommonConfig & LinConfig

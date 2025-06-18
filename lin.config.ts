@@ -6,6 +6,9 @@ export default defineConfig({
     defaultLocale: 'en-US',
     directory: './locales',
   },
+  parser: {
+    input: ['src/**/*.ts'],
+  },
   with: 'both',
   options: {
     provider: 'google',
