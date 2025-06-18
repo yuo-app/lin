@@ -261,7 +261,8 @@ export default defineCommand({
     if (missingKeys.length > 0) {
       hasIssues = true
       if (args.silent) {
-        console.log(`Missing keys: ${missingKeys.length}`)
+        if (!args.fix)
+          console.log(`Missing keys: ${missingKeys.length}`)
       }
       else {
         console.log(ICONS.warning, `Found \`${missingKeys.length}\` missing keys in default locale`)
@@ -274,7 +275,8 @@ export default defineCommand({
     if (unusedKeys.length > 0) {
       hasIssues = true
       if (args.silent) {
-        console.log(`Unused keys: ${unusedKeys.length}`)
+        if (!args['remove-unused'])
+          console.log(`Unused keys: ${unusedKeys.length}`)
       }
       else {
         console.log(ICONS.warning, `Found \`${unusedKeys.length}\` unused keys in default locale`)
@@ -303,6 +305,8 @@ export default defineCommand({
       fs.writeFileSync(defaultLocalePath, `${JSON.stringify(merged, null, 2)}\n`, { encoding: 'utf8' })
       if (!args.silent)
         console.log(ICONS.success, 'Missing keys added successfully.')
+      else
+        console.log(`Fixed ${missingKeys.length} missing keys.`)
     }
 
     if (args['remove-unused'] && unusedKeys.length > 0) {
@@ -333,6 +337,8 @@ export default defineCommand({
         }
         if (!args.silent)
           console.log(ICONS.success, 'Unused keys removed successfully.')
+        else
+          console.log(`Removed ${unusedKeys.length} unused keys.`)
       }
     }
 
