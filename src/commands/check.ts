@@ -261,8 +261,12 @@ export default defineCommand({
     if (missingKeys.length > 0) {
       hasIssues = true
       if (args.silent) {
-        if (!args.fix)
+        if (!args.fix) {
           console.log(`Missing keys: ${missingKeys.length}`)
+          const sample = missingKeys.slice(0, 10)
+          if (sample.length > 0)
+            console.log(`Samples: ${sample.map(k => k).join(', ')}${missingKeys.length > sample.length ? '...' : ''}`)
+        }
       }
       else {
         console.log(ICONS.warning, `Found \`${missingKeys.length}\` missing keys in default locale`)
@@ -275,8 +279,12 @@ export default defineCommand({
     if (unusedKeys.length > 0) {
       hasIssues = true
       if (args.silent) {
-        if (!args['remove-unused'])
+        if (!args['remove-unused']) {
           console.log(`Unused keys: ${unusedKeys.length}`)
+          const sample = unusedKeys.slice(0, 10)
+          if (sample.length > 0)
+            console.log(`Samples: ${sample.map(k => k).join(', ')}${unusedKeys.length > sample.length ? '...' : ''}`)
+        }
       }
       else {
         console.log(ICONS.warning, `Found \`${unusedKeys.length}\` unused keys in default locale`)
@@ -344,7 +352,7 @@ export default defineCommand({
 
     if (hasIssues && !args.fix && !args['remove-unused']) {
       if (args.silent)
-        console.log('Key issues detected. Run with --fix to add missing keys or --remove-unused to delete them.')
+        console.log('\nKey issues detected. Run with --fix to add missing keys or --remove-unused to delete them.')
       else
         console.log(ICONS.error, 'Key issues detected. Run with --fix to add missing keys or --remove-unused to delete them.')
       process.exitCode = 1
