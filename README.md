@@ -341,4 +341,35 @@ This simple string is directly added to the system prompt. Use it to provide ext
 
 #### `with` in config and CLI
 
-The `with`
+The `with` option allows you to control which locale files are included in the LLM's context window. This can significantly improve translation quality by providing the model with more context about your project's tone and style.
+
+You can set this in your `lin.config.ts` using `with` or use the `--with` (or `-w`) flag in the CLI. The CLI flag will always override the config file setting.
+
+**Context Profiles:**
+
+- `none` (default): Only the keys to be translated are sent to the LLM. This is the most cost-effective option.
+- `def`: Includes the entire default locale JSON file (e.g., `en-US.json`) in the context.
+- `tgt`: Includes the full JSON of each locale currently being translated.
+- `both`: Includes both the default locale file and the target locale files.
+- `all`: Includes every locale JSON file in the context. This may be expensive.
+- `<locale>`: You can also provide one or more specific locale codes (e.g., `es-ES`, `fr`).
+
+**Examples:**
+
+```ts
+// lin.config.ts
+export default defineConfig({
+  with: 'tgt', // use target locale as context for all translations
+})
+```
+
+```bash
+# Override config and use 'both' profile for this command
+lin translate --with both
+
+# Provide specific locales for context
+lin add ui.new.key New Key -w es-ES -w fr-FR
+
+# Force no additional context, overriding any config
+lin translate --no-with
+```
