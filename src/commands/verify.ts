@@ -4,7 +4,7 @@ import { console } from '../utils'
 export default defineCommand({
   meta: {
     name: 'verify',
-    description: 'verify translations',
+    description: 'verify translations (not implemented)',
   },
   async run({ args: _args }) {
     console.loading('Load data', async () => {
