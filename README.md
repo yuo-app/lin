@@ -186,8 +186,8 @@ You can also use the `sync` command to **add a new language**.
 > [!NOTE]
 > There is some syntax around **locale codes**:
 >
-> - locale JSONs should be named with the full locale code (e.g. `en-US.json`): lanugage code 2 characters, country code 2 characters
-> - in commands - just like above - you can use the first 2 letters as a shorthand (e.g. `en` to match en-**)
+> - Locale JSON file names must match the codes in your `locales` configuration (e.g., `en-US.json` for an `'en-US'` entry).
+> - Short codes like `'en'` also work (e.g., `'en.json'`), but these are also a shorthand: `lin sync en` will match all locales starting with `en-` (like `en-US` and `en-GB`).
 > - `all` is a special keyword that matches all locales
 > - `def` means the default locale from the config
 
