@@ -232,9 +232,21 @@ describe('check command', () => {
 
       await runCheckCommand({ fix: true })
 
-      expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.info, 'Adding missing keys with empty values to default locale...')
+      expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.info, 'Adding missing keys to default locale...')
       const updatedJson = JSON.parse(getVfs()['locales/en-US.json'])
       expect(updatedJson).toEqual({ a: '1', new: { key: '' } })
+      expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.success, 'Missing keys added successfully.')
+    })
+
+    it('should fix missing keys with --fix and use default value', async () => {
+      mockParse.mockReturnValue([{ key: 'a' }, { key: 'new.key', defaultValue: 'New Key Default' }])
+      setupVirtualFile('locales/en-US.json', { a: '1' })
+
+      await runCheckCommand({ fix: true })
+
+      expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.info, 'Adding missing keys to default locale...')
+      const updatedJson = JSON.parse(getVfs()['locales/en-US.json'])
+      expect(updatedJson).toEqual({ a: '1', new: { key: 'New Key Default' } })
       expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.success, 'Missing keys added successfully.')
     })
 

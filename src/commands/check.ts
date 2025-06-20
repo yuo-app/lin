@@ -189,8 +189,6 @@ export default defineCommand({
         return
       }
 
-      console.log(ICONS.info, 'Adding missing keys with empty values...')
-
       const filesToWrite: Record<string, LocaleJson> = {}
       const keyCountsBefore: Record<string, number> = {}
       const keyCountsAfter: Record<string, number> = {}
@@ -225,9 +223,6 @@ export default defineCommand({
       return
     }
 
-    if (!args.silent)
-      console.log(ICONS.info, 'Checking for missing and unused keys in the codebase...')
-
     const { parser: Parser } = i18nextParser
     const parser = new Parser({
       ...config.parser,
@@ -237,25 +232,33 @@ export default defineCommand({
 
     const files = await glob(config.parser.input, { cwd: config.cwd, absolute: true })
 
-    let usedKeysInCode: string[] = []
+    const usedKeysInCode: { key: string, defaultValue?: string }[] = []
     const parsingTask = async () => {
       for (const file of files) {
         const content = fs.readFileSync(file, 'utf8')
         const keysFromFile = parser.parse(content, file)
-        usedKeysInCode.push(...keysFromFile.map((k: any) => k.key))
+        usedKeysInCode.push(...keysFromFile.map((k: any) => ({ key: k.key, defaultValue: k.defaultValue })))
       }
     }
 
     if (args.silent)
       await parsingTask()
     else
-      await console.loading('Parsing source files...', parsingTask)
+      await console.loading('Checking for missing and unused keys in the codebase', parsingTask)
 
-    usedKeysInCode = [...new Set(usedKeysInCode)]
+    const usedKeysMap = new Map<string, string | undefined>()
+    for (const { key, defaultValue } of usedKeysInCode) {
+      const existing = usedKeysMap.get(key)
+      if (defaultValue || existing === undefined)
+        usedKeysMap.set(key, defaultValue)
+    }
+
+    const uniqueUsedKeys = Array.from(usedKeysMap.entries()).map(([key, defaultValue]) => ({ key, defaultValue }))
 
     const allLocaleKeys = getAllKeys(defaultLocaleJson)
-    const missingKeys = usedKeysInCode.filter(key => !allLocaleKeys.includes(key))
-    const unusedKeys = allLocaleKeys.filter(key => !usedKeysInCode.includes(key))
+    const missingKeysWithValues = uniqueUsedKeys.filter(({ key }) => !allLocaleKeys.includes(key))
+    const missingKeys = missingKeysWithValues.map(({ key }) => key)
+    const unusedKeys = allLocaleKeys.filter(key => !uniqueUsedKeys.some(k => k.key === key))
 
     let hasIssues = false
     if (missingKeys.length > 0) {
@@ -301,18 +304,16 @@ export default defineCommand({
     }
 
     if (args.fix && missingKeys.length > 0) {
-      if (!args.silent)
-        console.log(ICONS.info, 'Adding missing keys with empty values to default locale...')
-      const missingEmpty: LocaleJson = {}
-      for (const key of missingKeys)
-        missingEmpty[key] = ''
+      const missingWithValues: LocaleJson = {}
+      for (const { key, defaultValue } of missingKeysWithValues)
+        missingWithValues[key] = defaultValue || ''
 
       const defaultLocalePath = r(`${i18n.defaultLocale}.json`, i18n)
-      const merged = mergeMissingTranslations(defaultLocaleJson, missingEmpty)
+      const merged = mergeMissingTranslations(defaultLocaleJson, missingWithValues)
       saveUndoState([defaultLocalePath], config as any)
       fs.writeFileSync(defaultLocalePath, `${JSON.stringify(merged, null, 2)}\n`, { encoding: 'utf8' })
       if (!args.silent)
-        console.log(ICONS.success, 'Missing keys added successfully.')
+        console.log(ICONS.success, 'Missing keys added.')
       else
         console.log(`Fixed ${missingKeys.length} missing keys.`)
     }
@@ -325,8 +326,6 @@ export default defineCommand({
             initialValue: false,
           })
       if (result) {
-        if (!args.silent)
-          console.log(ICONS.info, 'Removing unused keys from all locales...')
         const filesToModify = i18n.locales.map(locale => r(`${locale}.json`, i18n))
         saveUndoState(filesToModify, config as any)
 
@@ -344,7 +343,7 @@ export default defineCommand({
           fs.writeFileSync(localePath, `${JSON.stringify(localeJson, null, 2)}\n`, { encoding: 'utf8' })
         }
         if (!args.silent)
-          console.log(ICONS.success, 'Unused keys removed successfully.')
+          console.log(ICONS.success, 'Unused keys removed.')
         else
           console.log(`Removed ${unusedKeys.length} unused keys.`)
       }

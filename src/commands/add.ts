@@ -44,6 +44,12 @@ export default defineCommand({
       description: 'force add key overriding existing ones',
       default: false,
     },
+    silent: {
+      alias: 's',
+      type: 'boolean',
+      description: 'suppress all console output',
+      default: false,
+    },
   },
   async run({ args }) {
     const { config } = await resolveConfig(args)
@@ -195,9 +201,10 @@ export default defineCommand({
         }
       })
 
-      console.log(ICONS.note, `Keys: ${keyCountsAfter[i18n.defaultLocale]}`)
+      if (!args.silent)
+        console.log(ICONS.note, `Keys: ${keyCountsAfter[i18n.defaultLocale]}`)
 
-      const result = await deletionGuard(keyCountsBefore, keyCountsAfter, locales)
+      const result = await deletionGuard(keyCountsBefore, keyCountsAfter, locales, args.silent)
       if (!result)
         return
 
@@ -205,7 +212,7 @@ export default defineCommand({
       for (const localePath of Object.keys(translationsToWrite))
         fs.writeFileSync(localePath, `${JSON.stringify(translationsToWrite[localePath], null, 2)}\n`, { encoding: 'utf8' })
     }
-    else {
+    else if (!args.silent) {
       console.log(ICONS.success, 'All locales are up to date.')
       console.log(ICONS.note, `Keys: ${countKeys(JSON.parse(fs.readFileSync(r(`${i18n.defaultLocale}.json`, i18n), { encoding: 'utf8' })))}`)
     }

@@ -16,6 +16,7 @@ import { z } from 'zod'
 import { availableModels, providers } from '../config'
 import { console, formatLog, ICONS } from './console'
 import { handleCliError } from './general'
+import { findMissingKeys, mergeMissingTranslations } from './locale'
 
 export function sanitizeJsonString(jsonString: string): string {
   let processedString = jsonString
@@ -81,30 +82,37 @@ export const jsonExtractionMiddleware: LanguageModelV1Middleware = {
   },
 }
 
-export async function deletionGuard(keyCountsBefore: Record<string, number>, keyCountsAfter: Record<string, number>, locales: string[]): Promise<boolean> {
-  console.logL(ICONS.result)
+export async function deletionGuard(keyCountsBefore: Record<string, number>, keyCountsAfter: Record<string, number>, locales: string[], silent = false): Promise<boolean> {
   const negativeDiffs: Record<string, number> = {}
-  for (const [index, locale] of Object.keys(keyCountsBefore).entries()) {
-    const diff = keyCountsAfter[locale] - keyCountsBefore[locale]
-
-    const isLast = index === locales.length - 1
-    if (Object.keys(keyCountsBefore).length === 1 || isLast)
-      console.logL(`${locale} (${diff > 0 ? '+' : ''}${diff})`)
-    else
-      console.logL(`${locale} (${diff > 0 ? '+' : ''}${diff}), `)
-
+  const allAffectedLocales = Object.keys(keyCountsAfter)
+  for (const locale of allAffectedLocales) {
+    const diff = (keyCountsAfter[locale] || 0) - (keyCountsBefore[locale] || 0)
     if (diff < 0)
       negativeDiffs[locale] = diff
   }
-  console.log()
 
   if (Object.keys(negativeDiffs).length > 0) {
+    if (silent)
+      return true
     const result = await confirm({
       message: formatLog(`${ICONS.warning} This will remove ${Object.keys(negativeDiffs).map(l => `\`${-negativeDiffs[l]}\` keys from **${l}**`).join(', ')}. Continue?`),
       initialValue: false,
     })
     if (typeof result !== 'boolean' || !result)
       return false
+  }
+
+  if (!silent) {
+    console.logL(ICONS.result)
+    for (const [index, locale] of allAffectedLocales.entries()) {
+      const diff = (keyCountsAfter[locale] || 0) - (keyCountsBefore[locale] || 0)
+      const isLast = index === allAffectedLocales.length - 1
+      if (allAffectedLocales.length === 1 || isLast)
+        console.logL(`${locale} (${diff > 0 ? '+' : ''}${diff})`)
+      else
+        console.logL(`${locale} (${diff > 0 ? '+' : ''}${diff}), `)
+    }
+    console.log()
   }
   return true
 }
@@ -144,6 +152,32 @@ export async function translateKeys(
   i18n: I18nConfig,
   withLocaleJsons?: Record<string, LocaleJson>,
 ): Promise<Record<string, LocaleJson>> {
+  const keysForLlm: Record<string, LocaleJson> = {}
+  const passthroughKeys: Record<string, LocaleJson> = {}
+
+  for (const locale in keysToTranslate) {
+    const allKeys = findMissingKeys(keysToTranslate[locale], {})
+    const nonEmpty: LocaleJson = {}
+    const empty: LocaleJson = {}
+    for (const key in allKeys) {
+      if (allKeys[key])
+        nonEmpty[key] = allKeys[key] as string
+      else
+        empty[key] = ''
+    }
+    if (Object.keys(nonEmpty).length > 0)
+      keysForLlm[locale] = nonEmpty
+    passthroughKeys[locale] = empty
+  }
+
+  if (Object.keys(keysForLlm).length === 0) {
+    const result: Record<string, LocaleJson> = {}
+    for (const locale in passthroughKeys)
+      result[locale] = mergeMissingTranslations({}, passthroughKeys[locale])
+
+    return result
+  }
+
   const provider = config.options.provider
   const modelId = config.options.model
   if (!provider || !modelId)
@@ -177,7 +211,7 @@ Example input:
 Example output:
 {"fr-FR": {"ui.home.title": "Accueil"}}`
 
-  const prompt = JSON.stringify(keysToTranslate)
+  const prompt = JSON.stringify(keysForLlm)
 
   const modelDefinition = availableModels[provider as Provider]?.find(m => m.value === modelId) as ModelDefinition | undefined
   const mode = modelDefinition?.mode || config.options.mode || 'auto'
@@ -205,10 +239,18 @@ Example output:
     mode: generateObjectMode,
   })
 
-  if (config.debug)
-    console.log('\n', ICONS.info, `System Prompt: ${system}`)
-  if (config.debug)
-    console.log('\n', ICONS.info, `Prompt: ${prompt}`)
+  // if (config.debug)
+  //   console.log('\n', ICONS.info, `System Prompt: ${system}`)
+  // if (config.debug)
+  //   console.log('\n', ICONS.info, `Prompt: ${prompt}`)
 
-  return translatedJson as Record<string, LocaleJson>
+  const result = { ...translatedJson }
+  for (const locale in passthroughKeys) {
+    if (result[locale])
+      result[locale] = mergeMissingTranslations(result[locale], passthroughKeys[locale])
+    else
+      result[locale] = mergeMissingTranslations({}, passthroughKeys[locale])
+  }
+
+  return result as Record<string, LocaleJson>
 }

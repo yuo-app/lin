@@ -14,6 +14,13 @@
 - [x] better context management
 - [x] **`check` command:** lint codebase for missing keys (compare to default locale json), `--fix` to add empty keys, `--remove-unused` to remove unused keys
 
+## v1.2.0
+
+- [x] **`sync` command:** rename old `translate` command to `sync`
+- [x] **NEW `translate` command:** the e2e magic command: `check -f` + default locale values from t('key', 'default value') + `sync`
+- [ ] add github action example with `translate`
+- [ ] batch size config for how many locales to translate at once
+
 ## later
 
 - [ ] `estimateTokens: boolean` config to enable/disable token estimation, show estimated tokens and ask before the llm call

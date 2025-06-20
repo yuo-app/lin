@@ -24,7 +24,7 @@ export default defineCommand({
 
     const undoData: Record<string, string> = JSON.parse(fs.readFileSync(undoFilepath, 'utf-8'))
 
-    await console.loading('Reverting changes...', async () => {
+    await console.loading('Reverting changes', async () => {
       for (const [filePath, content] of Object.entries(undoData)) {
         try {
           if (content === UNDO_FILE_NON_EXISTENT) {
@@ -42,7 +42,5 @@ export default defineCommand({
 
       fs.unlinkSync(undoFilepath)
     })
-
-    console.log(ICONS.success, 'Successfully reverted changes.')
   },
 })

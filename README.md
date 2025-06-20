@@ -68,21 +68,23 @@ export default defineConfig({
 > [!TIP]
 > Run `lin -h` and `lin <command> -h` to see all the options.
 
-- **`translate`**: Translate missing keys in your locale files with LLMs
-- **`add`**: Add a new key and its translations with LLMs
-- **`edit`**: Edit an existing key and its translations
-- **`del`**: Remove one or more keys
-- **`check`**: Validate locale files, check for missing/unused keys, or sort them, verify config
-- **`models`**: List available LLM models
-- **`undo`**: Revert the last change made by `translate`, `add`, `del`, `edit`, or `check`
+The main command is **`translate`**. It automates the entire process of finding new keys in your code, adding them to your default locale, and translating them into all other languages.
 
-### translate
+For it to work, you need to provide a default value when you use your translation function:
 
-The **translate** command syncs all locale JSON files with the default locale JSON file. It finds the missing keys in locales, and translates them.
+```js
+t('header.title', 'Default value')
+```
+
+Then, just run:
 
 ```bash
 lin translate
 ```
+
+`lin` will find `header.title`, add it to your default locale file with the value "Default value", and then translate it to all other locales.
+
+Use the [`with`](#with-in-config-and-cli) option to manage the LLM's context.
 
 To translate only specific locales, list them like this:
 
@@ -90,10 +92,51 @@ To translate only specific locales, list them like this:
 lin translate es fr
 ```
 
-You can also use the `translate` command to **add a new language**.
+To also remove unused keys from all locales, use the `--remove-unused` flag:
+
+```bash
+lin translate -r
+```
+
+### CI
+
+You can use `translate` in GitHub Actions. `lin` will automatically find new keys, add them to your locales, and translate them on every push to `main`.
+
+Here's an example workflow: **[.github/workflows/lin.yml](.github/workflows/lin.yml)**
+
+Don't forget to add your LLM provider API keys (e.g., `OPENAI_API_KEY`) to your repo secrets.
+
+---
+
+While `translate` covers most use cases, `lin` provides more granular commands for specific tasks:
+
+- **`sync`**: Syncs missing keys from your default locale to all other locales using LLMs.
+- **`add`**: Adds a new key and its translations manually.
+- **`edit`**: Edit an existing key and its translations.
+- **`del`**: Remove one or more keys.
+- **`check`**: Validate locale files, check for missing/unused keys, or sort them.
+- **`models`**: List available LLM models.
+- **`undo`**: Revert the last change made by `translate`, `sync`, `add`, `del`, `edit`, or `check`.
+- **`translate`**: `check --fix` + `sync`
+
+### sync
+
+The **sync** command syncs all locale JSON files with the default locale JSON file. It finds the missing keys in locales, and translates them.
+
+```bash
+lin sync
+```
+
+To sync only specific locales, list them like this:
+
+```bash
+lin sync es fr
+```
+
+You can also use the `sync` command to **add a new language**.
 
 1. First add the locale code to `locales` in the i18n config
-2. Then run `lin translate` and it will create the new locale JSON file
+2. Then run `lin sync` and it will create the new locale JSON file
 
 > [!NOTE]
 > There is some syntax around **locale codes**:
@@ -238,7 +281,7 @@ You can also run `lin check -S -f` or `lin check -S -r` to automatically fix iss
 
 ### undo
 
-`undo` reverts the last changes made by `translate`, `add`, `del`, `edit`, or `check`.
+`undo` reverts the last changes made by `translate`, `sync`, `add`, `del`, `edit`, or `check`.
 
 ```bash
 lin undo
@@ -274,7 +317,7 @@ See [`src/config/i18n.ts`](./src/config/i18n.ts) for a full list of configuratio
 
 ### LLM config
 
-*for the `add` and `translate` commands*
+*for the `add` and `sync` commands*
 
 `lin` uses the [Vercel AI SDK](https://sdk.vercel.ai/) to support multiple LLM providers. The currently supported providers are:
 
@@ -337,7 +380,7 @@ You can then activate a preset using the `--model` flag. Any other CLI flags wil
 
 ```bash
 # Use the 'creative-claude' preset
-lin translate -m creative-claude
+lin sync -m creative-claude
 
 # Use the 'fast-deepseek' preset, but override the temperature
 lin add ui.new.feature "A new feature" -m fast-deepseek -t 0.6
@@ -373,11 +416,11 @@ export default defineConfig({
 
 ```bash
 # Override config and use 'both' profile for this command
-lin translate --with both
+lin sync --with both
 
 # Provide specific locales for context
 lin add ui.new.key New Key -w es-ES -w fr-FR
 
 # Force no additional context, overriding any config
-lin translate --no-with
+lin sync --no-with
 ```
