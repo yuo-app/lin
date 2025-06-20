@@ -5,10 +5,6 @@ import { saveUndoState } from '@/utils/undo'
 import checkCommand from './check'
 import syncCommand from './sync'
 
-function t(key: string, defaultMessage: string) {
-  return defaultMessage
-}
-
 export default defineCommand({
   meta: {
     name: 'translate',
@@ -18,7 +14,7 @@ export default defineCommand({
     ...allArgs,
     'locale': {
       type: 'positional',
-      description: `the locales to translate to ${t('ui.test.message', 'hello user!')}`,
+      description: 'the locales to translate',
       required: false,
       valueHint: 'all | def | en | en-US',
     },

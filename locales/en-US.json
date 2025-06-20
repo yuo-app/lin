@@ -137,9 +137,6 @@
       "region": "Region",
       "timezone": "Timezone",
       "title": "Settings"
-    },
-    "test": {
-      "message": "hello user!"
     }
   }
 }
