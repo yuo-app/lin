@@ -102,7 +102,50 @@ lin translate -r
 
 You can use `translate` in GitHub Actions. `lin` will automatically find new keys, add them to your locales, and translate them on every push to `main`.
 
-Here's an example workflow: **[.github/workflows/lin.yml](.github/workflows/lin.yml)**
+Here's an example workflow:
+
+```yaml
+# .github/workflows/lin.yml
+name: Lin Translate
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  translate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run Lin Translate
+        run: bunx lin translate
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # Add other provider API keys as needed
+          # GOOGLE_GENERATIVE_AI_API_KEY: ${{ secrets.GOOGLE_GENERATIVE_AI_API_KEY }}
+          # GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          # CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add locales/
+          if ! git diff --staged --quiet; then
+            git commit -m "i18n: auto-translate locales"
+            git push
+          fi
+```
 
 Don't forget to add your LLM provider API keys (e.g., `OPENAI_API_KEY`) to your repo secrets.
 
