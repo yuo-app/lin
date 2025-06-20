@@ -70,10 +70,9 @@ export const availableModels = {
     { value: 'claude-3-5-haiku-latest', alias: 'Claude 3.5 Haiku', iq: 2, speed: 3 },
   ],
   google: [
-    { value: 'gemini-2.5-pro-preview-06-05', alias: 'Gemini 2.5 Pro', iq: 5, speed: 3 },
-    { value: 'gemini-2.5-flash-preview-05-20', alias: 'Gemini 2.5 Flash', iq: 4, speed: 4 },
-    { value: 'gemini-2.0-flash', alias: 'Gemini 2.0 Flash', iq: 3, speed: 5 },
-    { value: 'gemini-2.0-flash-lite', alias: 'Gemini 2.0 Flash Lite', iq: 2, speed: 5 },
+    { value: 'gemini-2.5-pro', alias: 'Gemini 2.5 Pro', iq: 5, speed: 3 },
+    { value: 'gemini-2.5-flash', alias: 'Gemini 2.5 Flash', iq: 4, speed: 4 },
+    { value: 'gemini-2.5-flash-lite-preview-06-17', alias: 'Gemini 2.5 Flash Lite', iq: 3, speed: 5 },
   ],
   xai: [
     { value: 'grok-3', alias: 'Grok 3', iq: 4, speed: 4 },
