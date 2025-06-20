@@ -22,11 +22,8 @@ jobs:
       - name: Build
         run: bun run build
 
-      - name: Link Lin
-        run: bun link @yuo-app/lin
-
       - name: Run Lin Translate
-        run: lin translate
+        run: bun bin/lin.mjs translate
         env:
           # OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           # Add other provider API keys as needed
