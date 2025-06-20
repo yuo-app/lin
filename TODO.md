@@ -18,7 +18,7 @@
 
 - [x] **`sync` command:** rename old `translate` command to `sync`
 - [x] **NEW `translate` command:** the e2e magic command: `check -f` + default locale values from t('key', 'default value') + `sync`
-- [ ] add github action example with `translate`
+- [x] add github action example with `translate`
 - [ ] batch size config for how many locales to translate at once
 
 ## later
