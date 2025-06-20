@@ -41,27 +41,42 @@ See [LLM Config](#llm-config).
 - Astro (`astro.config.mjs` or `astro-i18next.config.mjs`)
 - Remix (`package.json`)
 
-If your setup is not detected automatically, you can specify the integration with using the `integration` config, and `lin` will only load the specified framework.
+If your setup is not detected automatically, you can specify the integration using the `integration` config, and `lin` will only try to load the specified framework.
 
-Or you can create a `lin.config.ts` (or `i18n.config.ts` root) to tell `lin` about your i18n setup:
+Or you can create a configuration file to tell `lin` about your i18n setup. You have two options:
 
-- **locales**: an array of locales to translate
-- **defaultLocale**: the default from the locales array
-- **directory**: the folder with the locale JSON files
+1. **Use `lin.config.ts`**:
+    Add an `i18n` object to your main `lin.config.ts` file.
 
-Example `lin.config.ts`:
+    Example `lin.config.ts`:
 
-```ts
-import { defineConfig } from '@yuo-app/lin'
+    ```ts
+    import { defineConfig } from '@yuo-app/lin'
 
-export default defineConfig({
-  i18n: {
-    locales: ['en-US', 'es-ES'],
-    defaultLocale: 'en-US',
-    directory: 'locales',
-  }
-})
-```
+    export default defineConfig({
+      i18n: {
+        locales: ['en-US', 'es-ES'],
+        defaultLocale: 'en-US',
+        directory: 'locales',
+      },
+      // ... other lin config
+    })
+    ```
+
+2. **Use `i18n.config.ts`**:
+    Or if you don't plan to use other `lin` config, just create a `i18n.config.ts` file.
+
+    Example `i18n.config.ts`:
+
+    ```ts
+    import { defineI18nConfig } from '@yuo-app/lin'
+
+    export default defineI18nConfig({
+      locales: ['en-US', 'es-ES'],
+      defaultLocale: 'en-US',
+      directory: 'locales',
+    })
+    ```
 
 ## usage
 
@@ -98,6 +113,12 @@ To also remove unused keys from all locales, use the `--remove-unused` flag:
 lin translate -r
 ```
 
+To make the output more minimal (for CI or scripts), use the `--silent` flag:
+
+```bash
+lin translate -S
+```
+
 ### CI
 
 You can use `translate` in GitHub Actions. `lin` will automatically find new keys, add them to your locales, and translate them on every push to `main`.
@@ -120,17 +141,17 @@ jobs:
       contents: write
 
     steps:
-      - name: Checkout repository
+      - name: checkout repo
         uses: actions/checkout@v4
 
-      - name: Set up Bun
+      - name: setup bun
         uses: oven-sh/setup-bun@v2
 
-      - name: Install dependencies
+      - name: install deps
         run: bun install
 
-      - name: Run Lin Translate
-        run: bunx lin translate
+      - name: lin translate
+        run: bunx lin translate -S
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           # Add other provider API keys as needed
@@ -138,7 +159,7 @@ jobs:
           # GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           # CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
 
-      - name: Commit and push changes
+      - name: commit and push changes
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
@@ -149,20 +170,20 @@ jobs:
           fi
 ```
 
-Don't forget to add your LLM provider API keys (e.g., `OPENAI_API_KEY`) to your repo secrets.
+Don't forget to add your LLM provider API keys to your repo secrets.
 
 ---
 
-While `translate` covers most use cases, `lin` provides more granular commands for specific tasks:
+While `translate` is the most end-to-end command, `lin` provides more granular commands for specific tasks:
 
-- **`sync`**: Syncs missing keys from your default locale to all other locales using LLMs.
-- **`add`**: Adds a new key and its translations manually.
-- **`edit`**: Edit an existing key and its translations.
+- **`translate`**: `check --fix` + `sync`
+- **`sync`**: Translates missing keys from your default locale to all other locales using LLMs.
+- **`add`**: Adds a new key to your default locale and translates it to all other locales using LLMs.
+- **`edit`**: Edit an existing key and its translations manually.
 - **`del`**: Remove one or more keys.
-- **`check`**: Validate locale files, check for missing/unused keys, or sort them.
+- **`check`**: Validate locale files, check for missing/unused keys, or sort them. Quick config check.
 - **`models`**: List available LLM models.
 - **`undo`**: Revert the last change made by `translate`, `sync`, `add`, `del`, `edit`, or `check`.
-- **`translate`**: `check --fix` + `sync`
 
 ### sync
 
@@ -204,10 +225,10 @@ lin add ui.button.save Text of the save button
 > [!NOTE]
 > if the key is nested, it should be in dot notation like `ui.button.save`
 
-To add a key to only specific locales, use the `-l` flag. You can repeat it for multiple locales.
+To add a key to only specific locales, use the `-l` flag. You can repeat the flag for multiple locales.
 
 ```bash
-lin add -l es -l fr ui.button.save Text of the save button
+lin add -l es -l fr -l def ui.button.save Text of the save button
 ```
 
 This will add the key to `es` and `fr` locales (and the default locale).
@@ -224,14 +245,16 @@ This will add the key to `es` and `fr` locales (and the default locale).
 
 `edit` can be used to quickly edit an existing key in the default locale and all the other locales.
 
+This is a niche command, but maybe useful for quickly editing a specific key without having to search for it, or for LLM agents if you don't want to feed the entire locale json file, or have them edit the files themselves.
+
 ```bash
 lin edit ui.button.save Text of the save button
 ```
 
-To edit a key in only specific locales, use the `-l` flag. You can repeat it for multiple locales.
+To edit a key in only specific locales, use the `-l` flag.
 
 ```bash
-lin edit -l es -l fr ui.button.save Text of the save button
+lin edit -l en ui.button.save Text of the save button
 ```
 
 ### del
@@ -271,7 +294,7 @@ To remove unused keys from all locale files, use the `--remove-unused` flag.
 lin check -r
 ```
 
-You can also use `check` to find missing keys in your locales compared to the default locale file with the `--keys` flag (this skips the parsing):
+You can also use `check` to find missing keys in your locales compared to the default locale file with the `--keys` flag (this skips the codebase parsing):
 
 ```bash
 lin check -k
@@ -298,7 +321,7 @@ lin check -i
 
 ### check with git hooks
 
-A great way to enforce i18n key consistency is to run `lin check` automatically before each commit. You can use `simple-git-hooks` with `lint-staged` to set this up easily.
+A great way to enforce i18n consistency is to run `lin check` automatically before each commit. You can use `simple-git-hooks` with `lint-staged` to set this up easily.
 
 Add this to your `package.json`:
 
@@ -322,7 +345,7 @@ npm i -D lint-staged simple-git-hooks
 npx simple-git-hooks
 ```
 
-You can also run `lin check -S -f` or `lin check -S -r` to automatically fix issues.
+You can also run `lin check -S -f` or `lin check -S -r` to automatically fix issues, or even `lin translate -S` to translate them too.
 
 ### undo
 
@@ -347,7 +370,7 @@ To see a list of all available LLM providers and models:
 `lin` automatically saves a backup of any files modified by the `add`, `del`, `check`, and `translate` commands. You can disable this feature with the `--no-undo` flag, or by setting `undo: false` in your config file.
 
 > [!IMPORTANT]
-> Add the `.lin` directory to your `.gitignore` file.
+> Otherwise, add the `.lin` directory to your `.gitignore` file.
 
 ### config file
 
@@ -374,9 +397,9 @@ See [`src/config/i18n.ts`](./src/config/i18n.ts) for a full list of configuratio
 - `groq`
 - `azure`
 
-You need to specify the model in your configuration or via the `--model` CLI flag. The format is `provider:model_id` (e.g., `openai:gpt-4.1-mini`).
+You need to specify the model and the provider in your configuration or via the `--model` (`-m`) and `--provider` (`-p`) CLI flags.
 
-Make sure the corresponding API key is set in your environment variables (e.g., `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`).
+Make sure the corresponding API key is set in your env variables (e.g., `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`).
 
 Example `lin.config.ts` with LLM options:
 
@@ -384,7 +407,6 @@ Example `lin.config.ts` with LLM options:
 import { defineConfig } from '@yuo-app/lin'
 
 export default defineConfig({
-  // ... i18n config
   options: {
     provider: 'openai',
     model: 'gpt-4.1-mini',
@@ -397,7 +419,7 @@ All options under `options` are passed to the Vercel AI SDK.
 
 #### `presets` in config and CLI
 
-To avoid long CLI commands, you can define and name different model configurations in your `lin.config.ts` file.
+To save LLM options, you can define and name different model configurations in your `lin.config.ts` file.
 
 ```ts
 // lin.config.ts
@@ -443,7 +465,7 @@ You can set this in your `lin.config.ts` using `batchSize` or use the `--batchSi
 
 #### `with` in config and CLI
 
-The `with` option allows you to control which locale files are included in the LLM's context window. This can significantly improve translation quality by providing the model with more context about your project's tone and style.
+The `with` option allows you to control which locale files are included in the LLM's context window. This can significantly improve translation quality by providing the model with more context about your project's wording and style.
 
 You can set this in your `lin.config.ts` using `with` or use the `--with` (or `-w`) flag in the CLI. The CLI flag will always override the config file setting.
 
