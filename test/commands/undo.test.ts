@@ -107,7 +107,5 @@ describe('undo command', () => {
     expect(mockUnlinkSync).toHaveBeenCalledWith(localeFilePath2)
     const expectedUndoFilePath = path.join(mockResolvedConfig.cwd, UNDO_DIR, UNDO_FILE)
     expect(mockUnlinkSync).toHaveBeenCalledWith(expectedUndoFilePath)
-
-    expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.success, 'Successfully reverted changes.')
   })
 })

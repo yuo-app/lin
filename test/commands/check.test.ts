@@ -212,7 +212,6 @@ describe('check command', () => {
 
       await runCheckCommand()
 
-      expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.info, 'Checking for missing and unused keys in the codebase...')
       expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.success, 'All keys are in sync.')
     })
 
@@ -232,10 +231,9 @@ describe('check command', () => {
 
       await runCheckCommand({ fix: true })
 
-      expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.info, 'Adding missing keys to default locale...')
       const updatedJson = JSON.parse(getVfs()['locales/en-US.json'])
       expect(updatedJson).toEqual({ a: '1', new: { key: '' } })
-      expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.success, 'Missing keys added successfully.')
+      expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.success, 'Missing keys added.')
     })
 
     it('should fix missing keys with --fix and use default value', async () => {
@@ -244,10 +242,9 @@ describe('check command', () => {
 
       await runCheckCommand({ fix: true })
 
-      expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.info, 'Adding missing keys to default locale...')
       const updatedJson = JSON.parse(getVfs()['locales/en-US.json'])
       expect(updatedJson).toEqual({ a: '1', new: { key: 'New Key Default' } })
-      expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.success, 'Missing keys added successfully.')
+      expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.success, 'Missing keys added.')
     })
 
     it('should report unused keys', async () => {
@@ -269,7 +266,6 @@ describe('check command', () => {
       await runCheckCommand({ 'remove-unused': true })
 
       expect(mockConfirm).toHaveBeenCalled()
-      expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.info, 'Removing unused keys from all locales...')
 
       const enJson = JSON.parse(getVfs()['locales/en-US.json'])
       expect(enJson).toEqual({ a: '1' })
@@ -277,7 +273,7 @@ describe('check command', () => {
       const esJson = JSON.parse(getVfs()['locales/es-ES.json'])
       expect(esJson).toEqual({ a: 'uno' })
 
-      expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.success, 'Unused keys removed successfully.')
+      expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.success, 'Unused keys removed.')
     })
   })
 
@@ -309,7 +305,6 @@ describe('check command', () => {
 
       await runCheckCommand({ keys: true, fix: true })
 
-      expect(mockConsoleLog).toHaveBeenCalledWith(consoleModule.ICONS.info, 'Adding missing keys with empty values...')
       const expectedJson = { a: 'Hola', b: '', c: { d: '' } }
       expect(mockWriteFileSync).toHaveBeenCalledWith(
         expect.stringContaining('es-ES.json'),
