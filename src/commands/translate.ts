@@ -18,7 +18,7 @@ export default defineCommand({
     ...allArgs,
     'locale': {
       type: 'positional',
-      description: `the locales to translate to ${t('ui.test.message', 'hello')}`,
+      description: `the locales to translate to ${t('ui.test.message', 'hello user!')}`,
       required: false,
       valueHint: 'all | def | en | en-US',
     },
