@@ -23,6 +23,24 @@
 
 ## later
 
+- [ ] vercel ai sdk v5
+- [ ] custom llm system prompt:
+
+  ```ts
+  {
+    system: (targetLocale, ...args) => `...`
+    system: (targetLocale, ...args) => {
+      switch (targetLocale) {
+        case 'ko-KR':
+          return `...`
+        default:
+          return `...`
+      }
+    }
+  }
+  ```
+
+- [ ] config for llm reasoning tokens and reasoning effort
 - [ ] `estimateTokens: boolean` config to enable/disable token estimation, show estimated tokens and ask before the llm call
 - [ ] **`verify` command:** reflect on the quality of the translations, check if the translations are accurate
 - [ ] **`convert` command:** convert a project to use i18n by extracting all the strings from the code and adding them to the locale json files.
