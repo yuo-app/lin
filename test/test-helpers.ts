@@ -8,6 +8,7 @@ export const mockResolvedConfig: DeepRequired<ResolvedConfig> = {
   debug: false,
   context: '',
   with: 'none',
+  batchSize: 10,
   undo: false,
   integration: '',
   parser: {

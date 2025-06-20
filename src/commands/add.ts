@@ -54,6 +54,7 @@ export default defineCommand({
   async run({ args }) {
     const { config } = await resolveConfig(args)
     const i18n = config.i18n
+    const batchSize = config.batchSize || Number.POSITIVE_INFINITY
 
     const key = args.key as string
     const positionalArgs = [...(args._ as string[])]
@@ -91,25 +92,6 @@ export default defineCommand({
     const localesToCheck = catchError(normalizeLocales)(localesToCheckRaw, i18n)
 
     const withOption = args.with !== undefined ? args.with : config.with
-    const withLocales = resolveContextLocales(withOption as any, i18n, localesToCheck)
-    const withLocaleJsons: Record<string, LocaleJson> = {}
-    for (const locale of withLocales) {
-      try {
-        withLocaleJsons[locale] = JSON.parse(fs.readFileSync(r(`${locale}.json`, i18n), { encoding: 'utf8' }))
-      }
-      catch (error: any) {
-        if (config.debug) {
-          if (error.code === 'ENOENT')
-            console.log(ICONS.info, `Skipping context for **${locale}** *(file not found)*`)
-          else
-            console.log(ICONS.warning, `Could not read or parse context file for locale **${locale}**. Skipping.`)
-        }
-      }
-    }
-
-    const loadedContextLocales = Object.keys(withLocaleJsons)
-    if (loadedContextLocales.length > 0)
-      console.log(ICONS.info, `With: ${loadedContextLocales.map(l => `**${l}**`).join(', ')}`)
 
     if (args.debug) {
       console.log(ICONS.note, `Provider: \`${config.options.provider}\``)
@@ -120,91 +102,133 @@ export default defineCommand({
 
     const keyCountsBefore: Record<string, number> = {}
     const keyCountsAfter: Record<string, number> = {}
-    const keysToTranslate: Record<string, LocaleJson> = {}
-    const keysToTranslateAndDefault: Record<string, LocaleJson> = {}
     const translationsToWrite: Record<string, LocaleJson> = {}
-    const toOverwrite: string[] = []
-    for (const locale of localesToCheck) {
-      let localeJson: LocaleJson
-      try {
-        localeJson = JSON.parse(fs.readFileSync(r(`${locale}.json`, i18n), { encoding: 'utf8' }))
+    const finalTranslationsMap: Record<string, LocaleJson> = {}
+
+    await console.loading(`Adding \`${key}\` to ${localesToCheck.map(l => `**${l}**`).join(', ')}`, async () => {
+      const localeBatches: string[][] = []
+      if (batchSize > 0) {
+        for (let i = 0; i < localesToCheck.length; i += batchSize)
+          localeBatches.push(localesToCheck.slice(i, i + batchSize))
       }
-      catch (error: any) {
-        if (error.code === 'ENOENT') {
-          console.log(ICONS.warning, `File not found for locale **${locale}**. Creating a new one.`)
-          localeJson = {}
-        }
-        else {
-          throw error
-        }
+      else {
+        localeBatches.push(localesToCheck)
       }
 
-      if (findNestedKey(localeJson, args.key).value !== undefined) {
-        if (args.force) {
-          toOverwrite.push(locale)
-        }
-        else {
-          console.log(ICONS.info, `Skipped: **${locale}**`)
-          continue
-        }
-      }
-
-      if (locale !== i18n.defaultLocale)
-        keysToTranslate[locale] = { [args.key]: translation }
-      keysToTranslateAndDefault[locale] = { [args.key]: translation }
-      keyCountsBefore[locale] = countKeys(localeJson)
-    }
-
-    if (toOverwrite.length > 0)
-      console.log(ICONS.info, `Overwriting translation for locale${toOverwrite.length > 1 ? 's' : ''}: ${toOverwrite.map(l => `**${l}**`).join(', ')}`)
-
-    if (args.debug)
-      console.log(ICONS.info, `To translate: ${JSON.stringify(keysToTranslate)}`)
-
-    if (Object.keys(keysToTranslateAndDefault).length > 0) {
-      await console.loading(`Adding \`${key}\` to ${Object.keys(keysToTranslateAndDefault).map(l => `**${l}**`).join(', ')}`, async () => {
-        let translations: Record<string, LocaleJson>
-        if (translation === '') {
-          if (args.debug)
-            console.log(ICONS.info, 'Empty translation provided, skipping LLM call.')
-          translations = {}
-          for (const locale of Object.keys(keysToTranslateAndDefault))
-            translations[locale] = { [key]: translation }
-        }
-        else {
-          translations = Object.keys(keysToTranslate).length > 0
-            ? await translateKeys(keysToTranslate, config, i18n, withLocaleJsons)
-            : {}
-
-          if (keysToTranslateAndDefault[i18n.defaultLocale])
-            translations[i18n.defaultLocale] = keysToTranslateAndDefault[i18n.defaultLocale]
-        }
-
-        if (args.debug)
-          console.log(ICONS.info, `Translations: ${JSON.stringify(translations)}`)
-
-        for (const [locale, newTranslations] of Object.entries(translations)) {
-          const localeFilePath = r(`${locale}.json`, i18n)
-
-          let existingTranslations = {}
+      for (const batch of localeBatches) {
+        const withLocales = resolveContextLocales(withOption as any, i18n, batch)
+        const withLocaleJsons: Record<string, LocaleJson> = {}
+        for (const locale of withLocales) {
           try {
-            existingTranslations = JSON.parse(fs.readFileSync(localeFilePath, { encoding: 'utf8' }))
+            withLocaleJsons[locale] = JSON.parse(fs.readFileSync(r(`${locale}.json`, i18n), { encoding: 'utf8' }))
           }
           catch (error: any) {
-            if (error.code !== 'ENOENT')
+            if (config.debug) {
+              if (error.code === 'ENOENT')
+                console.log(ICONS.info, `Skipping context for **${locale}** *(file not found)*`)
+              else
+                console.log(ICONS.warning, `Could not read or parse context file for locale **${locale}**. Skipping.`)
+            }
+          }
+        }
+        const loadedContextLocales = Object.keys(withLocaleJsons)
+        if (loadedContextLocales.length > 0)
+          console.log(ICONS.info, `With: ${loadedContextLocales.map(l => `**${l}**`).join(', ')}`)
+
+        const keysToTranslate: Record<string, LocaleJson> = {}
+        const keysToTranslateAndDefault: Record<string, LocaleJson> = {}
+        const toOverwrite: string[] = []
+
+        for (const locale of batch) {
+          let localeJson: LocaleJson
+          try {
+            localeJson = JSON.parse(fs.readFileSync(r(`${locale}.json`, i18n), { encoding: 'utf8' }))
+          }
+          catch (error: any) {
+            if (error.code === 'ENOENT') {
+              console.log(ICONS.warning, `File not found for locale **${locale}**. Creating a new one.`)
+              localeJson = {}
+            }
+            else {
               throw error
+            }
           }
 
-          const finalTranslations = mergeMissingTranslations(existingTranslations, newTranslations)
-          translationsToWrite[localeFilePath] = finalTranslations
-          keyCountsAfter[locale] = countKeys(finalTranslations)
-        }
-      })
+          keyCountsBefore[locale] = countKeys(localeJson)
 
+          if (findNestedKey(localeJson, args.key).value !== undefined) {
+            if (args.force) {
+              toOverwrite.push(locale)
+            }
+            else {
+              console.log(ICONS.info, `Skipped: **${locale}**`)
+              continue
+            }
+          }
+
+          if (locale !== i18n.defaultLocale)
+            keysToTranslate[locale] = { [args.key]: translation }
+
+          keysToTranslateAndDefault[locale] = { [args.key]: translation }
+        }
+
+        if (toOverwrite.length > 0)
+          console.log(ICONS.info, `Overwriting translation for locale${toOverwrite.length > 1 ? 's' : ''}: ${toOverwrite.map(l => `**${l}**`).join(', ')}`)
+
+        if (args.debug)
+          console.log(ICONS.info, `To translate: ${JSON.stringify(keysToTranslate)}`)
+
+        if (Object.keys(keysToTranslateAndDefault).length > 0) {
+          let translations: Record<string, LocaleJson>
+          if (translation === '') {
+            if (args.debug)
+              console.log(ICONS.info, 'Empty translation provided, skipping LLM call.')
+            translations = {}
+            for (const locale of Object.keys(keysToTranslateAndDefault))
+              translations[locale] = { [key]: translation }
+          }
+          else {
+            translations = Object.keys(keysToTranslate).length > 0
+              ? await translateKeys(keysToTranslate, config, i18n, withLocaleJsons)
+              : {}
+
+            if (keysToTranslateAndDefault[i18n.defaultLocale])
+              translations[i18n.defaultLocale] = keysToTranslateAndDefault[i18n.defaultLocale]
+          }
+
+          if (args.debug)
+            console.log(ICONS.info, `Translations: ${JSON.stringify(translations)}`)
+
+          for (const [locale, newTranslations] of Object.entries(translations)) {
+            const localeFilePath = r(`${locale}.json`, i18n)
+
+            let existingTranslations = {}
+            try {
+              existingTranslations = JSON.parse(fs.readFileSync(localeFilePath, { encoding: 'utf8' }))
+            }
+            catch (error: any) {
+              if (error.code !== 'ENOENT')
+                throw error
+            }
+
+            const finalTranslations = mergeMissingTranslations(existingTranslations, newTranslations)
+            finalTranslationsMap[locale] = finalTranslations
+            keyCountsAfter[locale] = countKeys(finalTranslations)
+          }
+        }
+      }
+    })
+
+    for (const [locale, finalTranslations] of Object.entries(finalTranslationsMap)) {
+      const localeFilePath = r(`${locale}.json`, i18n)
+      translationsToWrite[localeFilePath] = finalTranslations
+    }
+
+    if (Object.keys(translationsToWrite).length > 0) {
       if (!args.silent)
         console.log(ICONS.note, `Keys: ${keyCountsAfter[i18n.defaultLocale]}`)
 
-      const result = await deletionGuard(keyCountsBefore, keyCountsAfter, locales, args.silent)
+      const result = await deletionGuard(keyCountsBefore, keyCountsAfter, localesToCheck, args.silent)
       if (!result)
         return
 

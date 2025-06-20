@@ -18,6 +18,14 @@ export function normalizeArgs(inputArgs: Record<string, any>): Partial<Config> {
   if (inputArgs.with !== undefined)
     outputConfig.with = inputArgs.with
 
+  if (inputArgs.batchSize !== undefined) {
+    const bs = Number(inputArgs.batchSize)
+    if (Number.isNaN(bs))
+      handleCliError(`Invalid batchSize "${inputArgs.batchSize}"`)
+
+    outputConfig.batchSize = bs
+  }
+
   if (inputArgs.integration !== undefined) {
     if (inputArgs.integration && !integrations.includes(inputArgs.integration as any)) {
       handleCliError(

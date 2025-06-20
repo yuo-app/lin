@@ -133,6 +133,12 @@ export interface LinConfig {
   with: 'none' | 'def' | 'tgt' | 'both' | 'all' | (string & {}) | string[]
 
   /**
+   * The number of locales to translate in a single batch.
+   * @default 10
+   */
+  batchSize: number
+
+  /**
    * LLM options
    */
   options: LLMProviderOptions

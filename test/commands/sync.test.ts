@@ -480,4 +480,33 @@ describe('sync command', () => {
       { 'ja-JP': { context: { example: 'コンテキスト例' } } },
     )
   })
+
+  it('should process locales in batches based on batchSize', async () => {
+    setupVirtualFile('locales/fr-FR.json', { greeting: 'Bonjour' })
+    setupVirtualFile('locales/de-DE.json', { greeting: 'Hallo' })
+
+    const tempI18nConfig = { ...mockResolvedConfig.i18n, locales: ['en-US', 'es-ES', 'fr-FR', 'de-DE'] }
+    const tempConfig = { ...mockResolvedConfig, i18n: tempI18nConfig, batchSize: 1 }
+    ;(resolveConfig as Mock).mockResolvedValue({ config: tempConfig })
+
+    mockTranslateKeys.mockImplementation(async (keysToTranslate) => {
+      const translated: Record<string, any> = {}
+      for (const locale in keysToTranslate) {
+        translated[locale] = {}
+        for (const keyPath in keysToTranslate[locale])
+          translated[locale][keyPath] = `${(keysToTranslate[locale] as any)[keyPath]} (${locale})`
+      }
+      return translated
+    })
+
+    const args = {
+      ...baseArgsToRun,
+      _: [],
+      locale: 'all',
+    }
+
+    await syncCommand.run!({ args } as any)
+
+    expect(mockTranslateKeys).toHaveBeenCalledTimes(3)
+  })
 })

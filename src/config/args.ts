@@ -9,6 +9,7 @@ type LLMArgs = Omit<ConfigToArgDef<LinConfig>, 'options' | 'i18n'> & {
   model: StringArgDef
   mode: StringArgDef
   temperature: StringArgDef
+  batchSize: StringArgDef
 }
 
 export const commonArgs = {
@@ -59,6 +60,11 @@ export const llmArgs = {
     alias: 'm',
     type: 'string',
     description: 'the model to use (e.g., gpt-4.1-mini)',
+  },
+  batchSize: {
+    alias: 'b',
+    type: 'string',
+    description: 'the number of locales to process in a single batch',
   },
   mode: {
     type: 'string',

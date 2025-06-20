@@ -37,6 +37,7 @@ export const DEFAULT_CONFIG = {
   context: '',
   integration: '',
   with: 'none',
+  batchSize: 10,
 
   options: {
     provider: 'openai',

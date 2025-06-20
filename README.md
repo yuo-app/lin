@@ -435,6 +435,12 @@ lin add ui.new.feature "A new feature" -m fast-deepseek -t 0.6
 
 This simple string is directly added to the system prompt. Use it to provide extra information to the LLM about your project.
 
+#### `batchSize` in config and CLI
+
+The `batchSize` option controls how many target locale files are sent to the LLM for translation in a single request. This can be useful for projects with many languages.
+
+You can set this in your `lin.config.ts` using `batchSize` or use the `--batchSize` (or `-b`) flag in the CLI. The CLI flag will always override the config file setting.
+
 #### `with` in config and CLI
 
 The `with` option allows you to control which locale files are included in the LLM's context window. This can significantly improve translation quality by providing the model with more context about your project's tone and style.

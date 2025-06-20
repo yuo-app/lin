@@ -160,6 +160,7 @@ describe('llm utils', () => {
       undo: false,
       context: 'Test context about the project.',
       with: 'none',
+      batchSize: 10,
       integration: '',
       parser: {
         input: ['src/**/*.{js,jsx,ts,tsx,vue,svelte}'],

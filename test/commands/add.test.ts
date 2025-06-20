@@ -664,4 +664,39 @@ describe('add command', () => {
       { 'ja-JP': { context: { example: 'コンテキスト例' } } },
     )
   })
+
+  it('should compute correct diff count for added key', async () => {
+    const args = {
+      ...baseArgsToRun,
+      key: 'diff.count',
+      _: ['diff.count', 'Diff Count Translation'],
+      locale: ['en-US'],
+    }
+
+    await addCommand.run!({ args } as any)
+
+    expect(mockDeletionGuard).toHaveBeenCalled()
+    const before = mockDeletionGuard.mock.calls[0][0]
+    const after = mockDeletionGuard.mock.calls[0][1]
+    expect(after['en-US'] - before['en-US']).toBe(1)
+  })
+
+  it('should process locales in batches based on batchSize', async () => {
+    const tempI18nConfig = { ...mockResolvedConfig.i18n, locales: ['en-US', 'es-ES', 'fr-FR'] }
+    const tempConfig = { ...mockResolvedConfig, i18n: tempI18nConfig, batchSize: 1 }
+    ;(resolveConfig as Mock).mockResolvedValue({ config: tempConfig })
+
+    setupVirtualFile('locales/fr-FR.json', { existing: { key: 'Bonjour' } })
+
+    const args = {
+      ...baseArgsToRun,
+      key: 'batch.test',
+      _: ['batch.test', 'Batch test translation'],
+      locale: 'all',
+    }
+
+    await addCommand.run!({ args } as any)
+
+    expect(mockTranslateKeys).toHaveBeenCalledTimes(2)
+  })
 })
