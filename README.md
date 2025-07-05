@@ -331,7 +331,7 @@ Add this to your `package.json`:
     "pre-commit": "npx lint-staged"
   },
   "lint-staged": {
-    "{src/**/*.{js,jsx,ts,tsx,vue,svelte},locales/**/*.json}": "lin check -S"
+    "{src/**/*.{js,jsx,ts,tsx,vue,svelte,astro},locales/**/*.json}": "lin check -S"
   }
 }
 ```

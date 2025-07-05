@@ -12,7 +12,7 @@ export const mockResolvedConfig: DeepRequired<ResolvedConfig> = {
   undo: false,
   integration: '',
   parser: {
-    input: ['src/**/*.{js,jsx,ts,tsx,vue,svelte}'],
+    input: ['src/**/*.{js,jsx,ts,tsx,vue,svelte,astro}'],
   },
   i18n: {
     locales: ['en-US', 'es-ES'],

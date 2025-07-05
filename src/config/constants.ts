@@ -48,7 +48,7 @@ export const DEFAULT_CONFIG = {
   },
 
   parser: {
-    input: ['src/**/*.{js,jsx,ts,tsx,vue,svelte}'],
+    input: ['src/**/*.{js,jsx,ts,tsx,vue,svelte,astro}'],
   },
 } satisfies Config
 

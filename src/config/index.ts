@@ -4,6 +4,7 @@ import type * as ConfigTypes from './types'
 import process from 'node:process'
 import deepmerge from 'deepmerge'
 import { loadConfig } from 'unconfig'
+import { SvelteLexer } from '../parsers'
 import { handleCliError } from './../utils'
 import * as ConfigConstants from './constants'
 import { normalizeArgs } from './helpers'
@@ -112,6 +113,17 @@ export async function resolveConfig(
     ],
     { arrayMerge: (_t, s) => s },
   ) as DeepRequired<ConfigTypes.ResolvedConfig>
+
+  const isSvelteProject = finalMergedConfig.integration === 'svelte' || finalMergedConfig.parser.input.some(glob => glob.includes('.svelte'))
+  const hasCustomSvelteLexer = loadedFromFileConfig.parser?.lexers?.svelte
+
+  if (isSvelteProject && !hasCustomSvelteLexer) {
+    if (!finalMergedConfig.parser.lexers) {
+      (finalMergedConfig.parser as any).lexers = {}
+
+      ;(finalMergedConfig.parser.lexers as any).svelte = [SvelteLexer]
+    }
+  }
 
   if (finalMergedConfig.options.provider !== 'azure') {
     delete (finalMergedConfig.options as any).resourceName

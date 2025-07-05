@@ -23,6 +23,7 @@
 
 ## later
 
+- [ ] add a ton of parser tests, like do we even need i18next-parser if it fails randomly and we only need key and default value?
 - [ ] vercel ai sdk v5
 - [ ] custom llm system prompt:
 

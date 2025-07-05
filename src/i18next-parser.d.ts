@@ -14,4 +14,10 @@ declare module 'i18next-parser' {
   }
 
   export const parser: typeof Parser
+
+  export class BaseLexer {
+    constructor(options?: { functions?: string[] })
+    functionPattern(): string
+    functions: string[]
+  }
 }

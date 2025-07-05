@@ -71,7 +71,7 @@ export type Integration = (typeof integrations)[number]
 export interface ParserConfig {
   /**
    * An array of globs to search for translation keys.
-   * @default ['src/**\/*.{js,jsx,ts,tsx,vue,svelte}']
+   * @default ['src/**\/*.{js,jsx,ts,tsx,vue,svelte,astro}']
    */
   input: string[]
   [key: string]: any
