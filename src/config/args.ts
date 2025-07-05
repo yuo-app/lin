@@ -64,7 +64,7 @@ export const llmArgs = {
   batchSize: {
     alias: 'b',
     type: 'string',
-    description: 'the number of locales to process in a single batch',
+    description: 'the number of locales to process in a single LLM request',
   },
   mode: {
     type: 'string',
