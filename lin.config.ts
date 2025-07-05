@@ -13,7 +13,6 @@ export default defineConfig({
   options: {
     provider: 'google',
     model: 'gemini-2.5-flash',
-    mode: 'json',
   },
   presets: {
     'grok': {

@@ -44,6 +44,7 @@ export const DEFAULT_CONFIG = {
     model: 'gpt-4.1-mini',
     apiKey: undefined,
     temperature: 0,
+    mode: 'auto',
   },
 
   parser: {

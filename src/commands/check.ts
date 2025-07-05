@@ -80,7 +80,14 @@ export default defineCommand({
     locales = catchError(normalizeLocales)(locales, i18n)
     const localesToCheck = locales.length > 0 ? locales : i18n.locales
 
-    const defaultLocaleJson = JSON.parse(fs.readFileSync(r(`${i18n.defaultLocale}.json`, i18n), { encoding: 'utf8' }))
+    let defaultLocaleJson: LocaleJson = {}
+    try {
+      defaultLocaleJson = JSON.parse(fs.readFileSync(r(`${i18n.defaultLocale}.json`, i18n), { encoding: 'utf8' }))
+    }
+    catch (error: any) {
+      if (error.code !== 'ENOENT' && !(error instanceof SyntaxError))
+        throw error
+    }
     const defaultKeyCount = countKeys(defaultLocaleJson)
 
     if (args.info) {

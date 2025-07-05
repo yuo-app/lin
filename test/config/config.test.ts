@@ -209,7 +209,7 @@ describe('resolveConfig with presets', () => {
       config: {
         context: 'Default context',
         presets: {
-          'context-test': { provider: 'google', model: 'gemini-2.5-flash-preview-05-20', context: presetContext },
+          'context-test': { provider: 'google', model: 'gemini-2.5-flash', context: presetContext },
         },
       },
       sources: ['lin.config.js'],
