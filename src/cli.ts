@@ -31,7 +31,11 @@ const main = defineCommand({
     const { config } = await resolveConfig(args)
     if (args.debug) {
       console.log(ICONS.info, 'Config:')
-      console.log(config)
+      const redactedConfig = { ...config }
+      if (redactedConfig.options?.apiKey)
+        redactedConfig.options = { ...redactedConfig.options, apiKey: '***' }
+
+      console.log(redactedConfig)
     }
   },
 })
