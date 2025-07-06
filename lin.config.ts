@@ -6,7 +6,7 @@ export default defineConfig({
     defaultLocale: 'en-US',
     directory: './locales',
   },
-  with: 'both',
+  with: 'tgt',
   options: {
     provider: 'google',
     model: 'gemini-2.5-flash',

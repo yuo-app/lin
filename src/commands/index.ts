@@ -13,3 +13,5 @@ export const commands = {
   models: () => import('./models').then(_rDefault),
   undo: () => import('./undo').then(_rDefault),
 } as const
+
+export type Commands = typeof commands

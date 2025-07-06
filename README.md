@@ -80,6 +80,8 @@ Or you can create a configuration file to tell `lin` about your i18n setup. You 
 
 ## usage
 
+You can use `lin` in the terminal, in [GitHub Actions](#ci), or [programmatically](#programmatic-usage).
+
 > [!TIP]
 > Run `lin -h` and `lin <command> -h` to see all the options.
 
@@ -361,6 +363,25 @@ To see a list of all available LLM providers and models:
 
 - Run `lin -M`, `lin --models` or `lin models` to list all models.
 - To filter by provider, just specify providers after the command: `lin -M openai google`
+
+### programmatic usage
+
+You can also use `lin` as a library and run commands programmatically. This is useful for integrating `lin` into your own scripts or tools.
+
+All commands and types are exported from the main package entry point.
+
+```ts
+import { run } from '@yuo-app/lin'
+
+// Example: check for missing keys
+await run('check', ['-k'])
+
+// Example: add a new key and translate it
+await run('add', ['new.key', 'new value'])
+
+// Example: translate with specific options
+await run('translate', ['-S'])
+```
 
 ## config
 

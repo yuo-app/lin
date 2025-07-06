@@ -1,4 +1,5 @@
 <script lang='ts'>
+  // @ts-nocheck
   import type { PageProps } from './$types'
   import { Button } from '$lib/components/ui/button'
   import { test } from '$lib/database/schema'
