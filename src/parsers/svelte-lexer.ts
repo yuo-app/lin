@@ -17,4 +17,4 @@ export class SvelteLexer extends BaseLexer {
 
     return keys
   }
-} 
+}

@@ -33,7 +33,7 @@ See [LLM Config](#llm-config).
 - Nuxt.js (`nuxt.config.js`)
 - Vue I18n (`vue.config.js`)
 - Angular (`angular.json`)
-- Svelte (`svelte.config.js`)
+- Svelte (`svelte.config.js`): ⚠️ There were issues with parsing svelte files, please set `integration: 'svelte'` in your lin config to use a custom parser.
 - Ember.js (`ember-cli-build.js`)
 - Gatsby (`gatsby-config.js`)
 - Solid.js (`vite.config.js`)
