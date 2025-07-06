@@ -58,13 +58,12 @@ describe('translate command', () => {
     expect(mockCheckRun).toHaveBeenCalledOnce()
     expect(mockCheckRun).toHaveBeenCalledWith(expect.objectContaining({
       args: expect.objectContaining({
-        ...mockResolvedConfig,
-        'silent': false,
-        'fix': true,
-        'keys': false,
-        'info': false,
-        'undo': false,
-        'remove-unused': false,
+        ...args,
+        silent: false,
+        fix: true,
+        keys: false,
+        info: false,
+        undo: false,
       }),
       rawArgs: [],
       cmd: checkCommand.meta,
@@ -73,7 +72,7 @@ describe('translate command', () => {
     expect(mockSyncRun).toHaveBeenCalledOnce()
     expect(mockSyncRun).toHaveBeenCalledWith(expect.objectContaining({
       args: expect.objectContaining({
-        ...mockResolvedConfig,
+        ...args,
         force: false,
         undo: false,
         silent: false,

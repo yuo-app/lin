@@ -17,24 +17,20 @@ export const commonArgs = {
     alias: 'l',
     type: 'string',
     description: 'only act on a specific locale',
-    default: DEFAULT_CONFIG.locale,
   },
   cwd: {
     alias: 'c',
     type: 'string',
     description: 'project root',
-    default: process.cwd(),
   },
   debug: {
     alias: 'd',
     type: 'boolean',
     description: 'debug mode',
-    default: false,
   },
   undo: {
     type: 'boolean',
     description: 'Enable/disable undo history. Use --no-undo to disable.',
-    default: true,
   },
 } as const satisfies CommonArgs
 
@@ -43,13 +39,11 @@ export const llmArgs = {
     alias: 'C',
     type: 'string',
     description: 'extra information to include in the LLM system prompt',
-    default: DEFAULT_CONFIG.context,
   },
   integration: {
     alias: 'i',
     type: 'string',
     description: 'the i18n integration used',
-    default: DEFAULT_CONFIG.integration,
   },
   provider: {
     alias: 'p',
@@ -80,7 +74,6 @@ export const llmArgs = {
     alias: 'w',
     type: 'string',
     description: 'the context profile to use. (def, tgt, both, all, or locales like en)',
-    default: DEFAULT_CONFIG.with,
   },
 } as const satisfies LLMArgs
 

@@ -40,7 +40,7 @@ export default defineCommand({
     }
 
     const checkArgs: any = {
-      ...config,
+      ...args,
       'silent': args.silent,
       'fix': true,
       'keys': false,
@@ -52,11 +52,12 @@ export default defineCommand({
     await checkCommand.run?.({ args: checkArgs, rawArgs: [], cmd: checkCommand.meta as any })
 
     const syncArgs: any = {
-      ...config,
+      ...args,
       force: false,
       undo: false,
       silent: args.silent,
     }
+
     await syncCommand.run?.({ args: syncArgs, rawArgs: [], cmd: syncCommand.meta as any })
   },
 })

@@ -114,9 +114,7 @@ export async function resolveConfig(
     { arrayMerge: (_t, s) => s },
   ) as DeepRequired<ConfigTypes.ResolvedConfig>
 
-  // const isSvelteProject = finalMergedConfig.integration === 'svelte' || finalMergedConfig.parser.input.some(glob => glob.includes('.svelte'))
-  const isSvelteProject = finalMergedConfig.integration === 'svelte'
-  console.log('isSvelteProject', isSvelteProject)
+  const isSvelteProject = finalMergedConfig.integration === 'svelte' || finalMergedConfig.parser.input.some(glob => glob.includes('.svelte'))
   const hasCustomSvelteLexer = loadedFromFileConfig.parser?.lexers?.svelte
 
   if (isSvelteProject && !hasCustomSvelteLexer) {
