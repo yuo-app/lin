@@ -41,13 +41,13 @@
       {t('purgeButton', 'Purge')}
     </Button>
     <Button class='w-full' onclick={toggleLocale}>
-      {i18n.t('toggleLang', 'Toggle language')}
+      {t('toggleLang', 'Toggle language')}
     </Button>
   </div>
 
   <div class='flex flex-col gap-2'>
     <p>
-      {i18n.t('testKey', 'Test')}
+      {t('testKey', 'Test')}
     </p>
     <p>
       {t('testKey2', 'Test2')}

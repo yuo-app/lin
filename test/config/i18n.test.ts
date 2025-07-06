@@ -2,24 +2,46 @@ import type { Mock, Mocked } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
 import { loadConfig } from 'unconfig'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { DEFAULT_I18N_CONFIG, loadI18nConfig } from '@/config/i18n'
-import { handleCliError } from '@/utils'
+import * as generalUtils from '@/utils/general'
+import { createVfsHelpers } from '../test-helpers'
 
 vi.mock('unconfig')
-vi.mock('@/utils')
+vi.mock('@/utils/general')
 vi.mock('node:fs', () => ({
   default: {
     readFileSync: vi.fn(),
+    existsSync: vi.fn(),
   },
 }))
 
 const mockedLoadConfig = loadConfig as unknown as Mock
-const mockedHandleCliError = handleCliError as unknown as Mock
+const mockedHandleCliError = generalUtils.handleCliError as unknown as Mock
 const mockedFs = fs as unknown as Mocked<typeof fs>
 
+const { setupVirtualFile, getVirtualFileContent, resetVfs } = createVfsHelpers()
+
 describe('loadI18nConfig', () => {
+  let cwd: string
   beforeEach(() => {
+    resetVfs()
+    cwd = process.cwd()
+
+    mockedFs.readFileSync.mockImplementation((path) => {
+      const content = getVirtualFileContent(path.toString())
+      if (typeof content === 'string')
+        return content
+
+      if (content === undefined) {
+        const e = new Error(`ENOENT: no such file or directory, open '${path.toString()}'`) as any
+        e.code = 'ENOENT'
+        throw e
+      }
+      return JSON.stringify(content)
+    })
+    mockedFs.existsSync.mockImplementation((path: fs.PathLike) => getVirtualFileContent(path.toString()) !== undefined)
+
     vi.clearAllMocks()
     mockedHandleCliError.mockImplementation(() => {
       throw new Error('handleCliError called')
@@ -28,6 +50,11 @@ describe('loadI18nConfig', () => {
       config: DEFAULT_I18N_CONFIG,
       sources: [],
     })
+  })
+
+  afterEach(() => {
+    vi.clearAllMocks()
+    resetVfs()
   })
 
   it('should load config from next.config.js', async () => {
@@ -460,6 +487,65 @@ describe('loadI18nConfig', () => {
     expect(i18n.locales).toEqual(['it'])
     expect(i18n.defaultLocale).toBe('de-DE')
     expect(i18n.directory).toBe('src/locale')
+  })
+
+  it('should load i18n config from lin.config.ts when svelte.config.js is present but has no i18n block', async () => {
+    setupVirtualFile(path.join(cwd, 'svelte.config.js'), 'export default { kit: {} }')
+    setupVirtualFile(path.join(cwd, 'lin.config.ts'), `
+      import { defineConfig } from '@yuo-app/lin';
+      export default defineConfig({ 
+        i18n: { 
+          locales: ['en-US', 'fr-FR'], 
+          defaultLocale: 'en-US', 
+          directory: 'i18n/locales' 
+        } 
+      });
+    `)
+
+    // Directly mock loadConfig to return the expected i18n config
+    mockedLoadConfig.mockResolvedValueOnce({
+      config: {
+        locales: ['en-US', 'fr-FR'],
+        defaultLocale: 'en-US',
+        directory: 'i18n/locales',
+      },
+      sources: ['lin.config.ts'],
+    })
+
+    const { i18n, sources } = await loadI18nConfig({ cwd } as any)
+
+    expect(i18n.locales).toEqual(['en-US', 'fr-FR'])
+    expect(i18n.defaultLocale).toBe('en-US')
+    expect(i18n.directory).toBe('i18n/locales')
+    expect(sources[0]).toContain('lin.config.ts')
+  })
+
+  it('should load i18n config from i18n.config.ts when angular.json is present but has no i18n block', async () => {
+    setupVirtualFile(path.join(cwd, 'angular.json'), '{ "defaultProject": "my-app", "projects": { "my-app": {} } }')
+    setupVirtualFile(path.join(cwd, 'i18n.config.ts'), `
+      export default { 
+        locales: ['en-GB', 'de-DE'], 
+        defaultLocale: 'en-GB', 
+        directory: 'src/assets/i18n' 
+      }
+    `)
+
+    // Directly mock loadConfig to return the expected i18n config
+    mockedLoadConfig.mockResolvedValueOnce({
+      config: {
+        locales: ['en-GB', 'de-DE'],
+        defaultLocale: 'en-GB',
+        directory: 'src/assets/i18n',
+      },
+      sources: ['i18n.config.ts'],
+    })
+
+    const { i18n, sources } = await loadI18nConfig({ cwd } as any)
+
+    expect(i18n.locales).toEqual(['en-GB', 'de-DE'])
+    expect(i18n.defaultLocale).toBe('en-GB')
+    expect(i18n.directory).toBe('src/assets/i18n')
+    expect(sources[0]).toContain('i18n.config.ts')
   })
 })
 

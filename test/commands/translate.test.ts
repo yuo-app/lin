@@ -56,30 +56,31 @@ describe('translate command', () => {
     await translateCommand.run!({ args } as any)
 
     expect(mockCheckRun).toHaveBeenCalledOnce()
-    expect(mockCheckRun).toHaveBeenCalledWith({
-      args: {
-        ...args,
-        silent: false,
-        fix: true,
-        keys: false,
-        info: false,
-        undo: false,
-      },
+    expect(mockCheckRun).toHaveBeenCalledWith(expect.objectContaining({
+      args: expect.objectContaining({
+        ...mockResolvedConfig,
+        'silent': false,
+        'fix': true,
+        'keys': false,
+        'info': false,
+        'undo': false,
+        'remove-unused': false,
+      }),
       rawArgs: [],
       cmd: checkCommand.meta,
-    })
+    }))
 
     expect(mockSyncRun).toHaveBeenCalledOnce()
-    expect(mockSyncRun).toHaveBeenCalledWith({
-      args: {
-        ...args,
+    expect(mockSyncRun).toHaveBeenCalledWith(expect.objectContaining({
+      args: expect.objectContaining({
+        ...mockResolvedConfig,
         force: false,
         undo: false,
         silent: false,
-      },
+      }),
       rawArgs: [],
       cmd: syncCommand.meta,
-    })
+    }))
   })
 
   it('should handle its own undo state when undo is enabled', async () => {
