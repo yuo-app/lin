@@ -1,5 +1,6 @@
 {
-  "svelte.enable-ts-plugin": true,
+  "svelte.enable-ts-plugin": false,
+  "svelte.plugin.svelte.enable": false,
   "typescript.tsdk": "node_modules\\typescript\\lib",
   "eslint.experimental.useFlatConfig": true,
   "prettier.enable": false,

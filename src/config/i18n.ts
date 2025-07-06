@@ -80,11 +80,11 @@ export async function loadI18nConfig(options?: Config): Promise<{ i18n: I18nConf
       rewrite(config: any) {
         const projectName = config.defaultProject || (config.projects ? Object.keys(config.projects)[0] : undefined)
         if (!projectName || !config.projects?.[projectName])
-          return {}
+          return undefined
         const project = config.projects[projectName]
 
         if (!project.i18n)
-          return {}
+          return undefined
 
         const localeFilePaths = project.i18n.locales ? Object.values(project.i18n.locales) : []
         let directory = 'src/assets/i18n'
@@ -106,7 +106,7 @@ export async function loadI18nConfig(options?: Config): Promise<{ i18n: I18nConf
       async rewrite(config: any) {
         const resolved = await (typeof config === 'function' ? config() : config)
         if (!resolved.i18n)
-          return {}
+          return undefined
         return {
           locales: resolved.i18n?.locales || [],
           defaultLocale: resolved.i18n?.defaultLocale || 'en',
@@ -120,7 +120,7 @@ export async function loadI18nConfig(options?: Config): Promise<{ i18n: I18nConf
       files: ['ember-cli-build'],
       rewrite(config: any) {
         if (!config.intl)
-          return {}
+          return undefined
         return {
           locales: config.intl?.locales || [],
           defaultLocale: config.intl?.defaultLocale || 'en-us',
@@ -154,7 +154,7 @@ export async function loadI18nConfig(options?: Config): Promise<{ i18n: I18nConf
             directory: 'i18n',
           }
         }
-        return {}
+        return undefined
       },
     },
     // Astro

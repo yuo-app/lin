@@ -20,9 +20,16 @@ vi.mock('i18next-parser', () => {
   const MockParserClass = vi.fn().mockImplementation(() => ({
     parse: mockParse,
   }))
+  class MockBaseLexer {
+    constructor() {}
+    functionPattern() {
+      return '(t|i18n.t)'
+    }
+  }
   return {
     default: MockParserClass,
     parser: MockParserClass,
+    BaseLexer: MockBaseLexer,
   }
 })
 vi.mock('glob', () => ({
