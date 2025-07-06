@@ -370,17 +370,62 @@ You can also use `lin` as a library and run commands programmatically. This is u
 
 All commands and types are exported from the main package entry point.
 
+The `run` function allows you to execute any command:
+
 ```ts
 import { run } from '@yuo-app/lin'
 
-// Example: check for missing keys
-await run('check', ['-k'])
-
-// Example: add a new key and translate it
-await run('add', ['new.key', 'new value'])
-
-// Example: translate with specific options
+// Simple usage: run the 'translate' command with the --silent flag
 await run('translate', ['-S'])
+```
+
+#### Advanced Usage
+
+The `run` function accepts an optional third argument, `options`, to control execution behavior. It returns a `RunResult` object with details about the execution.
+
+```ts
+run(
+  command: keyof Commands,
+  rawArgs?: string[],
+  options?: {
+    dry?: boolean,             // default: false
+    output?: 'live' | 'capture' | 'silent' // default: 'live'
+  }
+): Promise<{
+  result: unknown,
+  output?: string,
+  writes?: Record<string, string>,
+  deletes?: string[]
+}>
+```
+
+- **`dry`**: A boolean that, if `true`, prevents any file system modifications. Instead of writing or deleting files, `run` will return the planned changes in the `writes`
+- **`output`**: can return the console output in `output`
+  - `'live'`   (default) – print only.
+  - `'capture'` – print *and* return captured text.
+  - `'silent'`  – capture text *without* printing.
+
+**Example: Dry Run with Output Capture**
+
+Here's how you can see what files `check --fix` would change, without actually modifying your disk:
+
+```ts
+import { run } from '@yuo-app/lin'
+
+const { output, writes } = await run(
+  'check',
+  ['--fix'],
+  { dry: true, output: 'silent' },
+)
+
+console.log('--- Captured Console Output ---')
+console.log(output)
+
+console.log('\n--- Files to be Written ---')
+for (const [file, content] of Object.entries(writes || {})) {
+  console.log(`File: ${file}`)
+  console.log(content) // content is the full file content
+}
 ```
 
 ## config

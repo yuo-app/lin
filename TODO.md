@@ -21,6 +21,11 @@
 - [x] add github action example with `translate`
 - [x] batch size config for how many locales to translate at once
 
+## v2.1.0
+
+- [x] programmatic usage, capture output and writes
+- [ ] the readme is yuge, create lin docs instead
+
 ## later
 
 - [ ] add a ton of parser tests, like do we even need i18next-parser if it fails randomly and we only need key and default value?
