@@ -1,8 +1,21 @@
 // @ts-check
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import starlight from '@astrojs/starlight'
 import { defineConfig } from 'astro/config'
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
 export default defineConfig({
+  site: 'https://lin.yuo.app',
+  base: '/',
+  vite: {
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, '../src'),
+      },
+    },
+  },
   integrations: [
     starlight({
       title: 'lin',
