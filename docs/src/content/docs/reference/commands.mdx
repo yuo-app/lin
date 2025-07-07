@@ -1,0 +1,249 @@
+---
+title: Commands
+description: Detailed information about every CLI command.
+---
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+import { providers } from '@yuo-app/lin'
+
+While `translate` is the most end-to-end command, `lin` provides more granular commands for specific tasks:
+
+- **`translate`**: `check --fix` + `sync`
+- **`sync`**: Translates missing keys from your default locale to all other locales using LLMs.
+- **`add`**: Adds a new key to your default locale and translates it to all other locales using LLMs.
+- **`edit`**: Edit an existing key and its translations manually.
+- **`del`**: Remove one or more keys.
+- **`check`**: Validate locale files, check for missing/unused keys, or sort them. Quick config check.
+- **`models`**: List available LLM models.
+- **`undo`**: Revert the last change made by `translate`, `sync`, `add`, `del`, `edit`, or `check`.
+
+<Aside type="tip">
+  Run `lin -h` and `lin <command> -h` to see all the options.
+</Aside> 
+
+---
+
+### `translate`
+
+Automates the entire process of finding new keys in your code, adding them to your default locale, and translating them into all other languages. It's a combination of `check --fix` and `sync`.
+
+<Aside>
+  There is some syntax around **locale codes**:
+
+  - Locale JSON file names must match the codes in your `locales` configuration (e.g., `en-US.json` for an `'en-US'` entry).
+  - Short codes like `'en'` also work (e.g., `'en.json'`), but these also function as shorthands: `lin translate en` will match all locales starting with `en-` (like `en-US` and `en-GB`).
+  - `all` is a special keyword that matches all locales
+  - `def` means the default locale from the config
+</Aside>
+
+<Tabs>
+  <TabItem label="Usage">
+    ```bash
+    lin translate [locales...] [options]
+    ```
+  </TabItem>
+  <TabItem label="Example">
+    ```bash
+    # Find, add, and translate keys for all locales
+    lin translate
+
+    # Translate only for Spanish and French
+    lin translate es fr
+
+    # Also remove unused keys from all locales
+    lin translate -r
+
+    # Run in silent mode for CI
+    lin translate -S
+    ```
+  </TabItem>
+</Tabs>
+
+### `sync`
+
+Syncs all locale JSON files with the default locale JSON file. It finds the missing keys in other locales and translates them using LLMs. It can also be used to quickly add a new language.
+
+<Tabs>
+  <TabItem label="Usage">
+    ```bash
+    lin sync [locales...] [options]
+    ```
+  </TabItem>
+  <TabItem label="Example">
+    ```bash
+    # Sync all non-default locales
+    lin sync
+
+    # Sync only Spanish and French
+    lin sync es fr
+
+    # Add a new language 'de'
+    # add 'de' to your locales and then sync will create a de.json file
+    lin sync de
+    ```
+  </TabItem>
+</Tabs>
+
+### `add`
+
+Adds a new key to your default locale and translates it to all other locales using LLMs. It's useful for quickly adding translations while developing.
+
+<Tabs>
+  <TabItem label="Usage">
+    ```bash
+    lin add <key> <default-value> [options]
+    ```
+  </TabItem>
+  <TabItem label="Example">
+    ```bash
+    # Add a new button label
+    lin add ui.button.save Save Changes
+
+    # Add a key only to specific locales
+    lin add -l es -l fr ui.button.cancel Cancel
+    ```
+  </TabItem>
+</Tabs>
+
+### `edit`
+
+Allows you to manually change the value of an existing key in one or more locales directly from the command line.
+
+<Tabs>
+  <TabItem label="Usage">
+    ```bash
+    lin edit <key> <new-value> [options]
+    ```
+  </TabItem>
+  <TabItem label="Example">
+    ```bash
+    # Edit a key in all locales
+    lin edit ui.button.save Save
+
+    # Edit a key only in the default locale
+    lin edit -l def ui.button.save Save
+    ```
+  </TabItem>
+</Tabs>
+
+### `del`
+
+Removes one or more keys from all specified locale files.
+
+<Tabs>
+  <TabItem label="Usage">
+    ```bash
+    lin del [keys...] [options]
+    ```
+  </TabItem>
+  <TabItem label="Example">
+    ```bash
+    # Delete a single key
+    lin del nav.title
+
+    # Delete multiple keys
+    lin del footer.description header.tagline
+    ```
+  </TabItem>
+</Tabs>
+
+### `check`
+
+Validates and maintains your locale files. It can find missing and unused keys, sort keys, and display configuration info. It's ideal for CI or pre-commit hooks if you don't want to use LLMs and `translate`.
+
+<Tabs>
+  <TabItem label="Usage">
+    ```bash
+    lin check [options]
+    ```
+  </TabItem>
+  <TabItem label="Examples">
+    ```bash
+    # Lint codebase for missing/unused keys
+    lin check
+
+    # Add missing keys to default locale with --fix
+    lin check -f
+
+    # Remove unused keys from all locales with --remove-unused
+    lin check -r
+
+    # Check for missing keys in other locales with --keys
+    lin check -k
+
+    # Sort locales alphabetically with --sort
+    lin check -s abc
+
+    # Show config and locale info
+    lin check -i
+    ```
+  </TabItem>
+</Tabs>
+
+#### `check` with Git Hooks
+
+A great way to enforce i18n consistency is to run `lin check` automatically before each commit. You can use `simple-git-hooks` with `lint-staged` to set this up easily.
+
+First, install the dependencies:
+```bash
+npm i -D lint-staged simple-git-hooks
+```
+
+Then, add this to your `package.json`:
+
+```json
+{
+  "simple-git-hooks": {
+    "pre-commit": "npx lint-staged"
+  },
+  "lint-staged": {
+    "{src/**/*.{js,jsx,ts,tsx,vue,svelte,astro},locales/**/*.json}": "lin check -S"
+  }
+}
+```
+
+Finally, activate the hooks:
+```bash
+npx simple-git-hooks
+```
+You can also run `lin check -S -f` or `lin check -S -r` to automatically fix issues, or even `lin translate -S` to translate them too.
+
+### `models`
+
+Lists all available LLM providers and their models that you can use with `lin`.
+
+**Available providers:** {providers.join(', ')}.
+
+Note that `lin` can work even with models not listed here, just pass the model name as a string.
+
+To add a new provider, consider opening a PR. It's easy to do!
+
+<Tabs>
+  <TabItem label="Usage">
+    ```bash
+    lin models [provider...]
+    ```
+  </TabItem>
+  <TabItem label="Example">
+    ```bash
+    # List all available models
+    lin models
+
+    # List models only for openai and google
+    lin models openai google
+    ```
+  </TabItem>
+</Tabs>
+
+### `undo`
+
+Reverts the last change made by `translate`, `sync`, `add`, `del`, `edit`, or `check`.
+
+These commands save the state of the locale files in `.lin` before changing them.
+
+<Tabs>
+  <TabItem label="Usage">
+    ```bash
+    lin undo
+    ```
+  </TabItem>
+</Tabs> 

@@ -1,8 +1,9 @@
+import type { LoadConfigSource } from 'unconfig'
 import type { Config, Integration } from '@/config'
 import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
-import { loadConfig, type LoadConfigSource } from 'unconfig'
+import { loadConfig } from 'unconfig'
 import { handleCliError } from '../utils'
 
 export interface I18nConfig {

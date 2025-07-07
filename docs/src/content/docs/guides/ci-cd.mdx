@@ -1,0 +1,59 @@
+---
+title: CI/CD Automation
+description: How to set up lin in a GitHub Actions workflow.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+You can use `translate` in GitHub Actions. On every push to `main`, `lin` will automatically find new keys, add them to your locales, and translate them.
+
+Here's an example workflow:
+
+```yaml
+# .github/workflows/lin.yml
+name: Lin Translate
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  translate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v4
+
+      - name: setup bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: install deps
+        run: bun install
+
+      - name: lin translate
+        run: bunx lin translate -S
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # Add other provider API keys as needed
+          # GOOGLE_GENERATIVE_AI_API_KEY: ${{ secrets.GOOGLE_GENERATIVE_AI_API_KEY }}
+          # GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          # CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
+
+      - name: commit and push changes
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add locales/
+          if ! git diff --staged --quiet; then
+            git commit -m "i18n: auto-translate locales"
+            git push
+          fi
+```
+
+<Aside>
+  Don't forget to add your LLM provider API keys to your repo secrets.
+</Aside> 

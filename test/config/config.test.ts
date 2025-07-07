@@ -1,11 +1,12 @@
 import type { loadConfig } from 'unconfig'
 import type { MockedFunction } from 'vitest'
+import type { Config } from '../../src/config'
 import process from 'node:process'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import * as i18nConfigModule from '@/config/i18n'
 import * as configIndex from '@/config/index'
 import { handleCliError } from '@/utils/general'
-import { type Config, resolveConfig } from '../../src/config'
+import { resolveConfig } from '../../src/config'
 import { DEFAULT_I18N_CONFIG } from '../../src/config/i18n'
 
 vi.mock('unconfig')

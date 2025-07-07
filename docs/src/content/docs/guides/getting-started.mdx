@@ -1,0 +1,120 @@
+---
+title: Getting Started
+description: How to install and set up lin for the first time.
+---
+
+import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
+
+This guide will walk you through installing `lin` and setting up your project for the first time.
+
+TL;DR
+
+- a project with i18n set up that lin can detect
+- configured LLM provider and model or use the defaults
+- API keys for your chosen LLM providers in your .env file (e.g., `OPENAI_API_KEY`)
+
+For the complete config, see [Configuration](/reference/configuration).
+
+<Steps>
+
+1.  **Install the package**
+    <Tabs syncKey="pkg">
+      <TabItem label="npm">
+        ```sh
+        npm i -D @yuo-app/lin
+        ```
+      </TabItem>
+      <TabItem label="pnpm">
+        ```sh
+        pnpm add -D @yuo-app/lin
+        ```
+      </TabItem>
+      <TabItem label="yarn">
+        ```sh
+        yarn add -D @yuo-app/lin
+        ```
+      </TabItem>
+      <TabItem label="bun">
+        ```sh
+        bun add -d @yuo-app/lin
+        ```
+      </TabItem>
+      <TabItem label="ni">
+        ```sh
+        ni -D @yuo-app/lin
+        ```
+      </TabItem>
+    </Tabs>
+  
+    You can also use the `-g` flag to install globally for non-npm projects.
+
+2.  **Configure i18n**
+
+    `lin` will try to automatically detect your i18n configuration from your existing project setup.
+    See [Integrations](/frameworks) for the list of supported integrations.
+
+    If your setup is not detected automatically, you can create a configuration file. You have two options:
+
+    <Tabs syncKey="config-file">
+      <TabItem label="lin.config.ts">
+        Add an `i18n` object to your main `lin.config.ts` file.
+        ```ts
+        import { defineConfig } from '@yuo-app/lin'
+
+        export default defineConfig({
+          i18n: {
+            locales: ['en-US', 'es-ES'],
+            defaultLocale: 'en-US',
+            directory: 'locales',
+          },
+          // ... other lin config
+        })
+        ```
+      </TabItem>
+      <TabItem label="i18n.config.ts">
+        If you don't plan to use other `lin` config, just create a `i18n.config.ts` file.
+        ```ts
+        import { defineI18nConfig } from '@yuo-app/lin'
+
+        export default defineI18nConfig({
+          locales: ['en-US', 'es-ES'],
+          defaultLocale: 'en-US',
+          directory: 'locales',
+        })
+        ```
+      </TabItem>
+    </Tabs>
+
+3.  **Configure LLMs**
+
+    You need to specify the model and the provider in your configuration.
+    Make sure the corresponding API key is set in your env variables (e.g., `OPENAI_API_KEY`).
+
+    These are the defaults:
+
+    ```ts
+    import { defineConfig } from '@yuo-app/lin'
+
+    export default defineConfig({
+      options: {
+        provider: 'openai',
+        model: 'gpt-4.1-mini',
+      }
+    })
+    ```
+
+    See [LLM Configuration](/reference/configuration#llm-config).
+
+4.  **Add `.lin` to your `.gitignore`**
+
+    By default, `lin` will save the locale json files in `.lin` for the `undo` command to work.
+    Add it to your `.gitignore` or disable this by setting `undo: false` in your `lin.config.ts` file, or use the `--no-undo` flag.
+
+5.  **Next Steps**
+
+    - Learn how to use the [translate](/guides/first-translation) command.
+    - Check out all the other [commands](/reference/commands).
+    - Set up `lin` in [CI](/guides/ci-cd).
+    - Use `lin` as a [package](/guides/programmatic-usage).
+
+</Steps>

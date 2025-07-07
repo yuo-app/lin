@@ -1,4 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from 'vitest'
+import type { Mock } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { providers } from '@/config/constants'
 import { normalizeArgs } from '@/config/helpers'
 import { handleCliError } from '@/utils/general'

@@ -210,7 +210,7 @@ You can also use the `sync` command to **add a new language**.
 > There is some syntax around **locale codes**:
 >
 > - Locale JSON file names must match the codes in your `locales` configuration (e.g., `en-US.json` for an `'en-US'` entry).
-> - Short codes like `'en'` also work (e.g., `'en.json'`), but these are also a shorthand: `lin sync en` will match all locales starting with `en-` (like `en-US` and `en-GB`).
+> - Short codes like `'en'` also work (e.g., `'en.json'`), but these also function as shorthands: `lin sync en` will match all locales starting with `en-` (like `en-US` and `en-GB`).
 > - `all` is a special keyword that matches all locales
 > - `def` means the default locale from the config
 
@@ -384,22 +384,22 @@ await run('translate', ['-S'])
 The `run` function accepts an optional third argument, `options`, to control execution behavior. It returns a `RunResult` object with details about the execution.
 
 ```ts
-run(
+function run(
   command: keyof Commands,
   rawArgs?: string[],
   options?: {
-    dry?: boolean,             // default: false
+    dry?: boolean // default: false
     output?: 'live' | 'capture' | 'silent' // default: 'live'
   }
 ): Promise<{
-  result: unknown,
-  output?: string,
-  writes?: Record<string, string>,
+  result: unknown
+  output?: string
+  writes?: Record<string, string>
   deletes?: string[]
 }>
 ```
 
-- **`dry`**: A boolean that, if `true`, prevents any file system modifications. Instead of writing or deleting files, `run` will return the planned changes in the `writes`
+- **`dry`**: A boolean that, if `true`, prevents any file system modifications. Instead of writing or deleting files, `run` will return the planned changes in the `writes` and `deletes` objects.
 - **`output`**: can return the console output in `output`
   - `'live'`   (default) – print only.
   - `'capture'` – print *and* return captured text.
@@ -443,7 +443,7 @@ for (const [file, content] of Object.entries(writes || {})) {
 `lin` uses `unconfig` to find and load your configuration files. You can use one of the following:
 
 - `lin.config.ts` (or `.js`, `.mjs`, etc.)
-- `.linrc` (or with extension, or `.json`)
+- `.linrc` (without extension or `.json`)
 - `lin` property in `package.json`
 If you are not using one of the auto-detected frameworks, you can put your i18n config inside your `lin` config, or create a separate `i18n.config.ts` file.
 
@@ -476,7 +476,7 @@ export default defineConfig({
   options: {
     provider: 'openai',
     model: 'gpt-4.1-mini',
-    temperature: 0.7,
+    temperature: 0,
   }
 })
 ```
@@ -498,8 +498,8 @@ export default defineConfig({
     'creative-claude': {
       provider: 'anthropic',
       model: 'claude-sonnet-4-0',
-      temperature: 0.8,
-      context: 'You are a creative assistant who helps with translating my codebase.'
+      temperature: 0.6,
+      context: 'Use a playful tone.'
     },
     'fast-deepseek': {
       provider: 'groq',
@@ -516,7 +516,7 @@ You can then activate a preset using the `--model` flag. Any other CLI flags wil
 lin sync -m creative-claude
 
 # Use the 'fast-deepseek' preset, but override the temperature
-lin add ui.new.feature "A new feature" -m fast-deepseek -t 0.6
+lin add ui.new.feature A new feature -m fast-deepseek -t 0
 ```
 
 #### `context` in config
@@ -549,17 +549,17 @@ You can set this in your `lin.config.ts` using `with` or use the `--with` (or `-
 ```ts
 // lin.config.ts
 export default defineConfig({
-  with: 'tgt', // use target locale as context for all translations
+  with: 'tgt',
 })
 ```
 
 ```bash
 # Override config and use 'both' profile for this command
-lin sync --with both
+lin sync -w both
 
 # Provide specific locales for context
 lin add ui.new.key New Key -w es-ES -w fr-FR
 
 # Force no additional context, overriding any config
-lin sync --no-with
+lin sync -w none
 ```

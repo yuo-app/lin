@@ -1,0 +1,44 @@
+---
+title: Your First Translation
+description: A walkthrough of the core `translate` command.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+The main command is **`translate`**. It automates the entire process of finding new keys in your code, adding them to your default locale, and translating them into all other languages.
+
+For it to work, you need to provide a default value when you use your translation function:
+
+```js
+t('header.title', 'Default value')
+```
+
+Then, just run:
+
+```bash
+lin translate
+```
+
+`lin` will find `header.title`, add it to your default locale file with the value "Default value", and then translate it to all other locales.
+
+To translate only specific locales, list them like this:
+
+```bash
+lin translate es fr
+```
+
+To also remove unused keys from all locales, use the `--remove-unused` flag:
+
+```bash
+lin translate -r
+```
+
+To make the output more minimal (for CI or scripts), use the `--silent` flag:
+
+```bash
+lin translate -S
+```
+
+<Aside type="tip">
+  Run `lin -h` and `lin <command> -h` to see all the options.
+</Aside> 

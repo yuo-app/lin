@@ -1,0 +1,188 @@
+---
+title: Configuration
+description: Detailed explanation of `lin.config.ts`, i18n auto-detection, LLM options, and parser settings.
+---
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+import { providers, integrations } from '@yuo-app/lin'
+
+`lin` is designed to work with minimal configuration by auto-detecting your setup. However, you can customize every aspect of its behavior.
+
+<Aside>
+  All properties in the config file can also be used as CLI flags. For example, `with: 'def'` in your config is equivalent to running a command with `--with def`.
+</Aside>
+
+## Config File
+
+`lin` uses `unconfig` to find and load your configuration files. You can use one of the following:
+
+- `lin.config.ts` (or `.js`, `.mjs`, etc.)
+- `.linrc` (without extension, or `.json`)
+- `lin` property in `package.json`
+
+### i18n Config
+
+If your framework is not auto-detected, you can put your i18n config inside your `lin` config, or create a separate `i18n.config.ts` file.
+
+<Tabs syncKey="config-file">
+  <TabItem label="lin.config.ts">
+    Add an `i18n` object to your main `lin.config.ts` file.
+    ```ts
+    import { defineConfig } from '@yuo-app/lin'
+
+    export default defineConfig({
+      i18n: {
+        locales: ['en-US', 'es-ES'],
+        defaultLocale: 'en-US',
+        directory: 'locales',
+      },
+      // ... other lin config
+    })
+    ```
+  </TabItem>
+  <TabItem label="i18n.config.ts">
+    If you don't plan to use other `lin` config, just create a `i18n.config.ts` file.
+    ```ts
+    import { defineI18nConfig } from '@yuo-app/lin'
+
+    export default defineI18nConfig({
+      locales: ['en-US', 'es-ES'],
+      defaultLocale: 'en-US',
+      directory: 'locales',
+    })
+    ```
+  </TabItem>
+</Tabs>
+
+### LLM Config
+
+You need to specify the model and the provider in your configuration or via the `--model` (`-m`) and `--provider` (`-p`) CLI flags.
+
+Make sure the corresponding API key is set in your env variables (e.g., `OPENAI_API_KEY`).
+
+Example `lin.config.ts` with LLM options:
+
+```ts
+import { defineConfig } from '@yuo-app/lin'
+
+export default defineConfig({
+  options: {
+    provider: 'openai',
+    model: 'gpt-4.1-mini',
+    temperature: 0,
+  }
+})
+```
+
+Use `lin models` to see all available models.
+
+**Available providers:** {providers.join(', ')}.
+
+Note that `lin` can work with models not listed here, just pass the model name as a string.
+
+To add a new provider, consider opening a PR. It's easy to do!
+
+All properties under `options` are passed to the [Vercel AI SDK](https://sdk.vercel.ai/).
+
+#### Presets
+
+To save LLM options, you can define and name different model configurations in your `lin.config.ts` file.
+
+```ts
+// lin.config.ts
+export default defineConfig({
+  options: {
+    provider: 'openai',
+    model: 'gpt-4.1-mini',
+    temperature: 0.2,
+  },
+  presets: {
+    'creative-claude': {
+      provider: 'anthropic',
+      model: 'claude-sonnet-4-0',
+      temperature: 0.6,
+      context: 'Use a playful tone.'
+    },
+    'fast-deepseek': {
+      provider: 'groq',
+      model: 'deepseek-r1-distill-llama-70b',
+    },
+  }
+})
+```
+
+You can then activate a preset using the `--model` flag. Any other CLI flags will override the preset's values.
+
+```bash
+# Use the 'creative-claude' preset
+lin sync -m creative-claude
+
+# Use the 'fast-deepseek' preset, but override the temperature
+lin add ui.new.feature A new feature -m fast-deepseek -t 0
+```
+
+#### Context
+
+This simple string is directly added to the system prompt. Use it to provide extra information about your project.
+
+```ts
+// lin.config.ts
+export default defineConfig({
+  context: 'Translate everything in a formal and polite tone.',
+})
+```
+
+#### Batch Size
+
+The `batchSize` option controls how many locales to translate with the LLM in a single request. This can be useful for projects with many languages. The default is `10`.
+
+You can set this in your `lin.config.ts` using `batchSize` or use the `--batchSize` (or `-b`) flag in the CLI.
+
+#### `with` (Context Profiles)
+
+The `with` option allows you to control which locale files are included in the LLM's context window. This can significantly improve translation quality by providing the model with more context about your project's wording and style.
+
+- `none` (default): Only the keys to be translated are sent to the LLM.
+- `def`: Includes the entire default locale JSON file.
+- `tgt`: Includes the full JSON of each locale currently being translated.
+- `both`: Includes both the default locale file and the target locale files.
+- `all`: Includes every locale JSON file in the context. This may be expensive.
+- `<locale>`: You can also provide one or more specific locale codes (e.g., `es-ES`, `fr`).
+
+<Tabs>
+  <TabItem label="Config">
+    ```ts
+    // lin.config.ts
+    export default defineConfig({
+      with: 'tgt',
+    })
+    ```
+  </TabItem>
+  <TabItem label="CLI">
+    ```bash
+    # Override config and use 'both' profile
+    lin sync -w both
+
+    # Provide specific locales for context
+    lin add ui.new.key New Key -w es-ES -w fr
+
+    # Force no additional context
+    lin sync -w none
+    ```
+  </TabItem>
+</Tabs>
+
+### Parser Config
+
+You can configure the key parser to look for keys in different files or use custom lexers.
+
+This is used by the `check` and `translate` commands.
+
+```ts
+// lin.config.ts
+export default defineConfig({
+  parser: {
+    input: ['src/**/*.{js,jsx,ts,tsx,vue,svelte,astro}'],
+    // ... other i18next-parser options
+  }
+})
+``` 

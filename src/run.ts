@@ -1,10 +1,11 @@
 import type { CommandDef } from 'citty'
+import type { Commands } from './commands'
 import { Buffer } from 'node:buffer'
 import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
 import { runCommand as cittyRunCommand } from 'citty'
-import { commands, type Commands } from './commands'
+import { commands } from './commands'
 import { console, ICONS } from './utils'
 import { UNDO_DIR } from './utils/undo'
 

@@ -1,0 +1,32 @@
+---
+title: lin
+description: lin is a CLI tool that translates locale JSONs using LLMs
+template: splash
+hero:
+  tagline: A CLI tool that translates locale JSONs using LLMs.
+  actions:
+    - text: Get Started
+      link: /guides/getting-started/
+      icon: right-arrow
+    - text: View on GitHub
+      link: https://github.com/yuo-app/lin
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+<CardGrid stagger>
+	<Card title="E2E Translation" icon="approve-check-circle">
+		One command to find new keys, add them to your locales, and translate them.
+	</Card>
+	<Card title="Broad Compatibility" icon="puzzle">
+		Should work with any framework and any LLM provider.
+	</Card>
+	<Card title="Versatile" icon="magnifier">
+		Provides many commands for managing your locale files.
+	</Card>
+  <Card title="Automate" icon="rocket">
+    Set up `lin` in your CI once and forget about it.
+  </Card>
+</CardGrid>

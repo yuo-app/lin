@@ -1,7 +1,6 @@
 import type { StringArgDef } from 'citty'
 import type { CommonConfig, ConfigToArgDef, LinConfig } from './types'
-import process from 'node:process'
-import { DEFAULT_CONFIG, providers } from './constants'
+import { providers } from './constants'
 
 type CommonArgs = ConfigToArgDef<CommonConfig>
 type LLMArgs = Omit<ConfigToArgDef<LinConfig>, 'options' | 'i18n'> & {

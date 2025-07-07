@@ -2,6 +2,9 @@
   "name": "@yuo-app/lin",
   "type": "module",
   "version": "2.1.0",
+  "workspaces": [
+    "docs"
+  ],
   "packageManager": "bun@1.2.16",
   "description": "auto-i18n",
   "license": "MIT",
