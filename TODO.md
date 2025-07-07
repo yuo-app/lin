@@ -24,7 +24,13 @@
 ## v2.1.0
 
 - [x] programmatic usage, capture output and writes
-- [ ] the readme is yuge, create lin docs instead
+- [x] the readme is yuge, create lin docs instead
+
+## v3.0.0
+
+- [ ] format layer, support json and markdown too
+  - do json in config
+  - take formats step by step in output \t
 
 ## later
 
