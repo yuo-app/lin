@@ -8,6 +8,9 @@ export default defineConfig({
       title: 'lin',
       social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/yuo-app/lin' }],
       customCss: ['@fontsource/inter/400.css', '@fontsource/inter/600.css', './src/styles/custom.css'],
+      components: {
+        Header: './src/components/Header.astro',
+      },
       sidebar: [
         {
           label: 'Guides',

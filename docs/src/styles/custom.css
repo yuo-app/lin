@@ -1,5 +1,34 @@
 :root {
   --sl-font: 'Inter', sans-serif;
+  --sl-color-accent-low: #0c0d2b;
+  --sl-color-accent: #3749a9;
+  --sl-color-accent-high: #93a2ff;
+  --sl-color-white: #e9e9ff;
+  --sl-color-gray-1: #c4c4ff;
+  --sl-color-gray-2: #8f90b3;
+  --sl-color-gray-3: #5f6087;
+  --sl-color-gray-4: #434467;
+  --sl-color-gray-5: #2a2b47;
+  --sl-color-gray-6: #212239;
+  --sl-color-black: #111122;
+  --sl-color-bg-nav: #111122;
+  --sl-color-bg-sidebar: #111122;
+}
+
+html[data-theme='light'] {
+  --sl-color-accent-low: #22233f;
+  --sl-color-accent: #6b7eff;
+  --sl-color-accent-high: #a9b5ff;
+  --sl-color-white: #111122;
+  --sl-color-gray-1: #2a2b47;
+  --sl-color-gray-2: #434467;
+  --sl-color-gray-3: #5f6087;
+  --sl-color-gray-4: #8f90b3;
+  --sl-color-gray-5: #c4c4ff;
+  --sl-color-gray-6: #e9e9ff;
+  --sl-color-black: #ffffff;
+  --sl-color-bg-nav: #ffffff;
+  --sl-color-bg-sidebar: #ffffff;
 }
 
 @view-transition {
